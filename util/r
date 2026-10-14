@@ -5,16 +5,16 @@
 #   ./r c    A.cpp をコンパイルしてから実行（c 以外でも、何か付ければコンパイルする）
 #   入力: input.txt  →  出力: output.txt、デバッグ出力（cerr・debug マクロ）: debug.txt
 #   コンパイル時は -DLOCAL を付けるので、テンプレートの debug(...) が有効になる
+#   ACL（atcoder/）は g++ の include パスに入っている前提
 #   最初に 1 回だけ: chmod +x r
 # =====================================================================
 cd "$(dirname "$0")" || exit 1
 SRC=A.cpp
 BIN=./a.out
-ACL="${ACL_PATH:-$HOME/ac-library}"  # ACL の場所（中に atcoder/ フォルダがあるところ）。違うなら書き換えるか ACL_PATH を設定
 
 if [ $# -ge 1 ]; then
     echo "[compile] $SRC"
-    g++ -std=gnu++20 -O2 -DLOCAL -Wall -Wextra -I "$ACL" -o "$BIN" "$SRC" || { echo "[compile] エラー"; exit 1; }
+    g++ -std=gnu++20 -O2 -DLOCAL -Wall -Wextra -o "$BIN" "$SRC" || { echo "[compile] エラー"; exit 1; }
 fi
 [ -x "$BIN" ] || { echo "a.out がない。./r c でコンパイルして"; exit 1; }
 [ -f input.txt ] || touch input.txt
