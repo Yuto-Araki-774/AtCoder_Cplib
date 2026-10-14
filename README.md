@@ -22,7 +22,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 | [math/](#math--数学) | 数学: 累乗・拡張ユークリッド、行列累乗、二項係数、素数・素因数分解、メビウス変換、ガウスの消去法 など | 7 |
 | [string/](#string--文字列) | 文字列: ローリングハッシュ、KMP、Manacher、Trie、Aho-Corasick | 5 |
 | [dp/](#dp--dp) | DP: ナップサック、LCS、LIS、桁 DP、区間 DP、巡回セールスマン、期待値 DP、Alien DP など | 9 |
-| [util/](#util--提出テンプレート) | 提出テンプレート: ヘッダ・mint・chmin/chmax・INF・デバッグ出力 | 1 |
+| [util/](#util--提出テンプレート) | 提出テンプレート: ヘッダ・mint・chmin/chmax・INF・デバッグ出力。コンパイル・テスト実行用のスクリプト `r` | 2 |
 | [ds/](#ds--データ構造) | データ構造: 2 次元 BIT、平方分割、Mo、区間の集合、削除できるヒープ、Li Chao Tree、動的・永続セグ木、Wavelet Matrix | 9 |
 | [geometry/](#geometry--幾何) | 幾何: 外積・内積、線分の交差、凸包、面積、内外判定、偏角ソート（整数で誤差なし） | 1 |
 | [techniques/](#techniques--解法パターン) | 解法パターン: イベントソート、オフラインクエリ、区間スケジューリング、包除原理、平面走査 | 5 |
@@ -50,7 +50,7 @@ geometry/ 幾何            geometry（外積・内積・向き・線分の交�
 techniques/ 解法パターン  event_sort, offline_query, interval_scheduling, inclusion_exclusion,
                            plane_sweep_2d、patterns.md（使いどころと考え方の解説）
 string/  文字列            rolling_hash, kmp, manacher, trie, aho_corasick
-util/    提出テンプレート  template（全ヘッダ・mint・chmin/chmax・INF・方向配列・出力・デバッグ）
+util/    提出テンプレート  template（全ヘッダ・mint・chmin/chmax・INF・方向配列・出力・デバッグ）、r（コンパイル・実行スクリプト）
 ```
 
 Sparse Table は `basic/` に置いている（データ構造だが、累積和の仲間として使うことが多いため）。
@@ -797,6 +797,17 @@ F2 版は「スイッチ j を押すとランプ i が反転」型の問題（`A
 | `print_vec(v)`, `yes_no(cond)` | 配列を空白区切りで出力、Yes / No |
 | `debug(x, v, ...)` | 変数名と値を標準エラーに出す。vector・pair・set・map も表示。手元で `g++ -DLOCAL` のときだけ動き、提出時は何もしない |
 | `solve()` / `main()` | 高速入出力の設定済み。`solve()` の中に解答を書く |
+
+### [r](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/r) — コンパイル・テスト実行用のスクリプト
+解答を `A.cpp` に書き、同じフォルダに `r` を置いて使う（最初に 1 回 `chmod +x r`）。
+
+| コマンド | 何をするか |
+|---|---|
+| `./r` | コンパイルせずに実行（前にコンパイルした `a.out` を使う） |
+| `./r c` | `A.cpp` をコンパイル（`-std=gnu++20 -O2 -DLOCAL`）してから実行。`c` 以外でも何か付ければコンパイルする |
+
+入力は `input.txt`、出力は `output.txt`、デバッグ出力（`cerr`・`debug(...)`）は `debug.txt`。実行時間と、実行時エラーなら終了コードを表示し、`output.txt` の先頭 30 行も画面に出す。
+ACL の場所は `~/ac-library` を見る。違う場所なら、スクリプトの `ACL=` の行を書き換えるか、環境変数 `ACL_PATH` を設定する。
 
 
 ---
