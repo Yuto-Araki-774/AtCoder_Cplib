@@ -22,27 +22,42 @@ using namespace std;
 //   q.size(), q.empty()
 // 例: 直前 K 個の dp の最小を使う DP（dp[i] = min(dp[i-K..i-1]) + c[i]）
 //   q.push(dp[0]); for i: { if (q.size() > K) q.pop(); dp[i] = q.get() + c[i]; q.push(dp[i]); }
+// ◆ struct MinQueue : 最小値（Cmp = greater<T> なら最大値）がすぐわかるキュー
+//   push(x)   : 末尾に x を追加。ならし O(1)
+//   pop()     : 先頭（一番古いもの）を 1 つ削除。O(1)。空のときに呼ばないこと
+//   get()     : 中の最小値。O(1)。空のときに呼ばないこと
+//   size(), empty() : 個数、空か
+//   T : 値の型、Cmp : 比べ方（省略で最小、greater<T> で最大）
 template <class T, class Cmp = less<T>>
 struct MinQueue {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/sliding_window.cpp
     deque<pair<long long, T>> dq;  // {追加した番号, 値}。値は先頭から単調に並ぶ
     long long head = 0, tail = 0;  // 先頭の番号、次に追加する番号
     Cmp cmp;
+    // x : 末尾に入れる値
     void push(const T& x) {
         while (!dq.empty() && !cmp(dq.back().second, x)) dq.pop_back();  // ★ x 以上の値は、x がいる間は最小になれないので捨てる
         dq.push_back({tail++, x});
     }
+    // 先頭を 1 つ取り除く（キューなので一番古いもの）
     void pop() {
         if (!dq.empty() && dq.front().first == head) dq.pop_front();  // ★ 削除する要素が deque に残っていれば取り除く
         head++;
     }
+    // 今入っている中の最小値（空なら未定義）
     T get() const { return dq.front().second; }  // ★ 先頭が最小
+    // size() : 入っている個数
     long long size() const { return tail - head; }
+    // empty() : 空か
     bool empty() const { return tail == head; }
 };
 
 // ---------- 削除可: スライド最小値・最大値（本体が必要） ----------
 // 返り値: res[i] = min(a[i], ..., a[i+k-1])（i = 0 .. n-k）
+// ◆ sliding_min(a, k) / sliding_max(a, k) : 長さ k の区間をずらしたときの最小値 / 最大値。O(N)
+//   a : 数列
+//   k : 区間の長さ（1 <= k <= N。k > N なら空の配列）
+//   返り値 : res[i] = min(a[i..i+k))（i = 0..N−k）
 template <class T>
 vector<T> sliding_min(const vector<T>& a, int k) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/sliding_window.cpp
@@ -55,6 +70,7 @@ vector<T> sliding_min(const vector<T>& a, int k) {
     }
     return res;
 }
+// （引数は sliding_min と同じ。最大値を返す）
 template <class T>
 vector<T> sliding_max(const vector<T>& a, int k) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/sliding_window.cpp

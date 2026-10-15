@@ -16,6 +16,10 @@ using namespace std;
 // a : N × M のコスト行列（N <= M）。a[i][j] = 人 i に仕事 j を割り当てるコスト（負も OK）
 // auto [cost, match] = hungarian(a);   cost = 最小の合計、match[i] = 人 i の仕事
 // 最大化したいときは a を −1 倍して、答えも −1 倍する
+// ◆ hungarian(a) : 割当問題（N 人に 1 つずつ違う仕事を割り当てて、コストの合計を最小にする）。O(N^2 M)
+//   a : N × M のコスト行列（N <= M。人の方が多いなら転置して渡す）。負のコストもよい
+//   返り値 : {最小の合計, match}。match[i] = 人 i の仕事の番号
+//   注意 : 最大化したいなら a を −1 倍して、合計も −1 倍する
 template <class T>
 pair<T, vector<int>> hungarian(const vector<vector<T>>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/hungarian.cpp

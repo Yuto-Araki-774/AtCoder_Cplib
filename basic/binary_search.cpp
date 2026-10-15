@@ -23,6 +23,13 @@ using namespace std;
 // T, F は自分で定義しない（T は ok/ng の型、F はラムダの型で、どちらも自動で決まる）
 //   ok と ng の型が違うとき（例: 0 と 1e18）だけ bin_search<long long>(...) と T を明示する
 // f はラムダで main / solve の中に書く: [&](long long x) { return 条件; }
+// ◆ bin_search(ok, ng, f) : f が true になる境目を二分探索する。O(log |ok − ng|) 回 f を呼ぶ
+//   ok : f(ok) == true が確実な値。答えの候補の端（f(ok) は呼ばれないので、範囲の外の値でもよい）
+//   ng : f(ng) == false が確実な値。ok と反対側の端（範囲の 1 つ外。f(ng) も呼ばれない）
+//   f  : bool f(T x)。ok 側から ng 側へ true…true false…false と 1 回だけ切り替わること（単調でないと答えが壊れる）
+//   返り値 : f が true の値のうち ng に一番近いもの（ok < ng なら true の最大、ok > ng なら true の最小）
+//   注意 : ok と ng の型が違う（0 と 1e18 など）とコンパイルエラー → bin_search<long long>(...) と書く
+//          mid の計算で ok + (ng − ok) / 2 を使うので、ok, ng は T の範囲の半分程度までにする
 template <class T, class F>
 T bin_search(T ok, T ng, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
@@ -34,6 +41,11 @@ T bin_search(T ok, T ng, F f) {
 }
 
 // ---------- 削除可: 実数の二分探索（回数固定） ----------
+// ◆ bin_search_real(ok, ng, f, iter) : 実数の二分探索。区間を半分にするのを iter 回くり返す
+//   ok, ng : bin_search と同じ（f(ok) = true 側、f(ng) = false 側）
+//   f      : bool f(double x)。単調であること
+//   iter   : くり返す回数（既定 100。幅は 2^(−iter) 倍になる。100 回でほぼ double の限界）
+//   返り値 : 境目の近くの ok 側の値
 template <class F>
 double bin_search_real(double ok, double ng, F f, int iter = 100) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
@@ -45,22 +57,30 @@ double bin_search_real(double ok, double ng, F f, int iter = 100) {
 }
 
 // ---------- 削除可: ソート済み配列の個数カウント（v は昇順ソート済み） ----------
+// ◆ count_lt(v, x) / count_le / count_gt / count_ge : ソート済みの v の中で x 未満 / 以下 / より大 / 以上 の個数。O(log N)
+// ◆ count_range(v, l, r) : l 以上 r 未満の個数（l >= r なら 0）
+//   v : 昇順にソート済みであること（ソートしていないと答えが壊れる）
+//   x, l, r : 比べる値（v の要素と同じ型。違う型だとコンパイルエラーになることがある → 型をそろえる）
 template <class T> int count_lt(const vector<T>& v, T x) {  // x 未満
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return lower_bound(v.begin(), v.end(), x) - v.begin();
 }
+// count_le(v, x) : x 以下の個数
 template <class T> int count_le(const vector<T>& v, T x) {  // x 以下
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return upper_bound(v.begin(), v.end(), x) - v.begin();
 }
+// count_gt(v, x) : x より大きい個数
 template <class T> int count_gt(const vector<T>& v, T x) {  // x より大
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return (int)v.size() - count_le(v, x);
 }
+// count_ge(v, x) : x 以上の個数
 template <class T> int count_ge(const vector<T>& v, T x) {  // x 以上
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return (int)v.size() - count_lt(v, x);
 }
+// count_range(v, l, r) : l 以上 r 未満の個数（l >= r なら 0）
 template <class T> int count_range(const vector<T>& v, T l, T r) {  // [l, r)
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return l >= r ? 0 : count_lt(v, r) - count_lt(v, l);

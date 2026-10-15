@@ -21,11 +21,18 @@ using namespace std;
 //   xb.max_xor(x0)     x0 と、いくつか選んだものの xor の最大値（x0 省略で 0）
 //   xb.rank()          基底の数。作れる値の種類数は 2^rank
 // 典型: 「xor の最大」「xor で x を作れるか」「作れる値の個数」、ガウスの消去法（F2）の代わり
+// ◆ struct XorBasis : xor の基底（いくつか選んで xor して作れる値の集合を管理する）
+//   insert(x)      : x を追加。今までの数で作れなかった（基底が増えた）なら true。O(60)
+//   can_make(x)    : いくつか選んで xor すると x になるか（何も選ばない 0 は常に作れる）
+//   max_xor(x0)    : x0 と、いくつか選んだものの xor の最大値（x0 省略で 0）
+//   rank()         : 基底の数（作れる値の種類数 = 2^rank）
+//   注意 : 値は 0 以上 2^60 未満であること
 struct XorBasis {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/xor_basis.cpp
     static constexpr int B = 60;
     long long b[B] = {};  // b[k] = 最上位ビットが k の基底（なければ 0）
     int cnt = 0;
+    // insert(x) : x : 0 以上 2^60 未満
     bool insert(long long x) {
         for (int k = B - 1; k >= 0; k--) {
             if (!(x >> k & 1)) continue;
@@ -34,16 +41,19 @@ struct XorBasis {
         }
         return false;  // ★ 0 まで消えた = 既存の基底で作れる
     }
+    // can_make(x) : x : 調べる値
     bool can_make(long long x) const {
         for (int k = B - 1; k >= 0; k--)
             if ((x >> k & 1) && b[k]) x ^= b[k];
         return x == 0;
     }
+    // max_xor(x0) : x0 : 最初から持っている値（省略で 0）
     long long max_xor(long long x0 = 0) const {
         long long x = x0;
         for (int k = B - 1; k >= 0; k--) x = max(x, x ^ b[k]);  // ★ 上のビットから、立てられるなら立てる
         return x;
     }
+    // rank() : 基底の数
     int rank() const { return cnt; }
 };
 

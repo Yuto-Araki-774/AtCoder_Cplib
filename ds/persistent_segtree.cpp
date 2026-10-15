@@ -23,6 +23,13 @@ using namespace std;
 //   seg.get(r, p)                   版 r の a[p]
 //   seg.prod(r, l, x)               版 r の op(a[l], ..., a[x−1])
 // 版の一覧は自分で vector<int> roots などに入れて持つ
+// ◆ struct PersistentSegTree : 永続セグ木（更新しても昔の版が残る）。各操作 O(log N)、メモリ O(N + Q log N)
+//   PersistentSegTree(n)   : 長さ n
+//   build(v)               : 最初の版を作り、その根の番号を返す（v 省略で全部 e()）
+//   set(root, p, x)        : 版 root で a[p] = x にした新しい版の根の番号を返す（root はそのまま残る）
+//   get(root, p)           : 版 root の a[p]
+//   prod(root, l, r)       : 版 root の op(a[l], …, a[r−1])
+//   S, op, e : ACL の segtree と同じ
 template <class S, S (*op)(S, S), S (*e)()>
 struct PersistentSegTree {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/persistent_segtree.cpp
@@ -32,7 +39,9 @@ struct PersistentSegTree {
     };
     int n;
     vector<Node> nd;
+    // n_ : 配列の長さ（1 以上）
     PersistentSegTree(int n_) : n(n_) {}
+    // build(v) : v : 長さ n の初期値（省略で全部 e()）。何回呼んでもよい（別の版ができる）
     int build(const vector<S>& v = {}) {
         // 再帰の深さは log N なので再帰で書いている
         auto rec = [&](auto self, int lo, int hi) -> int {
@@ -48,6 +57,7 @@ struct PersistentSegTree {
         assert(n >= 1);
         return rec(rec, 0, n);
     }
+    // set(root, p, x) : root : 元にする版、p : 0..n−1、x : 新しい値
     int set(int root, int p, S x) {
         auto rec = [&](auto self, int k, int lo, int hi) -> int {
             if (hi - lo == 1) {
@@ -64,6 +74,7 @@ struct PersistentSegTree {
         assert(0 <= p && p < n);
         return rec(rec, root, 0, n);
     }
+    // get(root, p) : p : 0..n−1
     S get(int root, int p) const {
         int k = root, lo = 0, hi = n;
         while (hi - lo > 1) {
@@ -73,6 +84,7 @@ struct PersistentSegTree {
         }
         return nd[k].val;
     }
+    // prod(root, l, r) : 0 <= l <= r <= n
     S prod(int root, int l, int r) const {
         assert(0 <= l && l <= r && r <= n);
         auto rec = [&](auto self, int k, int lo, int hi) -> S {

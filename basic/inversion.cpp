@@ -21,6 +21,9 @@ using namespace std;
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
 // ---------- 本体: 転倒数 ----------
+// ◆ inversion_count(a) : 転倒数（i < j かつ a[i] > a[j] の組の数）。O(N log N)、ACL の fenwick_tree を使う
+//   a : 数列（同じ値があってもよい。同じ値どうしは転倒に数えない）。値は < で比べられれば何でもよい
+//   返り値 : 転倒数（最大 N(N−1)/2 なので long long）
 template <class T>
 long long inversion_count(const vector<T>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/inversion.cpp
@@ -40,6 +43,9 @@ long long inversion_count(const vector<T>& a) {
 // ---------- 削除可: 各位置ごとの個数 ----------
 // 返り値: res[i] = j < i かつ a[j] < a[i] となる j の個数（自分より前にある、自分より小さいもの）
 // 「より大きいもの」が欲しいなら、全要素を -1 倍して呼ぶ
+// ◆ smaller_before(a) : 各位置について、自分より前にある自分より小さい要素の個数。O(N log N)
+//   a : 数列（同じ値は「小さい」に数えない）
+//   返り値 : res[i] = #{ j < i : a[j] < a[i] }
 template <class T>
 vector<long long> smaller_before(const vector<T>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/inversion.cpp
@@ -59,6 +65,8 @@ vector<long long> smaller_before(const vector<T>& a) {
 // ---------- 削除可: マージソート版の転倒数（ACL・BIT 不要） O(N log N) ----------
 // 並べ替えながら数える。左半分と右半分を合わせるとき、右の要素を先に取るたびに
 // 「左に残っている要素の数」だけ転倒が見つかる
+// ◆ inversion_count_merge(a) : 転倒数をマージソートで数える（ACL 不要）。O(N log N)
+//   a : 数列（コピーして並べ替えるので、呼んだ側の a は変わらない）
 template <class T>
 long long inversion_count_merge(vector<T> a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/inversion.cpp
@@ -82,6 +90,8 @@ long long inversion_count_merge(vector<T> a) {
 // ---------- 削除可: 列 a を列 b にする隣接交換の最小回数（本体が必要） ----------
 // a と b は同じ値を同じ個数ずつ含むこと（そうでなければ -1）。同じ値があってもよい
 // ★ 同じ値は「a の k 番目の x」を「b の k 番目の x」に移すのが最適 → b での位置の列の転倒数になる
+// ◆ min_adjacent_swaps(a, b) : 隣どうしの入れ替えで a を b にする最小回数
+//   a, b : 同じ長さで、同じ値を同じ個数ずつ含むこと（そうでなければ −1 を返す）。同じ値があってもよい
 template <class T>
 long long min_adjacent_swaps(const vector<T>& a, const vector<T>& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/inversion.cpp

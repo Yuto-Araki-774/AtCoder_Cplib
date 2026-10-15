@@ -24,6 +24,10 @@ using namespace std;
 // rects[j] = {x1, y1, x2, y2}    長方形 [x1, x2) × [y1, y2)（半開区間）
 // 返り値[j] = 長方形 j に入る点の重みの合計
 // 閉区間 [x1, x2] × [y1, y2]（整数）なら {x1, y1, x2 + 1, y2 + 1} として渡す
+// ◆ rect_sum_offline(pts, rects) : 長方形の中の点の重みの合計（平面走査 + BIT）。O((N + Q) log N)
+//   pts   : 点 {x, y, 重み} の一覧（個数を数えるなら重み 1）
+//   rects : 長方形 {x1, y1, x2, y2}（[x1, x2) × [y1, y2) の半開区間）
+//   T : 座標の型、W : 重みの型（どちらも自動で決まる）
 template <class T, class W>
 vector<W> rect_sum_offline(const vector<tuple<T, T, W>>& pts, const vector<array<T, 4>>& rects) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/plane_sweep_2d.cpp
@@ -34,6 +38,7 @@ vector<W> rect_sum_offline(const vector<tuple<T, T, W>>& pts, const vector<array
     vector<int> po(pts.size());
     iota(po.begin(), po.end(), 0);
     sort(po.begin(), po.end(), [&](int a, int b) { return get<0>(pts[a]) < get<0>(pts[b]); });
+    // （内部用）長方形をばらしたイベント
     struct Ev { T x; int j, sign; };  // 「x 未満の点だけでの [y1, y2) の和」を sign 倍して答え j に足す
     vector<Ev> ev;
     for (int j = 0; j < (int)rects.size(); j++) {

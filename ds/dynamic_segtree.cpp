@@ -24,6 +24,13 @@ using namespace std;
 //   seg.prod(l, r)      op(a[l], ..., a[r-1])（l == r なら e()）
 //   seg.all_prod()      全体
 //   1 点に足したいとき: seg.set(p, seg.get(p) + x)
+// ◆ struct DynamicSegTree : 添字が巨大（1e18 など）でも使えるセグ木。使う場所だけノードを作る
+//   DynamicSegTree(L, R)  : 添字の範囲 [L, R)（long long）
+//   set(p, x)             : a[p] = x。O(log(R − L))
+//   get(p)                : a[p]（入れていなければ e()）
+//   prod(l, r)            : op(a[l], …, a[r−1])
+//   all_prod()            : 全体
+//   S, op, e : ACL の segtree と同じ（op と e はグローバルな関数）
 template <class S, S (*op)(S, S), S (*e)()>
 struct DynamicSegTree {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/dynamic_segtree.cpp
@@ -33,7 +40,9 @@ struct DynamicSegTree {
     };
     long long L, R;
     vector<Node> nd;
+    // L_, R_ : 添字の範囲 [L_, R_)。R_ − L_ が long long に収まること
     DynamicSegTree(long long L_, long long R_) : L(L_), R(R_) { nd.push_back({e(), {-1, -1}}); }  // 0 番が根 [L, R)
+    // set(p, x) : p : L <= p < R、x : 新しい値
     void set(long long p, S x) {
         assert(L <= p && p < R);
         vector<int> path;
@@ -59,6 +68,7 @@ struct DynamicSegTree {
             nd[u].val = op(a, b);
         }
     }
+    // get(p) : p : L <= p < R
     S get(long long p) const {
         assert(L <= p && p < R);
         int v = 0;
@@ -73,6 +83,7 @@ struct DynamicSegTree {
         }
         return nd[v].val;
     }
+    // prod(l, r) : L <= l <= r <= R（l == r なら e()）
     S prod(long long l, long long r) const {
         assert(L <= l && l <= r && r <= R);
         // 左から順に op するために、区間を左から並べて取り出す（スタックに右の子を先に積む）
@@ -89,6 +100,7 @@ struct DynamicSegTree {
         }
         return res;
     }
+    // all_prod() : 全体の積
     S all_prod() const { return nd[0].val; }
 };
 

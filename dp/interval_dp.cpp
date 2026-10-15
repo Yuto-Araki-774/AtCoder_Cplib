@@ -28,6 +28,13 @@ using namespace std;
 //     leaf(i) = 0, cost(l, m, r) = a[l] + ... + a[r-1]（累積和で O(1)）
 // 例: 行列の積の順番（行列 i は d[i] × d[i+1]）  leaf(i) = 0, cost(l, m, r) = d[l] * d[m] * d[r]
 // この形にならない区間 DP（両端から取り除くゲームなど）は、下のループの形（len を 1 ずつ増やす）だけ真似して自分で書く
+// ◆ interval_dp<T>(n, leaf, cost, minimize) : 区間を 2 つに分ける形の区間 DP。O(N^3)（N <= 400 程度）
+//   T        : 値の型（必ず書く）
+//   n        : 要素の数
+//   leaf     : T leaf(int i)。長さ 1 の区間 [i, i+1) の値
+//   cost     : T cost(int l, int m, int r)。[l, m) と [m, r) をまとめるときに足す値
+//   minimize : true（既定）なら最小、false なら最大
+//   返り値 : dp[l][r] = 区間 [l, r) の値（全体は dp[0][n]）
 template <class T, class Leaf, class Cost>
 vector<vector<T>> interval_dp(int n, Leaf leaf, Cost cost, bool minimize = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/interval_dp.cpp

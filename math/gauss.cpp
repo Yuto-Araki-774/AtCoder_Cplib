@@ -25,6 +25,7 @@ using namespace std;
 //   r.rank    A の階数（独立な式の本数）
 //   r.basis   Ax = 0 の解の基底（M − rank 本）。全部の解 = x + (basis の好きな線形結合)
 //   解の個数 = p^(M − rank)（ok のとき）
+// ◆ GaussResult<T> : gauss_solve の結果。ok : 解があるか、x : 解の 1 つ、rank : 階数、basis : Ax = 0 の解の基底
 template <class T>
 struct GaussResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/gauss.cpp
@@ -33,6 +34,11 @@ struct GaussResult {
     int rank;
     vector<vector<T>> basis;
 };
+// ◆ gauss_solve(A, b) : 連立一次方程式 Ax = b（mod 素数）。O(N M min(N, M))
+//   A : N 行 M 列の係数（vector<vector<mint>>。各行の長さは M でそろえる）
+//   b : 長さ N の右辺
+//   T : mint（mod は素数であること。割り算を使う）
+//   返り値 : ok, x（自由な未知数は 0 にした解）, rank, basis。解の個数 = p^(M − rank)
 template <class T>
 GaussResult<T> gauss_solve(vector<vector<T>> A, vector<T> b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/gauss.cpp
@@ -71,6 +77,8 @@ GaussResult<T> gauss_solve(vector<vector<T>> A, vector<T> b) {
 }
 
 // ---------- 削除可: 行列式（mod p） O(N^3) ----------
+// ◆ determinant(A) : 行列式（mod 素数）。O(N^3)
+//   A : N × N の正方行列
 template <class T>
 T determinant(vector<vector<T>> A) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/gauss.cpp
@@ -97,12 +105,18 @@ T determinant(vector<vector<T>> A) {
 // auto r = gauss_f2<W>(A, b, M);
 //   r.ok, r.x（解の 1 つ。vector<int> の 0 / 1）, r.rank。解の個数 = 2^(M − rank)
 // ランプの問題: 「スイッチ j を押すとランプ i が反転」→ A[i][j] = 1、「ランプ i を最終的に反転させたいか」→ b[i]
+// ◆ GaussF2Result : gauss_f2 の結果。ok, x（0 / 1 の解の 1 つ）, rank
 struct GaussF2Result {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/gauss.cpp
     bool ok;
     vector<int> x;
     int rank;
 };
+// ◆ gauss_f2<W>(A, b, m) : F2（0 / 1 と xor）の連立一次方程式。bitset で速い。O(N M min(N, M) / 64)
+//   W : bitset の大きさ（m より大きい定数。例 2048）
+//   A : N 本の式（A[i][j] = 1 なら式 i に未知数 j が入る）
+//   b : 右辺（0 / 1、長さ N）
+//   m : 未知数の個数（m < W であること。assert あり）
 template <size_t W>
 GaussF2Result gauss_f2(vector<bitset<W>> A, vector<int> b, int m) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/gauss.cpp
@@ -132,6 +146,9 @@ GaussF2Result gauss_f2(vector<bitset<W>> A, vector<int> b, int m) {
 // count_arborescences<mint>(n, edges, root)   有向グラフで、root から全頂点へ向かう有向全域木の個数（辺 a → b）
 // ★ ラプラシアン行列 L（対角 = 次数、(a, b) = −(a と b の間の辺の本数)）から 1 行 1 列を消した行列式 = 全域木の個数
 //    有向なら 対角 = 入次数、(a, b) = −(a → b の本数) にして root の行と列を消す
+// ◆ count_spanning_trees<mint>(n, edges) : 無向グラフの全域木の個数（行列木定理）。O(N^3)
+//   n     : 頂点数
+//   edges : 無向辺 {a, b} の一覧（多重辺は別々に数える。自己ループは無視）
 template <class T>
 T count_spanning_trees(int n, const vector<pair<int, int>>& edges) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/gauss.cpp
@@ -145,6 +162,10 @@ T count_spanning_trees(int n, const vector<pair<int, int>>& edges) {
     }
     return determinant(L);
 }
+// ◆ count_arborescences<mint>(n, edges, root) : 有向グラフで root から全頂点へ向かう有向全域木の個数。O(N^3)
+//   n     : 頂点数
+//   edges : 有向辺 {a, b}（a → b）の一覧
+//   root  : 根
 template <class T>
 T count_arborescences(int n, const vector<pair<int, int>>& edges, int root) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/gauss.cpp

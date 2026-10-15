@@ -22,6 +22,9 @@ using namespace std;
 // f は凸（f(x+1) - f(x) が x について増えていく）であること
 // 【自分で定義するもの】f(x)（main の中にラムダで書く）
 // 例: long long x = argmin_convex_int(0LL, (long long)1e9, [&](long long x) { return cost(x); });
+// ◆ argmin_convex_int(lo, hi, f) : 整数 x ∈ [lo, hi] で f(x) が最小になる x（最小が複数なら一番左）。O(log(hi − lo))
+//   lo, hi : 探す範囲（両端を含む）。f(hi + 1) は呼ばない
+//   f      : 凸な関数（f(x+1) − f(x) が増えていく）。途中で平らな所が最小以外にあると間違うことがある
 template <class F>
 long long argmin_convex_int(long long lo, long long hi, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/ternary_search.cpp
@@ -36,6 +39,10 @@ long long argmin_convex_int(long long lo, long long hi, F f) {
 
 // ---------- 本体B: 実数版（三分探索） ----------
 // [lo, hi] で f が最小になる x を返す（iter 回で区間は (2/3)^iter に縮む。200 回で十分）
+// ◆ argmin_convex_real(lo, hi, f, iter) : 実数 x ∈ [lo, hi] で f(x) が最小になる x（三分探索）
+//   lo, hi : 探す範囲
+//   f      : 下に凸な関数（谷が 1 つ）
+//   iter   : くり返す回数（既定 200。幅は (2/3)^iter 倍になる）
 template <class F>
 double argmin_convex_real(double lo, double hi, F f, int iter = 200) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/ternary_search.cpp
@@ -49,6 +56,8 @@ double argmin_convex_real(double lo, double hi, F f, int iter = 200) {
 
 // ---------- 本体C: 実数版（黄金分割探索） ----------
 // 本体B と同じ結果を、f の呼び出し 1 回ずつで求める（三分探索は 1 回あたり 2 回）
+// ◆ golden_section_min(lo, hi, f, iter) : 三分探索と同じ結果を、f を呼ぶ回数を半分にして求める（黄金分割探索）
+//   引数は argmin_convex_real と同じ（iter 回で幅は 0.618^iter 倍）
 template <class F>
 double golden_section_min(double lo, double hi, F f, int iter = 200) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/ternary_search.cpp

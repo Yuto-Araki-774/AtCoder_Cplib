@@ -18,6 +18,8 @@ using namespace std;
 // ---------- 本体 ----------
 // auto rl = run_length(s);    for (auto [c, k] : rl) { ... }   // c が k 個続いている
 // 型は自動で決まる（string なら pair<char, int>、vector<long long> なら pair<long long, int>）
+// ◆ run_length(s) : 同じ値が続く塊ごとに {値, 個数} にまとめる。O(N)
+//   s : string か vector など（== で比べられる要素の列）
 template <class Seq>
 vector<pair<typename Seq::value_type, int>> run_length(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/run_length.cpp
@@ -31,6 +33,8 @@ vector<pair<typename Seq::value_type, int>> run_length(const Seq& s) {
 
 // ---------- 削除可: 塊ごとの位置付き。{値, 開始位置, 終了位置（含まない）} ----------
 // 「各塊が元の配列のどこにあるか」が必要なとき（塊をまたぐ処理、塊の長さで区間を作るなど）
+// ◆ run_length_range(s) : 塊ごとに {値, 開始位置, 終了位置（含まない）}
+//   s : string か vector など
 template <class Seq>
 vector<tuple<typename Seq::value_type, int, int>> run_length_range(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/run_length.cpp
@@ -44,6 +48,8 @@ vector<tuple<typename Seq::value_type, int, int>> run_length_range(const Seq& s)
 }
 
 // ---------- 削除可: 復元（文字列用） ----------
+// ◆ run_length_decode(rl) : {文字, 個数} の列を文字列に戻す
+//   rl : run_length(string) の返り値の形
 string run_length_decode(const vector<pair<char, int>>& rl) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/run_length.cpp
     string s;

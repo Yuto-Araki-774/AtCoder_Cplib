@@ -24,14 +24,22 @@ using namespace std;
 //   bm.match_r[r]                右 r の相手の左の番号（いなければ -1）
 // 典型: 「人と仕事」「赤い点と青い点」をペアにする最大数。
 //       グリッドの隣り合うマスのペア（ドミノ）は、(i + j) の偶奇で左右に分ける
+// ◆ struct BipartiteMatching : 二部グラフの最大マッチング（Hopcroft-Karp）。O(M √N)
+//   BipartiteMatching(L, R) : 左 L 個・右 R 個の頂点で作る（左右で番号は別々に 0 から）
+//   add_edge(l, r)          : 左 l と右 r をつなぐ
+//   solve()                 : 最大マッチングの本数を返す。match_l / match_r に相手が入る
+//   min_vertex_cover()      : 最小頂点被覆 {左の頂点, 右の頂点}（solve の後に呼ぶ）
 struct BipartiteMatching {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bipartite_matching.cpp
     int L, R;
     vector<vector<int>> g;
     vector<int> match_l, match_r, dist;
+    // L_ : 左の頂点数、R_ : 右の頂点数
     BipartiteMatching(int L_, int R_) : L(L_), R(R_), g(L_), match_l(L_, -1), match_r(R_, -1) {}
+    // add_edge(l, r) : l は左の番号 0..L−1、r は右の番号 0..R−1（同じ組を 2 回入れても答えは変わらない）
     void add_edge(int l, int r) { g[l].push_back(r); }
 
+    // （内部用）増加道を探すための距離を求める
     bool bfs() {  // ★ 未マッチの左頂点から、交互に「マッチしていない辺 → している辺」で進む距離を求める
         dist.assign(L, -1);
         queue<int> q;
@@ -49,6 +57,7 @@ struct BipartiteMatching {
         }
         return found;
     }
+    // （内部用）距離に沿って増加道を探す。再帰の深さは道の長さまで
     bool dfs(int l, vector<int>& it) {  // ★ 距離が 1 ずつ増える道だけを使って、増やせる道を探す
         for (int& i = it[l]; i < (int)g[l].size(); i++) {
             int r = g[l][i], nl = match_r[r];
@@ -60,6 +69,7 @@ struct BipartiteMatching {
         dist[l] = -1;  // この頂点からはもう道がない
         return false;
     }
+    // solve() : 最大マッチングの本数。何回呼んでもよい（辺を足してから呼び直すと続きから増やす）
     int solve() {
         int res = 0;
         for (int l = 0; l < L; l++) res += match_l[l] != -1;
@@ -75,6 +85,7 @@ struct BipartiteMatching {
     // すべての辺の少なくとも一方の端点を含む、最小の頂点集合。大きさ = 最大マッチング（König の定理）
     // 返り値: {左側で選ぶ頂点, 右側で選ぶ頂点}
     // 最大独立集合（どの 2 頂点も辺でつながらない最大の集合）= 最小頂点被覆の補集合
+    // min_vertex_cover() : solve の後に呼ぶ。返り値 = {左側で選ぶ頂点, 右側で選ぶ頂点}
     pair<vector<int>, vector<int>> min_vertex_cover() const {
         vector<bool> vl(L, false), vr(R, false);
         queue<int> q;

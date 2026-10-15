@@ -20,6 +20,9 @@ using namespace std;
 // g : 無向グラフの隣接リスト（両方向に入れる）
 // 返り値: color[v] = 0 か 1（二部グラフでなければ空のベクタ）
 // 例: auto col = bipartite_coloring(g);  if (col.empty()) { /* 二部グラフでない */ }
+// ◆ bipartite_coloring(g) : 二部グラフ判定と 2 色塗り分け。O(N + M)
+//   g : 無向グラフの隣接リスト（両方向に入れる）。つながっていなくてもよい
+//   返り値 : color[v] = 0 か 1（各成分で番号の一番小さい頂点が 0）。二部グラフでなければ空
 vector<int> bipartite_coloring(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bipartite.cpp
     int n = g.size();
@@ -45,6 +48,8 @@ vector<int> bipartite_coloring(const vector<vector<int>>& g) {
 // 返り値: 成分ごとの {色 0 の頂点数, 色 1 の頂点数}（二部グラフでなければ空）
 // 典型: 「各成分でどちらの色を "選ぶ" か決めて、選んだ頂点数の合計を K にできるか」→ この結果で部分和 DP
 //      （各成分の 2 色は入れ替えてよいので、どちらの数を取るかを選べる）
+// ◆ bipartite_components(g) : 成分ごとの {色 0 の個数, 色 1 の個数}
+//   g : 無向グラフ。二部グラフでなければ空を返す
 vector<pair<int, int>> bipartite_components(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bipartite.cpp
     auto color = bipartite_coloring(g);

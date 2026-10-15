@@ -17,6 +17,12 @@ using namespace std;
 // auto [ok, cost] = min_arborescence<long long>(n, edges, root);
 //   ok = root から全頂点へ行けるか（行けない頂点があれば false）、cost = 最小の重みの合計
 // 各頂点の親（どの辺を使ったか）までは求めない
+// ◆ min_arborescence<T>(n, edges, root) : 最小全域有向木（root から全頂点へ行ける有向の木の最小の重み）。O(NM)
+//   T     : 重みの型（必ず書く）
+//   n     : 頂点数
+//   edges : 有向辺 {a, b, 重み}（a → b）の一覧。負の重み・多重辺もよい（自己ループは無視）
+//   root  : 根
+//   返り値 : {root から全頂点へ行けるか, 最小の重みの合計}
 template <class T>
 pair<bool, T> min_arborescence(int n, vector<tuple<int, int, T>> edges, int root) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/min_arborescence.cpp

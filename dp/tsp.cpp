@@ -25,6 +25,10 @@ using namespace std;
 //   tsp_path(d, dp)                全頂点を回る最小コスト（終わりはどこでもよい）
 //   tsp_restore(d, dp, s, end)     end で終わる最小の回り方の頂点の順番（削除可）
 template <class T> constexpr T TSP_INF = numeric_limits<T>::max() / 4;
+// ◆ tsp_dp(d, s) : bit DP の表を作る。O(2^N N^2)（N <= 16〜18）
+//   d : N × N の距離の表（d[i][j] = i から j へ直接行くコスト。行けないなら TSP_INF<T>。非対称でもよい）
+//   s : 出発する頂点
+//   返り値 : dp[mask][v] = 訪れた集合が mask で今 v にいるときの最小コスト（無理なら TSP_INF<T>）
 template <class T>
 vector<vector<T>> tsp_dp(const vector<vector<T>>& d, int s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/tsp.cpp
@@ -43,6 +47,8 @@ vector<vector<T>> tsp_dp(const vector<vector<T>>& d, int s) {
         }
     return dp;
 }
+// ◆ tsp_cycle(d, dp, s) : 全頂点を回って s に戻る最小コスト（無理なら TSP_INF<T>。N = 1 なら 0）
+//   d : tsp_dp に渡した表、dp : tsp_dp の返り値、s : tsp_dp に渡した出発点と同じもの
 template <class T>
 T tsp_cycle(const vector<vector<T>>& d, const vector<vector<T>>& dp, int s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/tsp.cpp
@@ -53,6 +59,8 @@ T tsp_cycle(const vector<vector<T>>& d, const vector<vector<T>>& dp, int s) {
         if (v != s && dp[full][v] != TSP_INF<T> && d[v][s] != TSP_INF<T>) best = min(best, dp[full][v] + d[v][s]);  // ★ 最後に s へ戻る
     return best;
 }
+// ◆ tsp_path(d, dp) : 全頂点を回る最小コスト（どこで終わってもよい）
+//   d, dp : tsp_dp に渡した表と返り値
 template <class T>
 T tsp_path(const vector<vector<T>>& d, const vector<vector<T>>& dp) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/tsp.cpp
@@ -62,6 +70,9 @@ T tsp_path(const vector<vector<T>>& d, const vector<vector<T>>& dp) {
 
 // ---------- 削除可: 回り方の復元 ----------
 // 返り値: s から始まり end で終わる、全頂点を回る最小の順番（dp[full][end] が TSP_INF なら空）
+// ◆ tsp_restore(d, dp, s, end) : s から始まり end で終わる、全頂点を回る最小の順番（無理なら空）
+//   d, dp : tsp_dp の表と返り値、s : 出発点、end : 終点
+//   一周の順番がほしいなら、tsp_cycle を達成する end（dp[全部][end] + d[end][s] が最小のもの）を選んで呼ぶ
 template <class T>
 vector<int> tsp_restore(const vector<vector<T>>& d, const vector<vector<T>>& dp, int s, int end) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/tsp.cpp

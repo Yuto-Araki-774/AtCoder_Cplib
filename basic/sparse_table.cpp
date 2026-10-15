@@ -22,11 +22,15 @@ using namespace std;
 //   例: int op(int a, int b) { return min(a, b); }
 // SparseTable<int, op> st(a);
 //   st.prod(l, r) : op(a[l], ..., a[r-1])。l < r であること（空区間は不可）
+// ◆ struct SparseTable : 更新のない配列で、区間の min / max / gcd などを O(1) で求める
+//   SparseTable(a)   : 前計算 O(N log N)
+//   prod(l, r)       : op(a[l], …, a[r−1])。O(1)
 template <class S, S (*op)(S, S)>
 struct SparseTable {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/sparse_table.cpp
     vector<vector<S>> t;  // t[k][i] = op(a[i], ..., a[i + 2^k - 1])
     vector<int> lg;       // lg[x] = floor(log2(x))
+    // a : 元の配列（後から変更できない）
     SparseTable(const vector<S>& a) {
         int n = a.size();
         lg.assign(n + 1, 0);
@@ -36,6 +40,7 @@ struct SparseTable {
             for (int i = 0; i + (2 << k) <= n; i++)
                 t[k + 1][i] = op(t[k][i], t[k][i + (1 << k)]);  // ★ 長さ 2^(k+1) = 長さ 2^k を 2 つ
     }
+    // l, r : 区間 [l, r)。l < r であること（空区間は未定義）
     S prod(int l, int r) const {
         int k = lg[r - l];
         return op(t[k][l], t[k][r - (1 << k)]);  // ★ 長さ 2^k の区間 2 つで [l, r) を覆う（重なってよい）

@@ -22,10 +22,17 @@ using namespace std;
 //   pal.rad[i]                文字の間に区切りを入れた列（長さ 2n-1）での半径（下の説明）
 // 内部では s の文字の間に区切りを入れて 2n-1 個の中心を見る:
 //   中心 i が偶数 → 文字 s[i/2] が中心（奇数長の回文）、奇数 → s[i/2] と s[i/2+1] の間（偶数長）
+// ◆ struct Palindrome : Manacher（各中心の最長回文）。前計算 O(N)
+//   Palindrome(s)   : s は string でも vector でもよい
+//   is_pal(l, r)    : s[l..r) が回文か。O(1)（空・1 文字は回文）
+//   longest()       : 最長回文の {開始位置, 長さ}
+//   count()         : 回文の部分文字列の個数（位置が違えば別に数える）
+//   rad[i]          : 中心 i（文字の間を含めて 2N−1 個）の最長回文の長さ
 struct Palindrome {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/manacher.cpp
     int n;
     vector<int> rad;  // rad[i] = 中心 i の最長回文の長さ（元の文字列での文字数）
+    // s : 回文を調べる列
     template <class Seq>
     Palindrome(const Seq& s) : n(s.size()) {
         if (n == 0) return;
@@ -45,16 +52,19 @@ struct Palindrome {
             rad[i] = (i % 2 == 0) ? (len / 2) * 2 + 1 : ((len + 1) / 2) * 2;
         }
     }
+    // is_pal(l, r) : 区間 [l, r)。0 <= l <= r <= N
     bool is_pal(int l, int r) const {
         if (r - l <= 1) return true;
         return rad[l + r - 1] >= r - l;  // ★ 区間 [l, r) の中心は区切り入りの列の l + r - 1 番目
     }
+    // longest() : 同じ長さが複数あれば一番左
     pair<int, int> longest() const {
         int best = 0, start = 0;
         for (int i = 0; i < (int)rad.size(); i++)
             if (rad[i] > best) best = rad[i], start = (i + 1) / 2 - rad[i] / 2;
         return {start, best};
     }
+    // count() : 長さ 1 も含めた回文の個数
     long long count() const {
         long long c = 0;
         for (int i = 0; i < (int)rad.size(); i++) c += (rad[i] + 1) / 2;  // ★ 中心ごとに、長さ rad, rad-2, ... の回文がある

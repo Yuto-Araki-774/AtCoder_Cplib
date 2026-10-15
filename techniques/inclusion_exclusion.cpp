@@ -21,6 +21,10 @@ using namespace std;
 // ---------- 本体A: 汎用 ----------
 // m 個の条件。【自分で定義するもの】f(mask) : mask に含まれる条件を「全部」満たすものの個数（ラムダ）
 // 返り値: 条件のどれか 1 つ以上を満たすものの個数
+// ◆ union_count<T>(m, f) : 包除原理。m 個の条件のどれか 1 つ以上を満たすものの個数。O(2^m × f)
+//   T : 個数の型（必ず書く）
+//   m : 条件の数（20 くらいまで）
+//   f : T f(int mask)。mask に含まれる条件を「全部」満たすものの個数
 template <class T, class F>
 T union_count(int m, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/inclusion_exclusion.cpp
@@ -36,6 +40,9 @@ T union_count(int m, F f) {
 // ---------- 本体B: どれかで割り切れる数の個数 ----------
 // 返り値: 1 以上 N 以下で、a のどれか 1 つ以上で割り切れる数の個数（a の要素は 1 以上）
 // 「L 以上 R 以下」なら count_divisible_any(R, a) - count_divisible_any(L - 1, a)
+// ◆ count_divisible_any(N, a) : 1 以上 N 以下で、a のどれか 1 つ以上で割り切れる数の個数。O(2^m log)
+//   N : 上限（0 以下なら 0）
+//   a : 割る数の一覧（1 以上。m 個、20 くらいまで）。最小公倍数が N を超えたら打ち切るのであふれない
 long long count_divisible_any(long long N, const vector<long long>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/inclusion_exclusion.cpp
     int m = a.size();

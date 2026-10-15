@@ -16,6 +16,9 @@ using namespace std;
 // g : 無向グラフの隣接リスト（頂点 0..n-1、n <= 25 程度まで。メモリ 2^n × 8 バイト × 2）
 // int k = chromatic_number(g);   彩色数（頂点が 0 個なら 0、辺がなければ 1）
 //   自己ループがあると彩色できないので -1
+// ◆ chromatic_number(g) : 彩色数（隣り合う頂点を違う色にするのに必要な最小の色数）。O(2^N N)
+//   g : 無向グラフの隣接リスト（片方向だけ入れてもよい。中で両方向として扱う）
+//   注意 : N <= 25 程度まで（メモリ 2^N × 20 バイトくらい）。自己ループがあれば −1
 int chromatic_number(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/chromatic_number.cpp
     int n = g.size();

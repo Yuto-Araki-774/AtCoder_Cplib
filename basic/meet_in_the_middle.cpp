@@ -21,6 +21,8 @@ using namespace std;
 
 // ---------- 本体A: 部分和の列挙 ----------
 // 返り値: a の部分集合（空集合を含む）の和 2^n 個を昇順に並べたもの
+// ◆ subset_sums(a) : a の部分集合（空集合を含む）の和 2^n 個を昇順で返す。O(2^n)
+//   a : 要素の列（n <= 20 くらいまで。負の値もよい）
 vector<long long> subset_sums(const vector<long long>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/meet_in_the_middle.cpp
     vector<long long> s = {0};
@@ -37,6 +39,9 @@ vector<long long> subset_sums(const vector<long long>& a) {
 // ---------- 本体B: 和が K 以下（本体A が必要） ----------
 // max_subset_sum_le(a, K)   : 和が K 以下になる部分集合の和の最大（空集合の 0 を含む。K < 0 なら -1）
 // count_subset_sum_le(a, K) : 和が K 以下になる部分集合の個数（空集合を含む）
+// ◆ max_subset_sum_le(a, K) : 和が K 以下になる部分集合の和の最大。O(2^(n/2) n)、n <= 40 程度
+//   a : 要素の列（負の値もよい）
+//   K : 上限。空集合の和 0 も候補に入るので、K >= 0 なら答えは 0 以上。K < 0 で該当なしなら −1
 long long max_subset_sum_le(const vector<long long>& a, long long K) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/meet_in_the_middle.cpp
     int h = a.size() / 2;
@@ -51,6 +56,8 @@ long long max_subset_sum_le(const vector<long long>& a, long long K) {
     }
     return best;
 }
+// ◆ count_subset_sum_le(a, K) : 和が K 以下になる部分集合の個数（空集合を含む）
+//   a : 要素の列（n <= 40 程度）、K : 上限
 long long count_subset_sum_le(const vector<long long>& a, long long K) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/meet_in_the_middle.cpp
     int h = a.size() / 2;
@@ -68,6 +75,10 @@ long long count_subset_sum_le(const vector<long long>& a, long long K) {
 // ---------- 本体C: ナップサック（N <= 40、W が大きい） ----------
 // 重さ w、価値 v、重さの合計 W 以下での価値の最大
 // （W が小さいなら dp/knapsack.cpp の knapsack_01、価値の合計が小さいなら knapsack_01_by_value）
+// ◆ knapsack_mitm(w, v, W) : 品物の数が 40 以下で W が大きい（1e18 まで）ナップサック。O(2^(n/2) n)
+//   w : 各品物の重さ、v : 各品物の価値（w と v は同じ長さ）
+//   W : 重さの合計の上限
+//   返り値 : 価値の合計の最大（何も選ばなければ 0）
 long long knapsack_mitm(const vector<long long>& w, const vector<long long>& v, long long W) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/meet_in_the_middle.cpp
     int n = w.size(), h = n / 2;

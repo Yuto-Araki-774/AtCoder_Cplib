@@ -24,10 +24,17 @@ using namespace std;
 
 // ---------- 本体A: 線形篩（最小素因数テーブル） 構築 O(N)、分解 O(log x) ----------
 // Sieve sv(N);  sv.primes（N 以下の素数）、sv.is_prime(x)、sv.factorize(x)、sv.divisors(x)
+// ◆ struct Sieve : 線形篩（N 以下の素数と、各数の最小素因数の表）
+//   Sieve(N)        : 前計算 O(N)。メモリ 4N バイト（N は 1e7 くらいまで）
+//   primes          : N 以下の素数の一覧（昇順）
+//   is_prime(x)     : x が素数か（0 <= x <= N）
+//   factorize(x)    : 素因数分解 {{素数, 指数}, ...}（1 <= x <= N）。O(log x)
+//   divisors(x)     : 約数の一覧（昇順。1 <= x <= N）
 struct Sieve {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     int n;
     vector<int> spf, primes;  // spf[x] = x の最小素因数
+    // n_ : 調べる数の上限 N
     Sieve(int n_) : n(n_), spf(n_ + 1, 0) {
         for (int i = 2; i <= n; i++) {
             if (spf[i] == 0) spf[i] = i, primes.push_back(i);  // ★ 誰にも割られていない = 素数
@@ -37,7 +44,9 @@ struct Sieve {
             }
         }
     }
+    // is_prime(x) : x : 0..N
     bool is_prime(int x) const { return x >= 2 && spf[x] == x; }
+    // factorize(x) : x : 1..N（1 なら空）
     vector<pair<int, int>> factorize(int x) const {  // {{素数, 指数}, ...}
         vector<pair<int, int>> res;
         while (x > 1) {
@@ -48,6 +57,7 @@ struct Sieve {
         return res;
     }
     // --- 削除可: 約数列挙（昇順） ---
+    // divisors(x) : x : 1..N
     vector<int> divisors(int x) const {
         vector<int> res = {1};
         for (auto [p, e] : factorize(x)) {
@@ -64,6 +74,8 @@ struct Sieve {
 };
 
 // ---------- 本体B: 1 個の数に対する O(√x) の関数 ----------
+// ◆ is_prime(x) : x が素数か。O(√x)（x は 1e12 くらいまで。もっと大きいなら is_prime_mr）
+//   x : 判定する数（2 未満なら false）
 bool is_prime(long long x) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     if (x < 2) return false;
@@ -71,6 +83,8 @@ bool is_prime(long long x) {
         if (x % i == 0) return false;
     return true;
 }
+// ◆ factorize(x) : 素因数分解 {{素数, 指数}, ...}（素数の昇順）。O(√x)
+//   x : 1 以上（1 なら空）。1e12 くらいまで（もっと大きいなら factorize_fast）
 vector<pair<long long, int>> factorize(long long x) {  // {{素数, 指数}, ...}
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     vector<pair<long long, int>> res;
@@ -83,6 +97,8 @@ vector<pair<long long, int>> factorize(long long x) {  // {{素数, 指数}, ...
     if (x > 1) res.push_back({x, 1});  // ★ 最後に残ったものは √x より大きい素数
     return res;
 }
+// ◆ divisors(x) : 約数の一覧（昇順）。O(√x)
+//   x : 1 以上
 vector<long long> divisors(long long x) {  // 昇順
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     vector<long long> small, large;
@@ -98,6 +114,9 @@ vector<long long> divisors(long long x) {  // 昇順
 // ---------- 本体C: 区間篩 O((R - L) log log R + √R) ----------
 // 返り値: res[i] = (L + i が素数か)（i = 0 .. R-L-1）
 // 例: auto ok = segment_sieve(L, R); for (long long x = L; x < R; x++) if (ok[x - L]) ...
+// ◆ segment_sieve(L, R) : [L, R) の各数が素数か。O((R − L) log log R + √R)
+//   L, R : 0 <= L <= R。R は 1e12 くらいまで、R − L は 1e6〜1e7 くらいまで（その大きさの配列を作る）
+//   返り値 : res[i] = L + i が素数か
 vector<bool> segment_sieve(long long L, long long R) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     long long s = 1;
@@ -116,6 +135,8 @@ vector<bool> segment_sieve(long long L, long long R) {
 // euler_phi(n)   : φ(n) を O(√n)
 // phi_table(N)   : φ(0..N) を全部 O(N log log N)
 // φ(n) = n × Π (1 - 1/p)（p は n の素因数）。φ(1) = 1、φ(p) = p - 1
+// ◆ euler_phi(n) : φ(n) = 1..n で n と互いに素な数の個数。O(√n)
+//   n : 1 以上
 long long euler_phi(long long n) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     long long res = n;
@@ -127,6 +148,8 @@ long long euler_phi(long long n) {
     if (n > 1) res -= res / n;
     return res;
 }
+// ◆ phi_table(N) : φ(0..N) の表（φ(0) = 0）。O(N log log N)
+//   N : 上限（1e7 くらいまで）
 vector<int> phi_table(int N) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     vector<int> phi(N + 1);
@@ -141,10 +164,12 @@ vector<int> phi_table(int N) {
 // is_prime_mr(x)      x が素数か。決まった 7 個の底で確かめるので、long long の範囲では必ず正しい  O(log x)
 // factorize_fast(x)   {{素数, 指数}, ...}（素数の昇順）  だいたい O(x^(1/4))。1e18 でも一瞬
 // 本体B の is_prime / factorize（O(√x)）は x が 1e12 くらいまで。それより大きいときはこちら
+// （内部用）a × b mod m を 128 bit で
 unsigned long long mr_mul(unsigned long long a, unsigned long long b, unsigned long long m) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     return (unsigned long long)((__uint128_t)a * b % m);
 }
+// （内部用）a^e mod m
 unsigned long long mr_pow(unsigned long long a, unsigned long long e, unsigned long long m) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     unsigned long long r = 1 % m;
@@ -152,6 +177,8 @@ unsigned long long mr_pow(unsigned long long a, unsigned long long e, unsigned l
     for (; e; e >>= 1, a = mr_mul(a, a, m)) if (e & 1) r = mr_mul(r, a, m);
     return r;
 }
+// ◆ is_prime_mr(x) : x が素数か（ミラー・ラビン。long long の範囲で必ず正しい）。O(log x)
+//   x : 判定する数（2 未満なら false）
 bool is_prime_mr(long long x) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     if (x < 2) return false;
@@ -174,6 +201,8 @@ bool is_prime_mr(long long x) {
     }
     return true;
 }
+// ◆ pollard_rho(x) : 合成数 x の、1 と x 以外の約数を 1 つ返す（素数とは限らない）
+//   x : 合成数であること（素数を渡すと終わらない）。普通は factorize_fast から使う
 long long pollard_rho(long long x) {  // x は合成数。1 より大きく x 未満の約数を 1 つ返す
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     if (x % 2 == 0) return 2;
@@ -199,6 +228,8 @@ long long pollard_rho(long long x) {  // x は合成数。1 より大きく x �
         if (g != n) return (long long)g;  // それでも n なら c を変えてやり直し
     }
 }
+// ◆ factorize_fast(x) : 素因数分解 {{素数, 指数}, ...}（素数の昇順）。1e18 でも一瞬
+//   x : 1 以上（1 なら空）
 vector<pair<long long, int>> factorize_fast(long long x) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     vector<long long> ps, st;

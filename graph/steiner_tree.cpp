@@ -23,6 +23,12 @@ using namespace std;
 //   つなげないなら STEINER_INF<T>
 //   dp[S][v] も使える（例: 「ターミナルの一部 S と v をつなぐ最小」）
 template <class T> constexpr T STEINER_INF = numeric_limits<T>::max() / 4;
+// ◆ steiner_tree<T>(n, edges, terms) : 指定した頂点（ターミナル）をつなぐ最小の重みの木。O(3^K N + 2^K M log N)
+//   T     : 重みの型（必ず書く）
+//   n     : 頂点数
+//   edges : 無向辺 {a, b, 重み} の一覧（重みは 0 以上）
+//   terms : ターミナルの一覧（K 個。K <= 10 くらいまで。重複してもよい）
+//   返り値 : dp[S][v] = ターミナルの集合 S（bit）と頂点 v をつなぐ木の最小の重み（つなげなければ STEINER_INF<T>）
 template <class T>
 vector<vector<T>> steiner_tree(int n, const vector<tuple<int, int, T>>& edges, const vector<int>& terms) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/steiner_tree.cpp
@@ -52,6 +58,8 @@ vector<vector<T>> steiner_tree(int n, const vector<tuple<int, int, T>>& edges, c
     }
     return dp;
 }
+// ◆ steiner_min(dp) : ターミナルを全部つなぐ最小の重み（= dp[全部][v] の最小）
+//   dp : steiner_tree の返り値
 template <class T>
 T steiner_min(const vector<vector<T>>& dp) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/steiner_tree.cpp

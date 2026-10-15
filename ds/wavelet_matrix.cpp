@@ -21,23 +21,40 @@ using namespace std;
 //   wm.range_freq(l, r, lo, hi) [l, r) の中で lo <= 値 < hi の個数
 //   wm.prev_value(l, r, x)      [l, r) の中で x 未満の最大の値（なければ nullopt）
 //   wm.next_value(l, r, x)      [l, r) の中で x 以上の最小の値（なければ nullopt）
+// ◆ struct WaveletMatrix : 区間の k 番目に小さい値・範囲に入る個数など（更新なし）。前計算 O(N log σ)、各クエリ O(log σ)
+//   WaveletMatrix(a)              : a は何でもよい（中で座標圧縮する）
+//   access(i)                     : a[i]
+//   kth_smallest(l, r, k)         : [l, r) で k 番目（0 始まり）に小さい値（0 <= k < r − l）
+//   kth_largest(l, r, k)          : k 番目に大きい値
+//   range_freq(l, r, lo, hi)      : [l, r) で lo <= 値 < hi の個数
+//   count_less(l, r, x)           : [l, r) で x 未満の個数
+//   prev_value(l, r, x)           : x 未満で最大の値（なければ nullopt）
+//   next_value(l, r, x)           : x 以上で最小の値（なければ nullopt）
 template <class T>
 struct WaveletMatrix {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/wavelet_matrix.cpp
+    // （内部用）rank が O(1) のビット列
     struct BitVec {  // rank（[0, i) の 1 の個数）を O(1) で求められるビット列
         vector<unsigned long long> b;
         vector<int> cum;
+        // （内部用）n ビットのビット列
         BitVec(int n = 0) : b(n / 64 + 1, 0), cum(n / 64 + 2, 0) {}
+        // （内部用）i 番目のビットを立てる
         void set(int i) { b[i >> 6] |= 1ULL << (i & 63); }
+        // （内部用）rank のための累積を作る
         void build() { for (size_t i = 0; i < b.size(); i++) cum[i + 1] = cum[i] + __builtin_popcountll(b[i]); }
+        // （内部用）i 番目のビット
         bool get(int i) const { return b[i >> 6] >> (i & 63) & 1; }
+        // （内部用）[0, i) の 1 の個数
         int rank1(int i) const { return cum[i >> 6] + __builtin_popcountll(b[i >> 6] & ((1ULL << (i & 63)) - 1)); }
+        // （内部用）[0, i) の 0 の個数
         int rank0(int i) const { return i - rank1(i); }
     };
     int n, LOG;
     vector<T> vals;  // 座標圧縮した値の一覧
     vector<BitVec> bv;
     vector<int> zeros;  // zeros[d] = 桁 d で 0 だったものの個数
+    // a : 元の数列
     WaveletMatrix(const vector<T>& a) : n(a.size()) {
         vals = a;
         sort(vals.begin(), vals.end());
@@ -59,6 +76,7 @@ struct WaveletMatrix {
             cur.insert(cur.end(), os.begin(), os.end());  // ★ 0 を前、1 を後ろに（順番は保つ）
         }
     }
+    // access(i) : i : 0..N−1
     T access(int i) const {
         int res = 0;
         for (int d = LOG - 1; d >= 0; d--) {
@@ -67,6 +85,7 @@ struct WaveletMatrix {
         }
         return vals[res];
     }
+    // kth_smallest(l, r, k) : 区間 [l, r)、k : 0..r−l−1（範囲外は assert）
     T kth_smallest(int l, int r, int k) const {
         assert(0 <= k && k < r - l);
         int res = 0;
@@ -77,7 +96,9 @@ struct WaveletMatrix {
         }
         return vals[res];
     }
+    // kth_largest(l, r, k) : k : 0..r−l−1
     T kth_largest(int l, int r, int k) const { return kth_smallest(l, r, r - l - 1 - k); }
+    // （内部用）圧縮後の値が x 未満の個数
     int count_less_id(int l, int r, int x) const {  // 圧縮後の値が x 未満の個数
         if (x >= (1 << LOG)) return r - l;
         if (x <= 0) return 0;
@@ -92,13 +113,17 @@ struct WaveletMatrix {
         }
         return res;
     }
+    // count_less(l, r, x) : x : 境目の値（入っていない値でもよい）
     int count_less(int l, int r, T x) const { return count_less_id(l, r, lower_bound(vals.begin(), vals.end(), x) - vals.begin()); }
+    // range_freq(l, r, lo, hi) : lo >= hi なら 0
     int range_freq(int l, int r, T lo, T hi) const { return lo >= hi ? 0 : count_less(l, r, hi) - count_less(l, r, lo); }
+    // prev_value(l, r, x) : x 未満で最大の値
     optional<T> prev_value(int l, int r, T x) const {
         int c = count_less(l, r, x);
         if (c == 0) return nullopt;
         return kth_smallest(l, r, c - 1);
     }
+    // next_value(l, r, x) : x 以上で最小の値
     optional<T> next_value(int l, int r, T x) const {
         int c = count_less(l, r, x);
         if (c == r - l) return nullopt;

@@ -30,11 +30,15 @@ using namespace std;
 //                   負閉路を通っていくらでも小さくできるなら BFResult<T>::NEG_INF
 //   r.neg_cycle     s から行ける負閉路があるか
 // 典型: 「t までのスコアをいくらでも大きくできるなら inf と出力」→ スコアを -1 倍して r.dist[t] == NEG_INF か判定
+// ◆ BEdge<T> : 有向辺 {from: 始点, to: 終点, cost: 重み}（無向の辺は逆向きも別に入れる）
 template <class T> struct BEdge {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/shortest_path.cpp
     int from, to;
     T cost;
 };
+// ◆ BFResult<T> : bellman_ford の結果
+//   dist[v]   : 最短距離。行けなければ INF、負閉路でいくらでも小さくできるなら NEG_INF
+//   neg_cycle : 始点から行ける負閉路があるか
 template <class T> struct BFResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/shortest_path.cpp
     static constexpr T INF = numeric_limits<T>::max() / 4;
@@ -42,6 +46,11 @@ template <class T> struct BFResult {
     vector<T> dist;
     bool neg_cycle;
 };
+// ◆ bellman_ford(n, es, s) : 負の辺があってもよい単一始点最短路。O(NM)
+//   n  : 頂点数
+//   es : 辺の一覧（vector<BEdge<T>>）。{ } で直接書くなら bellman_ford<long long>(...) と型を書く
+//   s  : 始点
+//   注意 : 重みの絶対値 × 辺の本数 が T の最大値の 1/4 を超えないこと
 template <class T>
 BFResult<T> bellman_ford(int n, const vector<BEdge<T>>& es, int s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/shortest_path.cpp
@@ -72,6 +81,8 @@ BFResult<T> bellman_ford(int n, const vector<BEdge<T>>& es, int s) {
 //   bool neg = warshall_floyd(d);              // d[i][j] が i から j への最短距離になる（到達不能は WF_INF のまま）
 //   neg が true なら負閉路がある（そのときの d は意味を持たない）
 template <class T> constexpr T WF_INF = numeric_limits<T>::max() / 4;
+// ◆ wf_matrix<T>(n) : ワーシャルフロイド用の n × n の行列（対角 0、他は WF_INF）を作る
+//   n : 頂点数。辺は d[a][b] = min(d[a][b], c) で入れる（多重辺に備えて min を取る）
 template <class T>
 vector<vector<T>> wf_matrix(int n) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/shortest_path.cpp
@@ -79,6 +90,9 @@ vector<vector<T>> wf_matrix(int n) {
     for (int i = 0; i < n; i++) d[i][i] = 0;
     return d;
 }
+// ◆ warshall_floyd(d) : 全点対の最短距離。O(N^3)（N <= 500 くらい）
+//   d : wf_matrix で作り辺を入れた行列。この関数が d を最短距離に書き換える（行けない組は WF_INF のまま）
+//   返り値 : 負閉路があれば true（そのときの d は使えない）
 template <class T>
 bool warshall_floyd(vector<vector<T>>& d) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/shortest_path.cpp
@@ -96,6 +110,10 @@ bool warshall_floyd(vector<vector<T>>& d) {
 
 // --- 削除可: 辺を 1 本追加したときの更新 O(N^2)（クエリごとに辺が増える問題） ---
 // warshall_floyd 済みの d に、辺 a -> b コスト c（無向なら undirected = true）を追加する
+// ◆ wf_add_edge(d, a, b, c, undirected) : 最短距離にした d に辺を 1 本足して O(N^2) で更新する
+//   d          : warshall_floyd 済みの行列（書き換わる）
+//   a, b, c    : 足す辺 a → b、重み c
+//   undirected : true（既定）なら b → a も足す。有向なら false
 template <class T>
 void wf_add_edge(vector<vector<T>>& d, int a, int b, T c, bool undirected = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/shortest_path.cpp
@@ -122,6 +140,10 @@ void wf_add_edge(vector<vector<T>>& d, int a, int b, T c, bool undirected = true
 //    w'(u→v) = w + h[u] − h[v] >= 0 になる（最短距離の性質 h[v] <= h[u] + w）→ 負の辺が消えるのでダイクストラが使える
 //    本当の距離 = （w' での距離）− h[s] + h[t]
 // 1 始点だけでよいなら、h を求めた後のダイクストラ 1 回で済む（「負の辺があるが、ポテンシャルが最初からわかる」問題で使う形）
+// ◆ johnson(n, es) : 負の辺があるグラフの全点対の最短距離。O(NM log N)（辺が少ないならワーシャルフロイドより速い）
+//   n  : 頂点数
+//   es : 辺の一覧（vector<BEdge<T>>。本体A の BEdge を使う）
+//   返り値 : d[s][t]（行けなければ numeric_limits<T>::max() / 4）。負閉路がどこかにあれば空の vector
 template <class T>
 vector<vector<T>> johnson(int n, const vector<BEdge<T>>& es) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/shortest_path.cpp

@@ -18,6 +18,12 @@ using namespace std;
 // directed    : 有向なら true（a -> b だけ）。無向なら false（両方向）
 // one_indexed : 入力の頂点番号が 1 から始まるなら true（ほとんどの問題）→ 内部では 0 から
 // 例: int n, m; cin >> n >> m; auto g = read_graph(n, m);
+// ◆ read_graph(n, m, directed, one_indexed) : 「a b」が m 行の入力を読み、重みなしの隣接リストを返す
+//   n           : 頂点数（隣接リストの大きさ）
+//   m           : 辺の本数（読む行数）
+//   directed    : true なら a → b だけ入れる。false（既定）なら両方向に入れる
+//   one_indexed : true（既定）なら入力の番号から 1 引いて 0 始まりにする。入力が 0 始まりなら false
+//   注意 : n, m を先に cin で読んでから呼ぶ（この関数は辺の行だけを読む）
 vector<vector<int>> read_graph(int n, int m, bool directed = false, bool one_indexed = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph_input.cpp
     vector<vector<int>> g(n);
@@ -33,6 +39,8 @@ vector<vector<int>> read_graph(int n, int m, bool directed = false, bool one_ind
 
 // ---------- 削除可: 木（辺が n-1 本。本体A が必要） ----------
 // 例: int n; cin >> n; auto g = read_tree(n);
+// ◆ read_tree(n, one_indexed) : 頂点 n 個・辺 n−1 本の木を読む（無向の隣接リスト）
+//   n : 頂点数（読むのは n−1 行）、one_indexed : read_graph と同じ
 vector<vector<int>> read_tree(int n, bool one_indexed = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph_input.cpp
     return read_graph(n, n - 1, false, one_indexed);
@@ -40,6 +48,9 @@ vector<vector<int>> read_tree(int n, bool one_indexed = true) {
 
 // ---------- 削除可: 親の列で与えられる木「p_2 p_3 ... p_n」（頂点 i の親が p_i） ----------
 // 返り値は無向の隣接リスト（tree.cpp や rerooting.cpp にそのまま渡せる形）
+// ◆ read_parents(n, one_indexed) : 「p_2 p_3 … p_n」（頂点 i の親が p_i）の形の木を読む（無向の隣接リスト）
+//   n : 頂点数（読むのは n−1 個の数）。頂点 1（0 始まりでは 0）が根
+//   one_indexed : 親の番号が 1 始まりなら true（既定）
 vector<vector<int>> read_parents(int n, bool one_indexed = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph_input.cpp
     vector<vector<int>> g(n);
@@ -59,6 +70,10 @@ vector<vector<int>> read_parents(int n, bool one_indexed = true) {
 //     dijkstra.cpp の WGraph に入れるなら E = WEdge<T> を指定する
 // 例: auto g = read_wgraph<long long>(n, m);                    // g[a] に {b, c}
 //     auto g = read_wgraph<long long, WEdge<long long>>(n, m);  // そのまま dijkstra(g, s) に渡せる
+// ◆ read_wgraph<T, E>(n, m, directed, one_indexed) : 「a b c」が m 行の入力を読み、重み付き隣接リストを返す
+//   T : 重みの型（long long など。必ず書く）
+//   E : 辺の型。省略すると pair<int, T>（{行き先, 重み}）。dijkstra に渡すなら WEdge<T>
+//   n, m, directed, one_indexed : read_graph と同じ
 template <class T, class E = pair<int, T>>
 vector<vector<E>> read_wgraph(int n, int m, bool directed = false, bool one_indexed = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph_input.cpp
@@ -77,6 +92,8 @@ vector<vector<E>> read_wgraph(int n, int m, bool directed = false, bool one_inde
 // ---------- 本体C: グリッド ----------
 // 入力が h 行の文字列のとき
 // 例: int h, w; cin >> h >> w; auto S = read_grid(h);
+// ◆ read_grid(h) : h 行の文字列（空白を含まない）を読む
+//   h : 行数（h, w は先に読んでおく）
 vector<string> read_grid(int h) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph_input.cpp
     vector<string> s(h);

@@ -28,6 +28,13 @@ using namespace std;
 //   条件を満たす区間の個数         = Σ (R[l] - l)
 //   条件を満たす最長の区間の長さ   = max (R[l] - l)
 //   「和が K 以上」になる最短区間  → 条件を「和が K 未満」にして、R[l] < n なら [l, R[l] + 1) が最短
+// ◆ two_pointers(n, can_push, push, pop) : 尺取り法。各左端 l について、条件を満たす最大の右端を求める。O(N)
+//   n        : 配列の長さ
+//   can_push : bool can_push(int r)。今の区間に a[r] を加えても条件を満たすか（区間の状態はラムダの外の変数に持つ）
+//   push     : void push(int r)。区間に a[r] を加えたとして状態を更新
+//   pop      : void pop(int l)。区間から a[l] を取り除いたとして状態を更新
+//   注意 : 「区間を縮めても条件は満たされたまま」（単調性）が成り立つこと。そうでないと尺取り法は使えない
+//   返り値 : R[l] = [l, R[l]) が条件を満たす最大の右端
 template <class CanPush, class Push, class Pop>
 vector<int> two_pointers(int n, CanPush can_push, Push push, Pop pop) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/two_pointers.cpp

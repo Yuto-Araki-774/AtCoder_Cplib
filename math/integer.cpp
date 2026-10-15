@@ -30,6 +30,9 @@ using namespace std;
 // ipow_cap(a, n, cap) : min(a^n, cap)。a >= 0。途中でオーバーフローしない
 //                       「a^n が X を超えるか」の判定に使う: ipow_cap(a, n, X + 1) > X
 // pow_mod64(a, n, m)  : a^n mod m。m が 1e18 程度まで OK（128 bit で掛け算）
+// ◆ ipow(a, n) : a^n（mod なし）。O(log n)
+//   a : 底（負でもよい）、n : 指数（0 以上。負は不可）
+//   注意 : 答えが long long に収まること（収まらないなら ipow_cap か pow_mod64）
 long long ipow(long long a, long long n) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     long long r = 1;
@@ -40,6 +43,8 @@ long long ipow(long long a, long long n) {
     }
     return r;
 }
+// ◆ ipow_cap(a, n, cap) : min(a^n, cap)。途中であふれない。O(min(n, 63))
+//   a : 底（0 以上）、n : 指数（0 以上）、cap : 上限（1 以上）
 long long ipow_cap(long long a, long long n, long long cap) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     __int128 r = 1;
@@ -50,6 +55,8 @@ long long ipow_cap(long long a, long long n, long long cap) {
     }
     return (long long)r;
 }
+// ◆ pow_mod64(a, n, m) : a^n mod m（128 bit で掛け算するので m は 1e18 程度まで）。O(log n)
+//   a : 底（負でもよい）、n : 指数（0 以上）、m : mod（1 以上）
 long long pow_mod64(long long a, long long n, long long m) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     __int128 r = 1 % m, x = ((a % m) + m) % m;
@@ -66,6 +73,9 @@ long long pow_mod64(long long a, long long n, long long m) {
 // 使い道: 「a * x ≡ c (mod m) を解く」「mod が素数でないときの逆元」「ax + by = c の整数解」
 //   例: a * x + b * y = c の解は c % g == 0 のとき x0 = x * (c / g), y0 = y * (c / g)
 //       一般解は x0 + k * (b / g), y0 - k * (a / g)（k は整数）
+// ◆ ext_gcd(a, b, x, y) : g = gcd(a, b) を返し、a x + b y = g となる x, y を入れる。O(log)
+//   a, b : 0 以上の整数（両方 0 なら g = 0）
+//   x, y : 答えを入れる変数（参照）。|x| <= b, |y| <= a 程度の小さい解が入る
 long long ext_gcd(long long a, long long b, long long& x, long long& y) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     if (b == 0) { x = 1, y = 0; return a; }
@@ -79,6 +89,7 @@ long long ext_gcd(long long a, long long b, long long& x, long long& y) {
 // floor_div(a, b) : floor(a / b)。負の数でも正しい（C++ の / は 0 方向に丸めるので負で 1 ずれる）
 // ceil_div(a, b)  : ceil(a / b)。負の数でも正しい
 // mod_pos(a, m)   : a mod m を 0 〜 m-1 で返す（C++ の % は負の数で負になる）
+// ◆ isqrt(n) : floor(√n)。n : 0 以上（誤差なし）
 long long isqrt(long long n) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     long long r = sqrtl((long double)n);
@@ -86,14 +97,17 @@ long long isqrt(long long n) {
     while ((__int128)(r + 1) * (r + 1) <= n) r++;      // ★ 小さすぎたら上げる
     return r;
 }
+// ◆ floor_div(a, b) : floor(a / b)。a, b : 負でもよい（b ≠ 0）
 long long floor_div(long long a, long long b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     return a / b - ((a % b != 0) && ((a < 0) != (b < 0)));  // ★ 割り切れず符号が違うと 0 方向に丸められている
 }
+// ◆ ceil_div(a, b) : ceil(a / b)。a, b : 負でもよい（b ≠ 0）
 long long ceil_div(long long a, long long b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     return a / b + ((a % b != 0) && ((a < 0) == (b < 0)));
 }
+// ◆ mod_pos(a, m) : a mod m を 0..m−1 で返す。a : 負でもよい、m : 1 以上
 long long mod_pos(long long a, long long m) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     long long r = a % m;
@@ -105,6 +119,9 @@ long long mod_pos(long long a, long long m) {
 //                       b >= 2 なら x >= 0。b <= -2（負の進数、例: -2 進数）なら x は負でもよい
 // from_base(digits, b)  桁の列（上の桁から）を数に戻す（long long に収まること）
 // to_base_str(x, b)     文字列で返す（10 以上の桁は 'A', 'B', ...）。|b| <= 36
+// ◆ to_base(x, b) : x を b 進数にした桁の列（上の桁から。x = 0 なら {0}）
+//   x : 変換する数（b >= 2 なら 0 以上。b <= −2 なら負でもよい）
+//   b : 基数（2 以上、または −2 以下。−1, 0, 1 は assert で止まる）
 vector<int> to_base(long long x, long long b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     assert(b >= 2 || b <= -2);
@@ -120,12 +137,16 @@ vector<int> to_base(long long x, long long b) {
     reverse(d.begin(), d.end());
     return d;
 }
+// ◆ from_base(d, b) : 桁の列（上の桁から）を数に戻す
+//   d : 各桁（0..|b|−1）、b : 基数（負でもよい）。結果が long long に収まること
 long long from_base(const vector<int>& d, long long b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     long long x = 0;
     for (int c : d) x = x * b + c;  // ★ 上の桁から「b 倍して足す」
     return x;
 }
+// ◆ to_base_str(x, b) : to_base の結果を文字列で（10 以上の桁は A, B, ...）
+//   x, b : to_base と同じ（|b| <= 36）
 string to_base_str(long long x, long long b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     string s;

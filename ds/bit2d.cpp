@@ -21,23 +21,32 @@ using namespace std;
 //   bit.sum(r1, c1, r2, c2)        行 [r1, r2) × 列 [c1, c2) の和
 //   bit.prefix(r, c)               行 [0, r) × 列 [0, c) の和
 // 典型: 「点の追加」と「長方形の中の点の個数」が交互に来る。座標が大きいなら座標圧縮してから
+// ◆ struct BIT2D : 2 次元 BIT（1 点に加算、長方形の和）。各操作 O(log H log W)
+//   BIT2D(H, W)              : H 行 W 列、全部 0。メモリ O(HW)
+//   add(i, j, x)             : マス (i, j) に x を足す
+//   sum(r1, c1, r2, c2)      : 行 [r1, r2) × 列 [c1, c2) の和
+//   prefix(r, c)             : 行 [0, r) × 列 [0, c) の和
 template <class T>
 struct BIT2D {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/bit2d.cpp
     int h, w;
     vector<vector<T>> d;  // 1-indexed で持つ
+    // h_, w_ : 行数・列数（座標が大きいなら座標圧縮してから）
     BIT2D(int h_, int w_) : h(h_), w(w_), d(h_ + 1, vector<T>(w_ + 1, T(0))) {}
+    // add(i, j, x) : i : 行 0..H−1、j : 列 0..W−1、x : 足す値
     void add(int i, int j, T x) {
         for (int a = i + 1; a <= h; a += a & -a)      // ★ 行方向に BIT
             for (int b = j + 1; b <= w; b += b & -b)  // ★ その中で列方向に BIT
                 d[a][b] += x;
     }
+    // prefix(r, c) : r : 0..H、c : 0..W
     T prefix(int r, int c) const {
         T s = T(0);
         for (int a = r; a > 0; a -= a & -a)
             for (int b = c; b > 0; b -= b & -b) s += d[a][b];
         return s;
     }
+    // sum(r1, c1, r2, c2) : 空の範囲なら 0
     T sum(int r1, int c1, int r2, int c2) const {
         if (r1 >= r2 || c1 >= c2) return T(0);
         return prefix(r2, c2) - prefix(r1, c2) - prefix(r2, c1) + prefix(r1, c1);  // ★ 2 次元累積和と同じ包除原理

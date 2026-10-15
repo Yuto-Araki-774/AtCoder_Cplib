@@ -26,11 +26,17 @@ using namespace std;
 // 祖先をたどる書き方:
 //   for (int c = v; c != -1; c = cd.cpar[c]) { int d = cd.dist[v][cd.level[c]]; ... }   // c は v の祖先の重心、d = dist(v, c)
 // 典型（使用例にあり）: 「頂点を赤く塗る」「v から一番近い赤い頂点までの距離」が交互に来る → 1 回 O(log N)
+// ◆ struct CentroidDecomposition : 重心分解（重心木を作る）。O(N log N)、再帰なし
+//   CentroidDecomposition(g) : g は木の隣接リスト（両方向、頂点 0..n−1。n >= 1）
+//   root                     : 重心木の根
+//   cpar[v], level[v]        : 重心木での親（根は −1）、深さ（根が 0）
+//   dist[v][k]               : v から「重心木での v の祖先のうち深さ k のもの」までの元の木での距離
 struct CentroidDecomposition {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp
     int n, root = -1;
     vector<int> cpar, level;
     vector<vector<int>> dist;
+    // g : 木の隣接リスト（両方向）
     CentroidDecomposition(const vector<vector<int>>& g) : n(g.size()), cpar(n, -1), level(n, 0), dist(n) {
         vector<bool> removed(n, false);
         vector<int> sz(n), par(n);
@@ -75,10 +81,15 @@ struct CentroidDecomposition {
 //   cc.count(v, k)            dist(v, u) <= k となる u の重みの和（u = v も含む）。O(log N)
 // ★ v の祖先の重心 c ごとに「c の成分で c から距離 k − dist(v, c) 以内」を足す。
 //    ただし v と同じ側（子の成分）の頂点は c を通らないので、その分を引く（同じ頂点を 2 回数えないように）
+// ◆ struct CentroidCount : 距離 k 以内の頂点の数（重みの和）
+//   CentroidCount(cd, w) : 前計算 O(N log N)
+//   count(v, k)          : dist(v, u) <= k となる u の重みの和（u = v を含む）。O(log N)
 struct CentroidCount {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp
     const CentroidDecomposition& cd;
     vector<vector<long long>> A, Bm;  // A[c][d] = c の成分で c から距離 d 以下の重みの和、Bm[ch][d] = ch の成分で「親の重心」から距離 d 以下の和
+    // cd_ : 作ってある CentroidDecomposition（参照で持つので、cd_ を先に作って残しておく）
+    // w   : 各頂点の重み（省略すると全部 1 = 頂点の個数）。作った後に重みは変えられない
     CentroidCount(const CentroidDecomposition& cd_, vector<long long> w = {}) : cd(cd_), A(cd_.n), Bm(cd_.n) {
         int n = cd.n;
         if (w.empty()) w.assign(n, 1);
@@ -97,10 +108,12 @@ struct CentroidCount {
         for (auto& a : A) for (int i = 1; i < (int)a.size(); i++) a[i] += a[i - 1];  // 累積和にしておく
         for (auto& b : Bm) for (int i = 1; i < (int)b.size(); i++) b[i] += b[i - 1];
     }
+    // （内部用）累積和の d 番目まで
     static long long upto(const vector<long long>& a, long long d) {  // a の d 番目まで（d < 0 なら 0）
         if (d < 0 || a.empty()) return 0;
         return a[min<long long>(d, (long long)a.size() - 1)];
     }
+    // count(v, k) : v : 中心の頂点、k : 距離の上限（負なら 0 を返す）
     long long count(int v, long long k) const {
         long long res = 0;
         int prev = -1;

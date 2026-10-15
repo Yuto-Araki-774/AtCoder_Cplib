@@ -23,16 +23,27 @@ using namespace std;
 //   uf.same(a, b, t)     時刻 t で a と b がつながっていたか
 //   uf.size(x, t)        時刻 t での x の成分の大きさ
 //   uf.first_time(a, b)  a と b が初めてつながった時刻（まだなら -1）。O(log Q log N)
+// ◆ struct PersistentUnionFind : 部分永続 UnionFind（過去の時刻のつながりも聞ける）。各操作 O(log N)
+//   PersistentUnionFind(n) : 頂点 0..n−1、時刻 0
+//   unite(a, b)            : 時刻を 1 進めて a と b をつなぐ。新しくつないだら true
+//   find(x, t)             : 時刻 t での x の根
+//   same(a, b, t)          : 時刻 t でつながっていたか
+//   size(x, t)             : 時刻 t での x の成分の頂点数
+//   first_time(a, b)       : a と b が初めてつながった時刻（まだなら −1）
+//   now                    : 今の時刻（unite を呼んだ回数）
 struct PersistentUnionFind {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/persistent_union_find.cpp
     int now = 0;
     vector<int> par, when;               // when[x] = x が根でなくなった時刻（根なら INT_MAX）
     vector<vector<pair<int, int>>> hist;  // hist[r] = {時刻, その時刻からの成分の大きさ} の履歴（r が根の間）
+    // n : 頂点数
     PersistentUnionFind(int n) : par(n), when(n, INT_MAX), hist(n, {{0, 1}}) { iota(par.begin(), par.end(), 0); }
+    // find(x, t) : x : 頂点、t : 時刻（0 = 何もつないでいない状態、t = t 回目の unite の直後）
     int find(int x, int t) const {
         while (when[x] <= t) x = par[x];  // ★ 時刻 t までに親ができていたら上へ（それより後の併合は見ない）
         return x;
     }
+    // unite(a, b) : 今の時刻に対してだけつなげる（過去は変えられない）。同じ成分でも時刻は 1 進む
     bool unite(int a, int b) {
         now++;
         a = find(a, now), b = find(b, now);
@@ -42,12 +53,15 @@ struct PersistentUnionFind {
         hist[a].push_back({now, hist[a].back().second + hist[b].back().second});
         return true;
     }
+    // same(a, b, t) : t : 時刻（0..now）
     bool same(int a, int b, int t) const { return find(a, t) == find(b, t); }
+    // size(x, t) : t : 時刻（0..now）
     int size(int x, int t) const {
         int r = find(x, t);
         auto it = upper_bound(hist[r].begin(), hist[r].end(), make_pair(t, INT_MAX));  // 時刻 t 以前の最後の記録
         return prev(it)->second;
     }
+    // first_time(a, b) : 二分探索で求める。a == b なら 0
     int first_time(int a, int b) const {
         if (!same(a, b, now)) return -1;
         int lo = -1, hi = now;  // same(a, b, hi) は true、same(a, b, lo) は false（lo = -1 は番兵）

@@ -23,11 +23,18 @@ using namespace std;
 //   r.vs    通る頂点の順番（長さ M + 1）。閉路なら vs.front() == vs.back()
 //   r.es    通る辺の番号の順番（長さ M）
 // 辺が 0 本なら ok = true、vs = {始点}（s 未指定なら 0）
+// ◆ EulerResult : euler_path の結果。ok : 一筆書きできるか、vs : 通る頂点の順（M + 1 個）、es : 通る辺の番号の順（M 個）
 struct EulerResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/euler_path.cpp
     bool ok;
     vector<int> vs, es;
 };
+// ◆ euler_path(n, edges, directed, s) : すべての辺をちょうど 1 回ずつ通る道（一筆書き）を求める。O(N + M)
+//   n        : 頂点数（辺のない頂点があってもよい）
+//   edges    : 辺 {a, b} の一覧（辺の番号 = この配列の添字）。多重辺・自己ループもよい
+//   directed : true なら有向（a → b だけ）、false なら無向
+//   s        : 始点を決めたいとき（既定 −1 = おまかせ）。その頂点から始められなければ ok = false
+//   注意 : 辺のある頂点が全部つながっていないと ok = false
 EulerResult euler_path(int n, const vector<pair<int, int>>& edges, bool directed, int s = -1) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/euler_path.cpp
     int m = edges.size();

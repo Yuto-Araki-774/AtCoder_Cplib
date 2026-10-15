@@ -20,6 +20,9 @@ using namespace std;
 // ---------- 本体A: bit 全探索（N 個それぞれ「選ぶ / 選ばない」の 2^N 通り） ----------
 // f(mask) が 2^n 回呼ばれる。i 番目を選んでいるかは (mask >> i & 1)
 // 例: bit_search(n, [&](int mask) { long long s = 0; for (int i = 0; i < n; i++) if (mask >> i & 1) s += a[i]; ... });
+// ◆ bit_search(n, f) : n 個それぞれを選ぶ / 選ばないの 2^n 通りすべてで f(mask) を呼ぶ。O(2^n)
+//   n : 要素の個数（n <= 20 くらいまで。int の mask なので n <= 30 が上限）
+//   f : void f(int mask)。i 番目を選んでいるか = (mask >> i & 1)
 template <class F>
 void bit_search(int n, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/brute_force.cpp
@@ -29,6 +32,9 @@ void bit_search(int n, F f) {
 // ---------- 本体B: 順列全探索（0, 1, ..., n-1 の並べ方 n! 通り） ----------
 // f(p) が n! 回呼ばれる。p は {0, ..., n-1} の並べ替え（辞書順）
 // 例: 巡回セールスマン（小さい N）、並べ方を全部試す問題
+// ◆ perm_search(n, f) : 0..n−1 の並べ方 n! 通りすべてで f(p) を呼ぶ（辞書順）
+//   n : 要素の個数（n <= 10 くらいまで。10! = 約 360 万）
+//   f : void f(const vector<int>& p)。p[i] = i 番目に来るもの。p を書き換えないこと（列挙が壊れる）
 template <class F>
 void perm_search(int n, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/brute_force.cpp
@@ -42,6 +48,9 @@ void perm_search(int n, F f) {
 // f(d) が呼ばれる。d[i] は 0 〜 base[i]-1
 // 例: N 個をそれぞれ 3 グループのどれかに入れる → product_search(vector<int>(n, 3), f)
 //     重複順列（1〜K の数字を N 個並べる）→ product_search(vector<int>(n, K), f)
+// ◆ product_search(base, f) : 各位置 i に 0..base[i]−1 のどれかを入れる、すべての組（Π base[i] 通り）で f(d) を呼ぶ
+//   base : 各位置の選択肢の数。全部同じなら vector<int>(n, K)。どれかが 0 だと 1 回目の f が範囲外を含むので 1 以上にする
+//   f    : void f(const vector<int>& d)。d[i] = 位置 i に入れたもの。d を書き換えないこと
 template <class F>
 void product_search(const vector<int>& base, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/brute_force.cpp
@@ -57,6 +66,9 @@ void product_search(const vector<int>& base, F f) {
 
 // ---------- 本体D: 組合せ全探索（0 〜 n-1 から k 個選ぶ nCk 通り） ----------
 // f(c) が呼ばれる。c は選んだ番号の昇順の列（辞書順）
+// ◆ comb_search(n, k, f) : 0..n−1 から k 個選ぶ nCk 通りすべてで f(c) を呼ぶ（辞書順）
+//   n, k : k が 0..n の外なら何もしない。k = 0 なら空の c で 1 回だけ呼ぶ
+//   f    : void f(const vector<int>& c)。c = 選んだ番号（昇順）。c を書き換えないこと
 template <class F>
 void comb_search(int n, int k, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/brute_force.cpp
@@ -76,6 +88,9 @@ void comb_search(int n, int k, F f) {
 // ---------- 本体E: 部分集合の列挙（mask の部分集合をすべて。bit DP で使う） ----------
 // f(sub) が mask の部分集合（mask 自身と 0 を含む）ごとに大きい順に呼ばれる
 // すべての mask について回すと全体で 3^n 回
+// ◆ subset_search(mask, f) : mask の部分集合すべて（mask 自身と 0 を含む）で f(sub) を呼ぶ（大きい順）
+//   mask : 元の集合（bit で表す）
+//   f    : void f(int sub)
 template <class F>
 void subset_search(int mask, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/brute_force.cpp

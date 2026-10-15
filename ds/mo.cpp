@@ -26,13 +26,22 @@ using namespace std;
 //   erase(i) : 位置 i が区間から出た（状態を更新）
 //   out(q)   : 今の区間がクエリ q の区間になっている。答えを ans[q] に記録する
 // 左から入る・右から入るで処理を変える必要があるときは run4 を使う
+// ◆ struct Mo : Mo's algorithm（区間クエリをオフラインで並べ替え、区間を少しずつ動かして答える）。O((N + Q) √N)
+//   Mo(n)                    : 配列の長さ n
+//   add_query(l, r)          : 区間 [l, r) のクエリを追加（追加した順に 0, 1, ... の番号）
+//   run(add, erase, out)     : 全クエリを処理する
+//   run4(add_left, add_right, erase_left, erase_right, out) : 左右で処理を変えたいとき
 struct Mo {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/mo.cpp
     int n;
     vector<pair<int, int>> qs;
+    // n_ : 配列の長さ
     Mo(int n_) : n(n_) {}
+    // add_query(l, r) : 0 <= l <= r <= n
     void add_query(int l, int r) { qs.push_back({l, r}); }
 
+    // run4(...) : add_left(i) / add_right(i) : 位置 i が左端 / 右端から区間に入った、
+    //             erase_left(i) / erase_right(i) : 位置 i が左端 / 右端から出た、out(q) : 今の区間がクエリ q
     template <class AL, class AR, class EL, class ER, class Out>
     void run4(AL add_left, AR add_right, EL erase_left, ER erase_right, Out out) {
         int q = qs.size();
@@ -54,6 +63,10 @@ struct Mo {
             out(i);
         }
     }
+    // run(add, erase, out) :
+    //   add(i)   : 位置 i が区間に入った（状態を更新）
+    //   erase(i) : 位置 i が区間から出た（状態を更新）
+    //   out(q)   : 今の区間がクエリ q の区間になった。答えを ans[q] に記録する
     template <class Add, class Erase, class Out>
     void run(Add add, Erase erase, Out out) { run4(add, add, erase, erase, out); }
 };

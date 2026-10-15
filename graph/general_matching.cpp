@@ -15,17 +15,24 @@ using namespace std;
 // ---------- 本体 ----------
 // GeneralMatching gm(n);  gm.add_edge(a, b);  int k = gm.solve();
 //   k = マッチングの大きさ（辺の本数）、gm.mate[v] = v の相手（いなければ -1）
+// ◆ struct GeneralMatching : 一般グラフの最大マッチング（Edmonds の花アルゴリズム）。O(N^3)
+//   GeneralMatching(n) : 頂点 0..n−1
+//   add_edge(a, b)     : 無向辺を足す（自己ループは無視）
+//   solve()            : 最大マッチングの辺の本数。mate[v] に相手（いなければ −1）が入る
 struct GeneralMatching {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/general_matching.cpp
     int n;
     vector<vector<int>> g;
     vector<int> mate, par, base;
     vector<bool> used, blossom;
+    // n_ : 頂点数（N <= 500 くらいまで）
     GeneralMatching(int n_) : n(n_), g(n_), mate(n_, -1) {}
+    // add_edge(a, b) : a, b : 端点（多重辺は 1 本と同じ）
     void add_edge(int a, int b) {
         if (a == b) return;
         g[a].push_back(b), g[b].push_back(a);
     }
+    // （内部用）交互木での 2 頂点の共通の祖先
     int lca(int a, int b) {  // 交互木の上で、2 頂点（の花）の共通の祖先
         vector<bool> seen(n, false);
         while (true) {
@@ -40,6 +47,7 @@ struct GeneralMatching {
             b = par[mate[b]];
         }
     }
+    // （内部用）花を縮めるときの印付け
     void mark_path(int v, int b, int child) {  // v から花の根 b までの頂点に「花の中」の印を付ける
         while (base[v] != b) {
             blossom[base[v]] = blossom[base[mate[v]]] = true;
@@ -48,6 +56,7 @@ struct GeneralMatching {
             v = par[mate[v]];
         }
     }
+    // （内部用）root から増加路を探す
     int find_path(int root) {  // root から増加路を BFS で探し、終点を返す（なければ -1）
         used.assign(n, false), par.assign(n, -1), base.resize(n);
         iota(base.begin(), base.end(), 0);
@@ -77,6 +86,7 @@ struct GeneralMatching {
         }
         return -1;
     }
+    // solve() : 辺を全部足してから呼ぶ。返り値 = マッチングの本数
     int solve() {
         for (int v = 0; v < n; v++)  // 最初に貪欲にマッチさせておく（速くなる）
             if (mate[v] == -1)

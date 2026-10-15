@@ -32,6 +32,14 @@ using mint = atcoder::modint1000000007;
 //
 // 例: 各桁の和が D の倍数の個数   S = D, init = 0, trans(s, d) = (s + d) % D, 答え = cnt[0]（0 を含む）
 // 例: 3 を含まない数の個数        S = 1, init = 0, trans(s, d) = (d == 3 ? -1 : 0), 答え = cnt[0]
+// ◆ digit_dp<T>(N, S, init, trans) : 桁 DP の枠。0 以上 N 以下の整数を、状態ごとに数える。O(桁数 × S × 10)
+//   T     : 個数の型（long long か mint。必ず書く）
+//   N     : 上限（10 進数の文字列。先頭に余分な 0 がないこと。long long なら to_string(N)）
+//   S     : 状態の数（状態は 0..S−1）
+//   init  : 最初の状態（0..S−1）
+//   trans : int trans(int s, int d)。状態 s で次の桁 d（0..9）を読んだ後の状態。−1 を返すとその数は数えない
+//           S 以上を返すと assert で止まる
+//   返り値 : cnt[s] = 読み終わったとき状態が s になる数の個数（x は N と同じ桁数になるよう上に 0 を詰めて読む）
 template <class T, class F>
 vector<T> digit_dp(const string& N, int S, int init, F trans) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/digit_dp.cpp

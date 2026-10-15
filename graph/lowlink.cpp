@@ -24,6 +24,13 @@ using namespace std;
 //   ll.is_art[v]     頂点 v が関節点か
 //   ll.articulation  関節点の一覧
 //   ll.edges[e]      辺 e の両端 {a, b}
+// ◆ struct LowLink : 無向グラフの橋・関節点・二重辺連結成分・二重頂点連結成分（再帰なし）
+//   LowLink(n)        : 頂点 0..n−1
+//   add_edge(a, b)    : 無向辺を足し、その辺の番号（0 から順）を返す
+//   build()           : 橋・関節点を求める（辺を全部足してから 1 回呼ぶ）。O(N + M)
+//   two_edge_cc()     : 二重辺連結成分の番号（build の後に呼ぶ）
+//   bcc()             : 二重頂点連結成分（ブロック）ごとの頂点の一覧（build なしで呼べる）
+//   block_cut_tree()  : Block-Cut Tree の隣接リスト
 struct LowLink {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/lowlink.cpp
     int n;
@@ -32,7 +39,9 @@ struct LowLink {
     vector<int> ord, low, bridges, articulation;
     vector<bool> is_bridge, is_art;
 
+    // n_ : 頂点数（つながっていなくてもよい）
     LowLink(int n_) : n(n_), g(n_) {}
+    // add_edge(a, b) : a, b : 端点（多重辺もよい）。返り値 = 辺の番号（is_bridge の添字）
     int add_edge(int a, int b) {
         int id = edges.size();
         g[a].push_back({b, id}), g[b].push_back({a, id});
@@ -40,6 +49,7 @@ struct LowLink {
         return id;
     }
 
+    // build() : 橋（is_bridge, bridges）と関節点（is_art, articulation）を求める。add_edge をすべて終えてから呼ぶ
     void build() {
         // ord[v] : DFS で訪れた順番
         // low[v] : v から「DFS 木の子へ下る辺」を何本か + 「後退辺」を 1 本まで使って戻れる最小の ord
@@ -84,6 +94,7 @@ struct LowLink {
     // --- 削除可: 二重辺連結成分分解（build の後に呼ぶ） ---
     // 橋をすべて取り除いたときの連結成分。comp[v] = v の成分番号（0 から）
     // 成分を頂点、橋を辺にすると木（森）になる（橋木）
+    // two_edge_cc() : build の後に呼ぶ。返り値 comp[v] = 橋を全部消したときの成分番号
     vector<int> two_edge_cc() const {
         vector<int> comp(n, -1);
         int c = 0;
@@ -107,6 +118,7 @@ struct LowLink {
     // block_cut_tree() : 頂点 0..n-1 = 元の頂点、n.. = ブロック。元の頂点とそれを含むブロックを辺で結んだ森（隣接リスト）
     //   ★ 関節点 v を取り除くと、v を含んでいた成分は「v を含むブロックの数」個に分かれる
     //   ★ 2 頂点 a, b の間のどの道も必ず通る頂点 = 木の上の a-b のパスにある関節点
+    // bcc() : 返り値 = ブロックごとの頂点の一覧（自己ループは無視）
     vector<vector<int>> bcc() const {
         vector<int> ord2(n, -1), low2(n, 0), pe(n, -1), it(n, 0), vst;
         vector<vector<int>> res;
@@ -149,6 +161,7 @@ struct LowLink {
         }
         return res;
     }
+    // block_cut_tree() : 返り値 = 大きさ n + ブロック数 の隣接リスト（頂点 v とブロック n + i を結ぶ）
     vector<vector<int>> block_cut_tree() const {
         auto b = bcc();
         vector<vector<int>> t(n + b.size());

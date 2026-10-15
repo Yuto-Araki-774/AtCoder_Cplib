@@ -18,6 +18,10 @@ using namespace std;
 // auto idom = dominator_tree(g, root);
 //   idom[v] = v の直接支配点（root は root 自身、root から行けない頂点は -1）
 //   支配木で u が v の祖先 ⇔ root から v へのどの道も u を通る
+// ◆ dominator_tree(g, root) : 支配木（root から v へのどの道も通る頂点のうち、v に一番近いもの）。O(M log N)
+//   g    : 有向グラフの隣接リスト（g[v] = v から出る辺の行き先）
+//   root : 始点
+//   返り値 : idom[v] = v の直接支配点（root は root、root から行けない頂点は −1）
 vector<int> dominator_tree(const vector<vector<int>>& g, int root) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dominator_tree.cpp
     int n = g.size();

@@ -27,12 +27,22 @@ using mint = atcoder::modint998244353;
 // 漸化式の使い方（例: a[i+2] = a[i+1] + a[i]）:
 //   ( a[i+2] )   ( 1 1 ) ( a[i+1] )
 //   ( a[i+1] ) = ( 1 0 ) ( a[i]   )   → (a[k+1], a[k]) = A^k (a[1], a[0])
+// ◆ struct Matrix : 行列（積・累乗・ベクトルとの積）
+//   Matrix(n, m)          : n 行 m 列、全部 0
+//   Matrix::identity(n)   : n × n の単位行列
+//   A[i][j]               : 成分の読み書き
+//   A * B                 : 積（A の列数 = B の行数）。O(n m B.m)
+//   A.pow(k)              : A^k（正方行列のみ）。O(n^3 log k)
+//   A.apply(v)            : A × v（列ベクトル。v の長さ = 列数）
+//   T : 要素の型（mint 推奨。long long だと掛け算ですぐあふれる）
 template <class T>
 struct Matrix {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/matrix.cpp
     int n, m;
     vector<vector<T>> a;
+    // n_ : 行数、m_ : 列数
     Matrix(int n_, int m_) : n(n_), m(m_), a(n_, vector<T>(m_, T(0))) {}
+    // identity(n) : n × n の単位行列
     static Matrix identity(int n) {
         Matrix I(n, n);
         for (int i = 0; i < n; i++) I.a[i][i] = T(1);
@@ -41,6 +51,7 @@ struct Matrix {
     vector<T>& operator[](int i) { return a[i]; }
     const vector<T>& operator[](int i) const { return a[i]; }
 
+    // A * b : b の行数が A の列数と同じであること（チェックしない）
     Matrix operator*(const Matrix& b) const {
         Matrix c(n, b.m);
         for (int i = 0; i < n; i++)
@@ -48,6 +59,7 @@ struct Matrix {
                 for (int j = 0; j < b.m; j++) c.a[i][j] += a[i][k] * b.a[k][j];
         return c;
     }
+    // pow(k) : k : 0 以上（0 なら単位行列）。正方行列であること
     Matrix pow(long long k) const {
         Matrix r = identity(n), x = *this;
         while (k > 0) {
@@ -57,6 +69,7 @@ struct Matrix {
         }
         return r;
     }
+    // apply(v) : v : 長さ m の列ベクトル。返り値は長さ n
     vector<T> apply(const vector<T>& v) const {
         vector<T> r(n, T(0));
         for (int i = 0; i < n; i++)

@@ -16,6 +16,12 @@ using namespace std;
 // 【自分で定義するもの】f(i, j) : 行列の (i, j) 成分（ラムダ。行列を作らずに計算で返せばよい）
 // auto pos = monotone_minima<T>(H, W, f);   pos[i] = 行 i の最小値の列（同じ値が複数あれば一番左）
 //   最小値そのものは f(i, pos[i])。最大値がほしいなら f を −1 倍する
+// ◆ monotone_minima<T>(H, W, f) : 各行の最小値の位置が単調な行列で、全行の最小値の位置を求める。O((H + W) log H)
+//   T : 値の型（必ず書く）
+//   H : 行数、W : 列数
+//   f : T f(int i, int j)。行列の (i, j) 成分（行列を作らず計算で返す）
+//   注意 : 行 i の最小値の位置（一番左）が i について単調増加であること（Monge なら成り立つ）
+//   返り値 : pos[i] = 行 i の最小値の列
 template <class T, class F>
 vector<int> monotone_minima(int H, int W, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/monotone_minima.cpp
@@ -42,6 +48,9 @@ vector<int> monotone_minima(int H, int W, F f) {
 // ---------- 削除可: 凸な列との (min, +) 畳み込み O((N + M) log(N + M)) ----------
 // c[k] = min_{i + j = k} (a[i] + b[j])（k = 0..N+M−2）。b は下に凸（b[j+1] − b[j] が増えていく）であること。a は何でもよい
 // 例: 「品物 j 個で b[j]（凸）」と「別の種類で a[i]」を合わせて、合計 k 個の最小コスト
+// ◆ min_plus_convex(a, b) : c[k] = min_{i+j=k} (a[i] + b[j])（長さ N + M − 1）
+//   a : 何でもよい列
+//   b : 下に凸な列（b[j+1] − b[j] が増えていく）。凸でないと答えが壊れる
 template <class T>
 vector<T> min_plus_convex(const vector<T>& a, const vector<T>& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/monotone_minima.cpp

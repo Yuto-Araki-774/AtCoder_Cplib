@@ -24,19 +24,29 @@ using namespace std;
 //   q.push(x), q.erase(x), q.top(), q.pop(), q.size(), q.empty()   どれもならし O(log N)
 //   erase(x) は x が入っているときだけ呼ぶこと（入っていない値を消すと壊れる）
 // 例: 最大値と最小値を両方見たいなら、最大用と最小用の 2 つに同じ値を入れる
+// ◆ struct ErasablePQ : 削除できる優先度付きキュー（既定は最大が先頭）。各操作ならし O(log N)
+//   push(x), erase(x), top(), pop(), size(), empty()
+//   T : 値の型、Cmp : 比べ方（greater<T> で最小が先頭）
 template <class T, class Cmp = less<T>>
 struct ErasablePQ {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/erasable_pq.cpp
     priority_queue<T, vector<T>, Cmp> q, del;  // del = 「消す予定」の値
+    // push(x) : x を入れる
     void push(const T& x) { q.push(x); }
+    // erase(x) : x を 1 つ消す。x が入っているときだけ呼ぶこと（入っていない値を消すと壊れる）
     void erase(const T& x) { del.push(x); }  // ★ すぐには消さず、メモだけしておく
+    // （内部用）先頭にある「消す予定」の値を実際に消す
     void clean() {
         Cmp c;
         while (!del.empty() && !c(q.top(), del.top()) && !c(del.top(), q.top())) q.pop(), del.pop();  // ★ 先頭が「消す予定」なら、ここでまとめて消す
     }
+    // top() : 先頭（空のときに呼ばないこと）
     const T& top() { clean(); return q.top(); }
+    // pop() : 先頭を取り除く（空のときに呼ばないこと）
     void pop() { clean(); q.pop(); }
+    // size() : 入っている個数
     size_t size() const { return q.size() - del.size(); }
+    // empty() : 空か
     bool empty() const { return size() == 0; }
 };
 
@@ -45,13 +55,17 @@ struct ErasablePQ {
 //   tk.insert(x), tk.erase(x)   値の追加・削除 O(log N)（erase は入っている値だけ）
 //   tk.sum                       大きい方から K 個の和（全部で K 個未満なら全部の和）
 // 小さい方から K 個の和が欲しいなら、-x を入れて -tk.sum を使う
+// ◆ struct TopKSum : 大きい方から K 個の和を保つ（値の追加・削除 O(log N)）
+//   TopKSum(K), insert(x), erase(x), sum
 template <class T>
 struct TopKSum {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/erasable_pq.cpp
     int K;
     multiset<T> top, rest;  // top = 大きい方から K 個、rest = 残り
     T sum = T(0);
+    // k : 和を取る個数 K（全部で K 個未満なら全部の和）
     TopKSum(int k) : K(k) {}
+    // insert(x) : x を追加
     void insert(const T& x) {
         top.insert(x), sum += x;
         if ((int)top.size() > K) {  // ★ K 個を超えたら、top の一番小さいものを rest へ
@@ -59,6 +73,7 @@ struct TopKSum {
             sum -= *it, rest.insert(*it), top.erase(it);
         }
     }
+    // erase(x) : x を 1 つ削除（入っている値だけ）
     void erase(const T& x) {
         auto it = rest.find(x);
         if (it != rest.end()) { rest.erase(it); return; }  // ★ rest にあれば和は変わらない
@@ -72,18 +87,23 @@ struct TopKSum {
 
 // ---------- 本体C: 中央値（追加のみ） ----------
 // MedianHeap<long long> mh;  mh.push(x);  mh.median()  （要素が偶数個なら小さい方の中央値）
+// ◆ struct MedianHeap : 中央値（値の追加のみ）。push O(log N)、median O(1)
+//   push(x), median()（偶数個なら小さい方の中央値。空のときに呼ばないこと）, size()
 template <class T>
 struct MedianHeap {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/erasable_pq.cpp
     priority_queue<T> lo;                             // 小さい半分（最大が先頭）
     priority_queue<T, vector<T>, greater<T>> hi;      // 大きい半分（最小が先頭）
+    // push(x) : x を追加
     void push(const T& x) {
         if (lo.empty() || x <= lo.top()) lo.push(x);
         else hi.push(x);
         if (lo.size() > hi.size() + 1) hi.push(lo.top()), lo.pop();  // ★ 個数を lo = hi か hi + 1 に保つ
         else if (hi.size() > lo.size()) lo.push(hi.top()), hi.pop();
     }
+    // median() : 中央値
     T median() const { return lo.top(); }  // ★ 小さい半分の最大 = 中央値
+    // size() : 入っている個数
     size_t size() const { return lo.size() + hi.size(); }
 };
 

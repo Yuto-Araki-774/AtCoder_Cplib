@@ -20,6 +20,10 @@ using namespace std;
 // g : 有向グラフ g[v] = {v -> to の to}
 // 返り値 : 頂点の並び。閉路があれば空
 // lex_min = true で辞書順最小の並び
+// ◆ topological_sort(g, lex_min) : 辺 u → v なら u が先になるように頂点を並べる。O(N + M)（lex_min なら O((N + M) log N)）
+//   g       : 有向グラフの隣接リスト（g[v] = v から出る辺の行き先）
+//   lex_min : true なら並べ方のうち辞書順最小のものを返す（既定 false = どれか 1 つ）
+//   返り値  : 頂点の並び。閉路があれば空
 vector<int> topological_sort(const vector<vector<int>>& g, bool lex_min = false) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp
     int n = g.size();
@@ -45,6 +49,8 @@ vector<int> topological_sort(const vector<vector<int>>& g, bool lex_min = false)
 
 // ---------- 削除可: DAG の最長路 ----------
 // res[v] = v で終わる最長パスの辺数（閉路があれば空）
+// ◆ dag_longest_path(g) : 各頂点で終わる最長の道の辺の本数（重みなし）
+//   g : 有向グラフ（閉路があれば空を返す）
 vector<int> dag_longest_path(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp
     auto ord = topological_sort(g);
@@ -65,6 +71,11 @@ vector<int> dag_longest_path(const vector<vector<int>>& g) {
 //   r.dist[v]       最短（最長）の重みの和
 //   r.path(t)       その道の頂点の並び
 // ふつうのグラフの最長路は難しいが、DAG ならトポロジカル順に DP するだけで求まる
+// ◆ struct DagPathResult : dag_path の結果
+//   ok           : 閉路がなかったか（false なら他は使えない）
+//   dist[v]      : 最短（最長）の重みの和
+//   reachable(v) : 始点から v に行けるか
+//   path(t)      : その道の頂点の並び（行けなければ空）
 template <class T>
 struct DagPathResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp
@@ -72,7 +83,9 @@ struct DagPathResult {
     vector<T> dist;
     vector<int> prev;
     vector<bool> reach;
+    // reachable(v) : v に行けるか
     bool reachable(int v) const { return reach[v]; }
+    // path(t) : t で終わる最短（最長）の道の頂点の並び。t : 終点
     vector<int> path(int t) const {
         if (!reach[t]) return {};
         vector<int> p;
@@ -81,6 +94,10 @@ struct DagPathResult {
         return p;
     }
 };
+// ◆ dag_path<T>(g, s, maximize) : DAG（閉路のない有向グラフ）の重み付き最短路・最長路。O(N + M)
+//   g        : g[v] = {{行き先, 重み}, ...}。負の重みもよい
+//   s        : 始点。−1 なら「どの頂点から始めてもよい」（各頂点だけの長さ 0 の道も含む）
+//   maximize : true なら最長路、false（既定）なら最短路
 template <class T>
 DagPathResult<T> dag_path(const vector<vector<pair<int, T>>>& g, int s, bool maximize = false) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp

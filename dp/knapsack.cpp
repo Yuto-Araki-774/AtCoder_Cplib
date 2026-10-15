@@ -22,6 +22,10 @@ using namespace std;
 
 // ---------- 本体A: 0-1 ナップサック（重さで DP） ----------
 // 返り値: 重さ W 以下での価値の最大値
+// ◆ knapsack_01(w, v, W) : 各品物 1 個までのナップサック（重さで DP）。O(NW)
+//   w : 各品物の重さ（0 以上）、v : 各品物の価値（w と同じ長さ）
+//   W : 重さの上限（配列を W + 1 個作るので 1e5〜1e6 程度まで。大きいなら knapsack_01_by_value）
+//   返り値 : 重さの合計 W 以下での価値の最大
 long long knapsack_01(const vector<int>& w, const vector<long long>& v, int W) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/knapsack.cpp
     vector<long long> dp(W + 1, 0);  // dp[j] = 重さ j 以下での価値の最大
@@ -33,6 +37,9 @@ long long knapsack_01(const vector<int>& w, const vector<long long>& v, int W) {
 
 // ---------- 本体B: 0-1 ナップサック（価値で DP。W が大きいとき） ----------
 // 返り値: 重さ W 以下での価値の最大値
+// ◆ knapsack_01_by_value(w, v, W) : 各品物 1 個まで、W が大きく価値の合計が小さいとき（価値で DP）。O(N Σv)
+//   w : 各品物の重さ、v : 各品物の価値（0 以上。価値の合計を V として配列を V + 1 個作る）
+//   W : 重さの上限（1e18 まで OK）
 long long knapsack_01_by_value(const vector<long long>& w, const vector<int>& v, long long W) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/knapsack.cpp
     int V = accumulate(v.begin(), v.end(), 0);
@@ -48,6 +55,8 @@ long long knapsack_01_by_value(const vector<long long>& w, const vector<int>& v,
 }
 
 // ---------- 本体C: 個数制限なしナップサック ----------
+// ◆ knapsack_unbounded(w, v, W) : 同じ品物を何個でも使えるナップサック。O(NW)
+//   w, v, W : knapsack_01 と同じ（重さ 0 の品物は正しく扱えないので、重さは 1 以上にする）
 long long knapsack_unbounded(const vector<int>& w, const vector<long long>& v, int W) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/knapsack.cpp
     vector<long long> dp(W + 1, 0);
@@ -59,6 +68,9 @@ long long knapsack_unbounded(const vector<int>& w, const vector<long long>& v, i
 
 // ---------- 本体D: 個数制限ありナップサック ----------
 // c[i] : 品物 i を使える個数
+// ◆ knapsack_bounded(w, v, c, W) : 品物 i を c[i] 個まで使えるナップサック。O(NW log c)
+//   w, v, W : knapsack_01 と同じ
+//   c       : 各品物の個数の上限（0 以上。1e18 まででもよい）
 long long knapsack_bounded(const vector<int>& w, const vector<long long>& v, const vector<long long>& c, int W) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/knapsack.cpp
     vector<long long> dp(W + 1, 0);
@@ -77,6 +89,10 @@ long long knapsack_bounded(const vector<int>& w, const vector<long long>& v, con
 
 // ---------- 本体E: 部分和問題 ----------
 // 返り値: ok[s] = 「いくつか選んで合計をちょうど s にできるか」（0 <= s <= S）
+// ◆ subset_sum(a, S) : いくつか選んで合計をちょうど s にできるか（s = 0..S）。O(NS)
+//   a : 数の列（0 以上）。各数は 1 回まで
+//   S : 調べる和の上限
+//   返り値 : ok[s]（ok[0] は常に true）
 vector<bool> subset_sum(const vector<int>& a, int S) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/knapsack.cpp
     vector<bool> ok(S + 1, false);

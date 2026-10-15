@@ -20,20 +20,28 @@ using namespace std;
 // ---------- 本体 ----------
 // WGraph<long long> g(n);  g[a].push_back({b, c});   // a -> b コスト c（無向なら逆も）
 // auto r = dijkstra(g, s);   r.dist[t]（到達不能は INF）、r.reachable(t)、r.path(t)
+// ◆ WEdge<T> : 重み付きの辺 {to: 行き先, cost: 重み}。WGraph<T> = vector<vector<WEdge<T>>> が隣接リスト
 template <class T> struct WEdge {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp
     int to; T cost;
 };
 template <class T> using WGraph = vector<vector<WEdge<T>>>;
 
+// ◆ struct DijkstraResult : ダイクストラの結果
+//   dist[v]        : 最短距離（行けなければ INF = T の最大値の半分）
+//   prev[v]        : 最短路で v の 1 つ前の頂点（始点・行けない頂点は −1）
+//   reachable(v)   : v に行けるか
+//   path(t)        : 始点から t への最短路の頂点の並び（行けなければ空）
 template <class T>
 struct DijkstraResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp
     static constexpr T INF = numeric_limits<T>::max() / 2;
     vector<T> dist;
     vector<int> prev;
+    // reachable(v) : v に行けるか。v : 頂点番号
     bool reachable(int v) const { return dist[v] != INF; }
     // --- 削除可: 経路復元 ---
+    // path(t) : t までの最短路（始点 → … → t）。t : 終点
     vector<int> path(int t) const {
         if (!reachable(t)) return {};
         vector<int> res;
@@ -46,6 +54,12 @@ struct DijkstraResult {
 
 // 汎用版: 頂点数 n と「隣接を列挙する関数」を渡す
 // adj(v, relax) の中で、v から行ける先ごとに relax(行き先, コスト) を呼ぶ
+// ◆ dijkstra_func<T>(n, starts, adj) : 頂点を自分で定義するダイクストラ（拡張ダイクストラ）。O((N + M) log N)
+//   T      : 距離の型（long long など。必ず書く）
+//   n      : 状態の数。状態は 0..n−1 の番号にしておく（例: (頂点, 使ったクーポンの数) → v * (K + 1) + k）
+//   starts : 始点の一覧（多始点）
+//   adj    : void adj(int v, auto relax)。v から行ける先ごとに relax(行き先, コスト) を呼ぶ
+//   注意 : コストは 0 以上であること（負の辺があると正しくない → shortest_path.cpp）
 template <class T, class F>
 DijkstraResult<T> dijkstra_func(int n, const vector<int>& starts, F adj) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp
@@ -71,6 +85,10 @@ DijkstraResult<T> dijkstra_func(int n, const vector<int>& starts, F adj) {
 }
 
 // 普通のグラフ用
+// ◆ dijkstra(g, starts) / dijkstra(g, s) : ダイクストラ法。O((N + M) log N)
+//   g      : WGraph<T>（g[a].push_back({b, c}) で a → b 重み c。無向なら逆向きも入れる）
+//   starts : 始点の一覧（多始点）、s : 始点が 1 つのとき
+//   注意 : 重みは 0 以上。距離の合計が T の最大値の半分を超えないこと
 template <class T>
 DijkstraResult<T> dijkstra(const WGraph<T>& g, const vector<int>& starts) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp
@@ -78,6 +96,7 @@ DijkstraResult<T> dijkstra(const WGraph<T>& g, const vector<int>& starts) {
         for (auto& e : g[v]) relax(e.to, e.cost);
     });
 }
+// dijkstra(g, s) : 始点が 1 つのとき（s : 始点）
 template <class T>
 DijkstraResult<T> dijkstra(const WGraph<T>& g, int s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp
@@ -91,6 +110,9 @@ DijkstraResult<T> dijkstra(const WGraph<T>& g, int s) {
 //   ★ 辺 u → v（重み w）が最短路に使える ⇔ dist[u] + w == dist[v]
 //   重み 0 の辺があると、同じ距離の頂点の間で順番が決まらない（0 の閉路なら本数が無限）ので使えない
 //   重みなしグラフは全部の重みを 1 にして渡す
+// ◆ shortest_path_dag(g, dist) : 最短路に使われうる辺だけを残した隣接リスト（最短路 DAG）
+//   g    : dijkstra に渡したグラフ
+//   dist : dijkstra の結果の dist
 template <class T>
 vector<vector<int>> shortest_path_dag(const WGraph<T>& g, const vector<T>& dist) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp
@@ -102,6 +124,11 @@ vector<vector<int>> shortest_path_dag(const WGraph<T>& g, const vector<T>& dist)
     }
     return dag;
 }
+// ◆ count_shortest_paths<C>(g, s) : s から各頂点への最短路の本数
+//   C : 本数の型（mint か long long。本数はすぐ大きくなるのでたいてい mint）
+//   g : WGraph<T>。重みはすべて正（0 があると assert で止まる）
+//   s : 始点
+//   返り値 : {dijkstra の結果, cnt}。cnt[v] = 最短路の本数（行けなければ 0）
 template <class C, class T>
 pair<DijkstraResult<T>, vector<C>> count_shortest_paths(const WGraph<T>& g, int s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp
@@ -125,6 +152,11 @@ pair<DijkstraResult<T>, vector<C>> count_shortest_paths(const WGraph<T>& g, int 
 //   辺の並びが違えば別の道として数える（長さが同じでも別々に入る）。s → s の長さ 0 の道も 1 個と数える
 //   重みは正であること（0 の辺があると同じ長さの道が無限にできることがある）
 // ★ ダイクストラで「各頂点を K 回まで取り出してよい」ことにするだけ。v を i 回目に取り出したときの距離が i 番目の長さ
+// ◆ kth_shortest(g, s, K) : s から各頂点への道の長さを短い順に K 個。O(K (N + M) log)
+//   g : WGraph<T>。重みは正であること
+//   s : 始点（s → s の長さ 0 の道も 1 個に数える）
+//   K : 何個まで求めるか。同じ頂点を何度通ってもよい道で、辺の並びが違えば別の道
+//   返り値 : res[v] = 長さの昇順の列（K 個未満のこともある）
 template <class T>
 vector<vector<T>> kth_shortest(const WGraph<T>& g, int s, int K) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp

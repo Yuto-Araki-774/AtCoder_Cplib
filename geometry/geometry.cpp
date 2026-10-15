@@ -31,6 +31,11 @@ using namespace std;
 //   on_segment(p, a, b)            点 p が線分 ab 上（端点を含む）にあるか
 //   segments_intersect(a, b, c, d) 線分 ab と線分 cd が共有点を持つか（端点で触れる・重なるも含む）
 //   norm2(a)                       長さの 2 乗（距離を比べるときは 2 乗のまま比べれば誤差がない）
+// ◆ struct Pt<T> : 点・ベクトル {x, y}
+//   a + b, a − b, a * k : ベクトルの和・差・定数倍
+//   a == b             : 同じ点か
+//   a < b              : x が小さい順、同じなら y が小さい順（ソート用）
+//   T : 座標の型（long long 推奨。座標の絶対値 1e9 程度までなら外積が long long に収まる）
 template <class T>
 struct Pt {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
@@ -41,27 +46,36 @@ struct Pt {
     bool operator==(const Pt& o) const { return x == o.x && y == o.y; }
     bool operator<(const Pt& o) const { return x != o.x ? x < o.x : y < o.y; }
 };
+// ◆ dot(a, b) : 内積 a.x b.x + a.y b.y（正なら鋭角、0 なら直角、負なら鈍角）
 template <class T> T dot(const Pt<T>& a, const Pt<T>& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     return a.x * b.x + a.y * b.y;
 }
+// ◆ cross(a, b) : 外積 a.x b.y − a.y b.x（正なら b は a から見て反時計回り、0 なら平行）
 template <class T> T cross(const Pt<T>& a, const Pt<T>& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     return a.x * b.y - a.y * b.x;  // ★ a, b が作る平行四辺形の符号付き面積
 }
+// ◆ norm2(a) : 長さの 2 乗（距離は 2 乗のまま比べると誤差が出ない）
 template <class T> T norm2(const Pt<T>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     return dot(a, a);
 }
+// ◆ ccw(a, b, c) : a → b → c の向き。反時計回りなら 1、時計回りなら −1、一直線なら 0
+//   a, b, c : 3 点（同じ点を含んでもよい。そのときは 0）
 template <class T> int ccw(const Pt<T>& a, const Pt<T>& b, const Pt<T>& c) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     T v = cross(b - a, c - a);  // ★ a から見た b と c の向き
     return (v > 0) - (v < 0);
 }
+// ◆ on_segment(p, a, b) : 点 p が線分 ab の上（端点を含む）にあるか
+//   p : 調べる点、a, b : 線分の端点（a == b なら点 a と同じか）
 template <class T> bool on_segment(const Pt<T>& p, const Pt<T>& a, const Pt<T>& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     return cross(a - p, b - p) == 0 && dot(a - p, b - p) <= 0;  // ★ 一直線上で、p から見て a と b が反対側（か p が端点）
 }
+// ◆ segments_intersect(a, b, c, d) : 線分 ab と線分 cd が共有点を持つか（端点で触れる・重なるも true）
+//   a, b : 1 本目の端点、c, d : 2 本目の端点
 template <class T> bool segments_intersect(const Pt<T>& a, const Pt<T>& b, const Pt<T>& c, const Pt<T>& d) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     int d1 = ccw(a, b, c), d2 = ccw(a, b, d), d3 = ccw(c, d, a), d4 = ccw(c, d, b);
@@ -74,6 +88,8 @@ template <class T> bool segments_intersect(const Pt<T>& a, const Pt<T>& b, const
 // 返り値: すべての点を囲む最小の凸多角形の頂点を反時計回りに（一直線上の途中の点・重複は除く）
 //         x が最小（同じなら y が最小）の点から始まる。点が 1 個なら 1 個、全部一直線なら両端の 2 個
 // 例: auto h = convex_hull(pts);  周の長さ・面積・最も遠い 2 点などは h の上で調べる
+// ◆ convex_hull(ps) : 凸包の頂点（反時計回り。x が最小の点から始まる。一直線上の途中の点は含めない）。O(N log N)
+//   ps : 点の一覧（重複してもよい）。点が 2 個以下ならそのまま（重複を除いて）返す
 template <class T> vector<Pt<T>> convex_hull(vector<Pt<T>> ps) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     sort(ps.begin(), ps.end());
@@ -98,12 +114,16 @@ template <class T> vector<Pt<T>> convex_hull(vector<Pt<T>> ps) {
 // poly は頂点を順番に並べたもの（時計回りでも反時計回りでもよい。自己交差しないこと）
 // area2(poly)               面積の 2 倍（整数のまま）。反時計回りなら正、時計回りなら負
 // point_in_polygon(p, poly) 内部なら 2、辺の上なら 1、外部なら 0
+// ◆ area2(poly) : 多角形の面積の 2 倍（整数のまま）。反時計回りなら正、時計回りなら負
+//   poly : 頂点を順番に並べたもの（自分と交わらない多角形）
 template <class T> T area2(const vector<Pt<T>>& poly) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     T s = 0;
     for (size_t i = 0; i < poly.size(); i++) s += cross(poly[i], poly[(i + 1) % poly.size()]);  // ★ 原点と各辺が作る三角形の符号付き面積の和
     return s;
 }
+// ◆ point_in_polygon(p, poly) : 点 p が多角形の内部なら 2、辺の上なら 1、外部なら 0
+//   p : 調べる点、poly : 頂点を順番に並べたもの（時計回り・反時計回りどちらでもよい）
 template <class T> int point_in_polygon(const Pt<T>& p, const vector<Pt<T>>& poly) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     bool in = false;
@@ -122,11 +142,14 @@ template <class T> int point_in_polygon(const Pt<T>& p, const vector<Pt<T>>& pol
 //   同じ向き（長さだけ違う）は「同じ」扱い（順番は決まらない。決めたいなら stable_sort か、比較に norm2 を足す）
 //   原点 (0, 0) は一番前
 //   外積だけで比べるので誤差なし（atan2 は使わない）。座標は 1e9 程度まで
+// （内部用）原点は −1、角度 [0°, 180°) は 0、[180°, 360°) は 1
 template <class T> int arg_half(const Pt<T>& p) {  // 原点は -1、[0, 180°) は 0、[180°, 360°) は 1
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     if (p.x == 0 && p.y == 0) return -1;
     return (p.y < 0 || (p.y == 0 && p.x < 0)) ? 1 : 0;
 }
+// ◆ arg_less(a, b) : 偏角ソート用の比較。原点から見た向きが a の方が前か（x 軸の正の向きから反時計回り）
+//   a, b : ベクトル。原点 (0, 0) は一番前、同じ向きは同順位
 template <class T> bool arg_less(const Pt<T>& a, const Pt<T>& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     int ha = arg_half(a), hb = arg_half(b);

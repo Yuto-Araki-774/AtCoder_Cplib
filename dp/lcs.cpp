@@ -19,6 +19,9 @@ using namespace std;
 // ---------- 本体A: LCS（復元付き） ----------
 // 返り値: LCS そのもの（a と同じ型）。長さだけなら .size()
 // 例: lcs(string("axyb"), string("abyxb")) → "axb" など（長さ 3。最長のものが 1 つ返る）
+// ◆ lcs(a, b) : 最長共通部分列（LCS）を 1 つ返す。O(NM)、メモリ O(NM)
+//   a, b : string か vector（同じ型）。N × M が 1e7〜1e8 程度まで
+//   返り値 : LCS（a と同じ型）。長さだけなら .size()
 template <class Seq>
 Seq lcs(const Seq& a, const Seq& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/lcs.cpp
@@ -39,6 +42,8 @@ Seq lcs(const Seq& a, const Seq& b) {
 }
 
 // ---------- 本体B: 編集距離 ----------
+// ◆ edit_distance(a, b) : 編集距離（1 文字の挿入・削除・置換で a を b にする最小回数）。O(NM)
+//   a, b : string か vector（同じ型）
 template <class Seq>
 int edit_distance(const Seq& a, const Seq& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/lcs.cpp

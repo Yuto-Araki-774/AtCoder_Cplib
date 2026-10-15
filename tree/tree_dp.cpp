@@ -32,15 +32,29 @@ using namespace std;
 // 例2: 部分木の高さ        e = 0, merge = max, put_edge = x + 1, put_vertex = x
 // 例3: 独立集合の数え上げ（隣り合う 2 頂点を両方黒にしない塗り方）  使用例を参照
 // 処理順（td.order）と親（td.par）も solve の後に使える
+// ◆ struct TreeDP : 木 DP のテンプレート（再帰なし）
+//   TreeDP(n)                                       : 頂点 0..n−1
+//   add_edge(a, b, w)                               : 無向辺を足す（w 省略で 0）
+//   solve(root, e, merge, put_edge, put_vertex)     : dp[v] = v を根とする部分木の値 を全頂点について返す。O(N)
+//   order, par                                      : solve の後に使える（BFS 順、親）
+//   S : DP の値の型、W : 辺の重みの型（既定 long long）
 template <class S, class W = long long>
 struct TreeDP {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_dp.cpp
     int n;
     vector<vector<pair<int, W>>> g;
     vector<int> order, par;  // order: 根からの BFS 順、par: 親（根は -1）
+    // n_ : 頂点数
     TreeDP(int n_) : n(n_), g(n_) {}
+    // add_edge(a, b, w) : a, b : 端点、w : 重み（put_edge に渡される）
     void add_edge(int a, int b, W w = W(0)) { g[a].push_back({b, w}), g[b].push_back({a, w}); }
 
+    // solve(root, e, merge, put_edge, put_vertex) :
+    //   root       : 根
+    //   e          : merge の単位元（子がいないときの「集めた結果」）
+    //   merge      : S merge(S a, S b)。子からの値を集める（順番によらない演算）
+    //   put_edge   : S put_edge(S x, int c, int p, W w)。子 c の値 x を、辺 c-p（重み w）を通して親 p へ渡すときの変換
+    //   put_vertex : S put_vertex(S x, int v)。集めた値 x から頂点 v の値を作る
     template <class Merge, class PutEdge, class PutVertex>
     vector<S> solve(int root, S e, Merge merge, PutEdge put_edge, PutVertex put_vertex) {
         order = {root}, par.assign(n, -1);

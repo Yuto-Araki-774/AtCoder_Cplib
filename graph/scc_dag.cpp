@@ -23,12 +23,20 @@ using namespace std;
 //   sd.dag[c]        縮約 DAG で c から出る辺の行き先（重複なし、自分への辺なし）
 //   sd.self_loop[c]  成分 c の中に辺があるか（頂点 2 個以上、または自己ループ）= c の中をぐるぐる回れるか
 // DP の書き方: 「後ろから」なら for (int c = k - 1; c >= 0; c--) for (int d : dag[c]) ...（d は c より後ろ）
+// ◆ struct SCCDag : 強連結成分分解（ACL の scc_graph）と、成分を 1 頂点にまとめた DAG
+//   SCCDag(n, edges) : 作るだけで全部求まる。O(N + M)
+//   k            : 成分の数
+//   comp[v]      : v の成分番号（トポロジカル順。辺 a → b があれば comp[a] <= comp[b]）
+//   groups[c]    : 成分 c の頂点の一覧
+//   dag[c]       : 成分 c から出る辺の行き先の成分（重複なし、自分への辺なし）
+//   self_loop[c] : 成分 c の中に辺があるか（c の中をぐるぐる回れるか）
 struct SCCDag {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/scc_dag.cpp
     int n, k;
     vector<int> comp;
     vector<vector<int>> groups, dag;
     vector<bool> self_loop;
+    // n_ : 頂点数、edges : 有向辺 {a, b}（a → b）の一覧。多重辺・自己ループもよい
     SCCDag(int n_, const vector<pair<int, int>>& edges) : n(n_), comp(n_) {
         atcoder::scc_graph g(n);
         for (auto [a, b] : edges) g.add_edge(a, b);

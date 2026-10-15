@@ -28,6 +28,13 @@ using namespace std;
 // auto E = ev_backward<T>(n, adj, cost);   E[i] = 状態 i からゴールまでにかかる量の期待値
 // ★ E[i] = cost(i) + Σ p × E[j]。j == i（自己ループ、確率 q）があると E[i] が両辺に出るので
 //    E[i] = (cost(i) + Σ_{j > i} p × E[j]) / (1 − q) と移項してから計算する
+// ◆ ev_backward<T>(n, adj, cost) : 各状態からゴールまでの量の期待値（後ろから）。O(遷移の数)
+//   T    : double か mint（必ず書く）
+//   n    : 状態の数（状態は 0..n−1）
+//   adj  : void adj(int i, auto emit)。状態 i からの遷移ごとに emit(行き先 j, 確率 p) を呼ぶ
+//          j >= i であること（j == i は「何も変わらない」= 自己ループ）。遷移がない状態はゴール
+//   cost : cost(i)。状態 i から 1 回動くときにかかる量（回数なら常に 1）
+//   注意 : 確率の合計は 1 にしておく。自己ループの確率が 1 だと 0 で割る
 template <class T, class F, class C>
 vector<T> ev_backward(int n, F adj, C cost) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/expected_value.cpp
@@ -49,6 +56,9 @@ vector<T> ev_backward(int n, F adj, C cost) {
 
 // ---------- 本体B: 確率（前から） ----------
 // adj は本体A と同じ。P[i] = start から始めて、状態 i にたどり着く確率（ゴールなら「そこで終わる確率」）
+// ◆ prob_forward<T>(n, start, adj) : start から各状態にたどり着く確率（前から）
+//   n, adj : ev_backward と同じ（遷移は番号が同じか大きい状態へ）
+//   start  : 出発する状態
 template <class T, class F>
 vector<T> prob_forward(int n, int start, F adj) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/expected_value.cpp
@@ -71,6 +81,9 @@ vector<T> prob_forward(int n, int start, F adj) {
 
 // ---------- 削除可: 期待値（閉路あり。ガウスの消去法） O(n^3) ----------
 // adj・cost は本体A と同じだが、行き先 j に制限なし（戻ってもよい）。ゴールにいずれ必ずたどり着くこと
+// ◆ ev_general<T>(n, adj, cost) : 遷移が自由（行ったり戻ったり）でも期待値を求める（連立方程式）。O(n^3)
+//   n, adj, cost : ev_backward と同じだが、行き先 j に制限なし
+//   注意 : どの状態からもいつか必ずゴールに着くこと（着けない状態があると assert で止まる）。n <= 500 程度
 template <class T, class F, class C>
 vector<T> ev_general(int n, F adj, C cost) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/expected_value.cpp

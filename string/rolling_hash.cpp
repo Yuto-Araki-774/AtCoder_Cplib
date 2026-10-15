@@ -23,20 +23,28 @@ using namespace std;
 // 別の文字列どうしの比較もできる（基数を全インスタンスで共有しているため）
 //   RollingHash a(s), b(t);  a.get(...) == b.get(...)
 // 回文判定: 反転文字列 rev の RollingHash も作り、s[l..r) と rev[n-r..n-l) を比較
+// ◆ struct RollingHash : ローリングハッシュ（mod 2^61−1。部分文字列の一致を O(1) で判定）
+//   RollingHash(s) : 前計算 O(N)
+//   get(l, r)      : s[l..r) のハッシュ値。2 つのハッシュ値が同じなら（ほぼ確実に）同じ文字列
+//   lcp(a, b)      : s[a..) と s[b..) の最長共通接頭辞の長さ。O(log N)
+//   注意 : 基数は全部の RollingHash で共通なので、別の文字列どうしの get も比べられる
 struct RollingHash {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/rolling_hash.cpp
     static constexpr uint64_t MOD = (1ULL << 61) - 1;
+    // （内部用）a × b mod 2^61−1
     static uint64_t mul(uint64_t a, uint64_t b) {  // a * b mod 2^61-1（128 bit で計算）
         __uint128_t t = (__uint128_t)a * b;
         uint64_t r = (uint64_t)(t >> 61) + (uint64_t)(t & MOD);  // ★ 2^61 ≡ 1 なので上位と下位を足すだけ
         return r >= MOD ? r - MOD : r;
     }
+    // （内部用）基数（実行ごとに乱数で決める）
     static uint64_t base() {
         static uint64_t b = mt19937_64(chrono::steady_clock::now().time_since_epoch().count())() % (MOD - 2) + 2;
         return b;
     }
 
     vector<uint64_t> h, pw;  // h[i] = s[0..i) のハッシュ、pw[i] = base^i
+    // s : string か vector<int> など（要素は 0 以上の整数として扱える型）
     template <class Seq>
     RollingHash(const Seq& s) : h(s.size() + 1, 0), pw(s.size() + 1, 1) {
         uint64_t b = base();
@@ -46,12 +54,14 @@ struct RollingHash {
             pw[i + 1] = mul(pw[i], b);
         }
     }
+    // get(l, r) : 区間 [l, r)。0 <= l <= r <= N（空区間は 0）
     uint64_t get(int l, int r) const {
         uint64_t res = h[r] + MOD - mul(h[l], pw[r - l]);  // ★ h[r] - h[l] * base^(r-l)
         return res >= MOD ? res - MOD : res;
     }
 
     // --- 削除可: LCP（s[a..) と s[b..) の最長共通接頭辞の長さ）O(log N) ---
+    // lcp(a, b) : a, b : 開始位置（0..N）
     int lcp(int a, int b) const {
         int ok = 0, ng = min(h.size() - a, h.size() - b);  // 長さ ng はとれない
         while (ng - ok > 1) {

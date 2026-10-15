@@ -26,10 +26,19 @@ using namespace std;
 //   on_enter(v, p) : v に初めて入ったとき。p は v に来る直前の頂点（始点は -1）  = 行きがけ
 //   on_exit(v, p)  : v から行ける未訪問の頂点をすべて調べ終わったとき           = 帰りがけ
 // 例: 行きがけ順・帰りがけ順・DFS 木の親・部分木サイズなど（使用例あり）
+// ◆ dfs_walk(g, s, seen, on_enter, on_exit) : s から深さ優先探索（再帰なし）。O(N + M)
+//   g        : 隣接リスト（無向なら両方向）
+//   s        : 始点。seen[s] が true ならすぐ終わる
+//   seen     : 訪問済みフラグ（大きさ n、最初は全部 false）。呼んだ後は s から行けた頂点が true
+//              同じ seen で別の始点から呼び直すと、もう訪れた頂点は飛ばす（連結成分ごとの処理）
+//   on_enter : void on_enter(int v, int p)。v に初めて来たときに呼ぶ（行きがけ）。p は来る前の頂点（始点は −1）
+//   on_exit  : void on_exit(int v, int p)。v から先を全部調べ終わったときに呼ぶ（帰りがけ）
+//   注意 : on_enter / on_exit の中で seen を書き換えないこと
 template <class Enter, class Exit>
 void dfs_walk(const vector<vector<int>>& g, int s, vector<bool>& seen, Enter on_enter, Exit on_exit) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp
     if (seen[s]) return;
+    // （内部用）スタックに積む情報
     struct Frame { int v, p, i; };  // 頂点、親、次に見る隣接の位置
     vector<Frame> st;
     seen[s] = true;
@@ -52,6 +61,9 @@ void dfs_walk(const vector<vector<int>>& g, int s, vector<bool>& seen, Enter on_
 
 // ---------- 削除可: 連結成分の番号付け（本体A が必要。無向グラフ用） ----------
 // 返り値 comp[v] = v の連結成分の番号（0 から）。成分の個数は *max_element + 1
+// ◆ connected_components(g) : 無向グラフの連結成分の番号付け。O(N + M)
+//   g : 隣接リスト（両方向に入れておくこと。有向のままだと成分が正しく分かれない）
+//   返り値 : comp[v] = v の成分の番号（0 から、頂点番号の小さい順に振る）
 vector<int> connected_components(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp
     int n = g.size(), c = 0;
@@ -68,6 +80,9 @@ vector<int> connected_components(const vector<vector<int>>& g) {
 // ---------- 本体B: 有向グラフの閉路検出・復元 ----------
 // 返り値: 閉路の頂点列 {v0, v1, ..., vk}（v0→v1→...→vk→v0 が閉路）。閉路がなければ空
 // 自己ループ v→v は {v} を返す
+// ◆ find_cycle_directed(g) : 有向グラフの閉路を 1 つ見つける。O(N + M)
+//   g : 有向グラフの隣接リスト（g[v] = v から出る辺の行き先）
+//   返り値 : 閉路の頂点の並び（最後の頂点から最初の頂点へ辺がある）。閉路がなければ空。自己ループは {v}
 vector<int> find_cycle_directed(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp
     int n = g.size();
@@ -98,10 +113,15 @@ vector<int> find_cycle_directed(const vector<vector<int>>& g) {
 // ---------- 本体C: 無向グラフの閉路検出・復元 ----------
 // g は両方向に辺を入れた隣接リスト。多重辺（同じ 2 頂点を結ぶ辺が 2 本）も長さ 2 の閉路として見つける
 // 返り値: 閉路の頂点列 {v0, v1, ..., vk}（v0-v1-...-vk-v0 が閉路）。閉路がなければ空
+// ◆ find_cycle_undirected(g) : 無向グラフの閉路を 1 つ見つける。O(N + M)
+//   g : 両方向に辺を入れた隣接リスト。多重辺は長さ 2 の閉路として見つける
+//   返り値 : 閉路の頂点の並び。閉路がなければ空
+//   注意 : 自己ループ（v-v）は g[v] に v が 2 回入るので、長さ 1 の閉路 {v} として見つかる
 vector<int> find_cycle_undirected(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp
     int n = g.size();
     vector<int> state(n, 0), pos(n, -1);
+    // （内部用）スタックに積む情報
     struct Frame { int v, p, i; bool skipped; };  // skipped: 親へ戻る辺を 1 本飛ばしたか
     vector<Frame> st;
     for (int s = 0; s < n; s++) {

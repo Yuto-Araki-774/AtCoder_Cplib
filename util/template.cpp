@@ -53,11 +53,15 @@ const int IINF = 1 << 30;  // ≈ 1.07e9
 // ---------- chmin / chmax ----------
 // a より b が小さければ（大きければ）a を b に更新して true を返す
 // 例: chmin(dp[j], dp[i] + c);   if (chmax(best, x)) arg = i;
+// ◆ chmin(a, b) : b < a なら a = b にして true（最小値の更新）
+// ◆ chmax(a, b) : a < b なら a = b にして true（最大値の更新）
+//   a : 更新する変数（参照）、b : 比べる値（a と型が違ってもよい。比べて代入できること）
 template <class T, class U> bool chmin(T& a, const U& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
     if (b < a) { a = b; return true; }
     return false;
 }
+// chmax(a, b) : a < b なら a = b にして true
 template <class T, class U> bool chmax(T& a, const U& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
     if (a < b) { a = b; return true; }
@@ -69,6 +73,7 @@ template <class T, class U> bool chmax(T& a, const U& b) {
 // 例: for (int d = 0; d < 4; d++) { int ni = i + DI[d], nj = j + DJ[d]; if (!in_grid(ni, nj, H, W)) continue; ... }
 const int DI[8] = {1, 0, -1, 0, 1, 1, -1, -1};
 const int DJ[8] = {0, 1, 0, -1, 1, -1, 1, -1};
+// ◆ in_grid(i, j, h, w) : (i, j) が h 行 w 列の盤面の中か（0 <= i < h かつ 0 <= j < w）
 bool in_grid(int i, int j, int h, int w) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
     return 0 <= i && i < h && 0 <= j && j < w;
@@ -77,11 +82,14 @@ bool in_grid(int i, int j, int h, int w) {
 // ---------- 出力 ----------
 // print_vec(v)        : 空白区切りで 1 行（sep="\n" で 1 行ずつ）
 // yes_no(cond)        : "Yes" / "No"（AtCoder の大文字小文字に合わせて書き換える）
+// ◆ print_vec(v, sep) : 配列を 1 行で出力（最後に改行）
+//   v : 出力する配列、sep : 区切り（既定 " "。改行区切りなら "\n"）
 template <class T> void print_vec(const vector<T>& v, const string& sep = " ") {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
     for (size_t i = 0; i < v.size(); i++) cout << (i ? sep : "") << v[i];
     cout << '\n';
 }
+// ◆ yes_no(cond) : cond が true なら Yes、false なら No を出力
 void yes_no(bool cond) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
     cout << (cond ? "Yes" : "No") << '\n';
@@ -101,6 +109,7 @@ template <class T> ostream& operator<<(ostream& os, const vector<T>& v) {
 }
 template <class T> ostream& operator<<(ostream& os, const set<T>& s) { return os << vector<T>(s.begin(), s.end()); }
 template <class K, class V> ostream& operator<<(ostream& os, const map<K, V>& m) { return os << vector<pair<K, V>>(m.begin(), m.end()); }
+// （内部用）debug マクロの中身。debug(x, y, ...) で「x = 値 | y = 値」を標準エラーに出す
 void debug_out(const char*) { cerr << endl; }
 template <class H, class... T> void debug_out(const char* names, const H& h, const T&... t) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
@@ -122,10 +131,12 @@ template <class H, class... T> void debug_out(const char* names, const H& h, con
 
 // ============ ここにライブラリを貼る ============
 
+// ◆ solve() : ここに解答を書く（入力を読んで答えを出力する）
 void solve() {
     // ここに解答を書く
 }
 
+// ◆ main() : 高速入出力の設定をして solve() を呼ぶ（基本は書き換えない）
 int main() {
     cin.tie(nullptr);
     ios::sync_with_stdio(false);  // ★ 入出力の高速化（scanf / printf と混ぜない）

@@ -24,11 +24,17 @@ using namespace std;
 //     vs[i]  : 残った頂点（元の番号）。行きがけ順に並んでいて、vs[0] が根
 //     par[i] : vs[i] の親の、vs の中での位置（vs[0] は -1）。元の木での辺の本数は dep[vs[i]] − dep[vs[par[i]]]
 //   DP は i = vs.size() − 1 から 0 へ回せば「子が先」になる（行きがけ順の逆）
+// ◆ struct AuxiliaryTree : Auxiliary Tree（虚樹。指定した頂点とその LCA だけを残した木）
+//   AuxiliaryTree(g, root) : 前計算 O(N log N)
+//   lca(u, v), dist(u, v)  : O(log N)
+//   dep[v]                 : 根からの辺の本数
+//   build(S)               : {vs, par}。vs = 残った頂点（行きがけ順、vs[0] が根）、par[i] = vs[i] の親の vs での位置（根は −1）
 struct AuxiliaryTree {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/auxiliary_tree.cpp
     int n, LOG;
     vector<int> tin, dep, pos;
     vector<vector<int>> up;
+    // g : 木の隣接リスト（両方向）、root : 根（省略で 0）
     AuxiliaryTree(const vector<vector<int>>& g, int root = 0) : n(g.size()), tin(n), dep(n, 0), pos(n, -1) {
         LOG = 1;
         while ((1 << LOG) < n) LOG++;
@@ -50,6 +56,7 @@ struct AuxiliaryTree {
         for (int k = 1; k < LOG; k++)
             for (int v = 0; v < n; v++) up[k][v] = up[k - 1][up[k - 1][v]];
     }
+    // lca(u, v) : 最小共通祖先
     int lca(int u, int v) const {
         if (dep[u] < dep[v]) swap(u, v);
         for (int k = LOG - 1; k >= 0; k--) if (dep[u] - (1 << k) >= dep[v]) u = up[k][u];
@@ -57,7 +64,10 @@ struct AuxiliaryTree {
         for (int k = LOG - 1; k >= 0; k--) if (up[k][u] != up[k][v]) u = up[k][u], v = up[k][v];
         return up[0][u];
     }
+    // dist(u, v) : 辺の本数
     int dist(int u, int v) const { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }
+    // build(S) : S : 指定する頂点の一覧（重複・順不同 OK）。O(|S| log N)
+    //   返り値の頂点数は 2|S| − 1 以下。元の木での辺の長さは dep[vs[i]] − dep[vs[par[i]]]
     pair<vector<int>, vector<int>> build(vector<int> vs) {
         auto by_tin = [&](int a, int b) { return tin[a] < tin[b]; };
         sort(vs.begin(), vs.end(), by_tin);

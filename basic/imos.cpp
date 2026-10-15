@@ -18,18 +18,26 @@ using namespace std;
 // ---------- 本体A: 1 次元いもす ----------
 // add(l, r, x) : [l, r) に x を足す（範囲外は切り捨て）
 // build()      : 最終的な配列
+// ◆ struct Imos : 1 次元いもす法（区間への加算をまとめて行い、最後に全体を求める）
+//   Imos(n)         : 長さ n、全部 0 で作る
+//   add(l, r, x)    : [l, r) に x を足す。O(1)
+//   build()         : 加算をすべて反映した長さ n の配列を返す。O(n)（何回呼んでもよい）
 template <class T>
 struct Imos {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/imos.cpp
     int n;
     vector<T> d;
+    // n_ : 配列の長さ
     Imos(int n_) : n(n_), d(n_ + 1, T(0)) {}
+    // l, r : 足す区間 [l, r)（r は含まない）。0..n の外にはみ出た部分は無視する。l >= r なら何もしない
+    // x    : 足す値（負でもよい）
     void add(int l, int r, T x) {
         l = max(l, 0), r = min(r, n);
         if (l >= r) return;
         d[l] += x;  // ★ 始まりに +x
         d[r] -= x;  // ★ 終わりの次に -x
     }
+    // 返り値 : res[i] = 位置 i に足された値の合計
     vector<T> build() const {
         vector<T> res(n);
         T cur = T(0);
@@ -40,17 +48,25 @@ struct Imos {
 
 // ---------- 本体B: 2 次元いもす ----------
 // add(r1, c1, r2, c2, x) : 行 [r1, r2) × 列 [c1, c2) に x を足す
+// ◆ struct Imos2D : 2 次元いもす法（長方形への加算をまとめて行う）
+//   Imos2D(h, w)              : h 行 w 列、全部 0 で作る
+//   add(r1, c1, r2, c2, x)    : 行 [r1, r2) × 列 [c1, c2) に x を足す。O(1)
+//   build()                   : 加算をすべて反映した h × w の配列を返す。O(hw)
 template <class T>
 struct Imos2D {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/imos.cpp
     int h, w;
     vector<vector<T>> d;
+    // h_, w_ : 行数と列数
     Imos2D(int h_, int w_) : h(h_), w(w_), d(h_ + 1, vector<T>(w_ + 1, T(0))) {}
+    // r1, r2 : 行の範囲 [r1, r2)、c1, c2 : 列の範囲 [c1, c2)（どちらも終わりは含まない。はみ出た部分は無視）
+    // x : 足す値
     void add(int r1, int c1, int r2, int c2, T x) {
         r1 = max(r1, 0), c1 = max(c1, 0), r2 = min(r2, h), c2 = min(c2, w);
         if (r1 >= r2 || c1 >= c2) return;
         d[r1][c1] += x, d[r1][c2] -= x, d[r2][c1] -= x, d[r2][c2] += x;  // ★ 4 隅に ±x
     }
+    // 返り値 : res[i][j] = マス (i, j) に足された値の合計
     vector<vector<T>> build() const {
         auto t = d;
         for (int i = 0; i <= h; i++)

@@ -35,14 +35,23 @@ using namespace std;
 // 例2: 各頂点から全頂点への距離の和   S = pair<long long, long long>（{距離の和, 頂点数}）
 //   e = {0, 0}, merge = 成分ごとの和, put_edge = {x.first + x.second * w, x.second},
 //   put_vertex = {x.first, x.second + 1}
+// ◆ struct Rerooting : 全方位木 DP（すべての頂点 v について「v を根にしたときの木 DP の値」を O(N) で）
+//   Rerooting(n)                                 : 頂点 0..n−1
+//   add_edge(a, b, w)                            : 無向辺を足す（w 省略で 0）
+//   solve(e, merge, put_edge, put_vertex)        : ans[v] を全頂点について返す
+//   S : DP の値の型、W : 辺の重みの型（既定 long long）
 template <class S, class W = long long>
 struct Rerooting {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/rerooting.cpp
     int n;
     vector<vector<pair<int, W>>> g;
+    // n_ : 頂点数（1 以上。木がつながっていること）
     Rerooting(int n_) : n(n_), g(n_) {}
+    // add_edge(a, b, w) : a, b : 端点、w : 重み（put_edge に渡される）
     void add_edge(int a, int b, W w = W(0)) { g[a].push_back({b, w}), g[b].push_back({a, w}); }
 
+    // solve(e, merge, put_edge, put_vertex) : 引数の意味は TreeDP::solve と同じ（根はいらない）
+    //   注意 : merge は結合的で順番によらないこと（左右からの累積で「1 方向を除いた値」を作るため）
     template <class Merge, class PutEdge, class PutVertex>
     vector<S> solve(S e, Merge merge, PutEdge put_edge, PutVertex put_vertex) {
         vector<int> order = {0}, par(n, -1);

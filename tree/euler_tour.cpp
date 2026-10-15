@@ -31,10 +31,17 @@ using namespace std;
 //       v の値に x を足す → bit.add(in[v], x)、bit.add(out[v], -x)（out[v] < n のとき）
 //       根から u までの和 → bit.sum(0, in[u] + 1)
 //       ★ v の値は「v の部分木の中の頂点」すべての根からの和に効く、を区間加算で表している
+// ◆ struct EulerTour : オイラーツアー（部分木を連続した区間 [in[v], out[v]) にする）。O(N)、再帰なし
+//   EulerTour(g, root)   : 前計算
+//   in[v], out[v]        : v の部分木 = 時刻 [in[v], out[v])
+//   order[t]             : 時刻 t に入った頂点
+//   par[v], dep[v]       : 親（根は −1）、深さ
+//   is_ancestor(u, v)    : u が v の祖先か（u == v も true）。O(1)
 struct EulerTour {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/euler_tour.cpp
     int n;
     vector<int> in, out, order, par, dep;
+    // g : 木の隣接リスト（両方向）、root : 根（省略で 0）
     EulerTour(const vector<vector<int>>& g, int root = 0)
         : n(g.size()), in(n), out(n), par(n, -1), dep(n, 0) {
         vector<int> it(n, 0), st = {root};
@@ -54,6 +61,7 @@ struct EulerTour {
             }
         }
     }
+    // is_ancestor(u, v) : u, v : 頂点
     bool is_ancestor(int u, int v) const { return in[u] <= in[v] && out[v] <= out[u]; }  // ★ 区間の包含
 };
 

@@ -18,6 +18,8 @@ using namespace std;
 // 返り値: pi[i] = s[0..i] の「接頭辞かつ接尾辞」になる最長の長さ（全体は除く）
 // 例: s = "abcabd" → pi = {0, 0, 0, 1, 2, 0}
 // string でも vector でも使える
+// ◆ prefix_function(s) : 失敗関数。pi[i] = s[0..i] の「接頭辞かつ接尾辞」の最長の長さ（全体は除く）。O(N)
+//   s : string か vector
 template <class Seq>
 vector<int> prefix_function(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp
@@ -34,6 +36,8 @@ vector<int> prefix_function(const Seq& s) {
 
 // ---------- 削除可: パターン検索（本体が必要） ----------
 // 返り値: t の中で p が始まる位置の一覧（重なりも含む）
+// ◆ kmp_search(t, p) : t の中で p が現れる開始位置の一覧（重なりも含む）。O(|t| + |p|)
+//   t : 探される側の文字列、p : パターン（空なら空の結果）。t と p は同じ型
 template <class Seq>
 vector<int> kmp_search(const Seq& t, const Seq& p) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp
@@ -52,6 +56,8 @@ vector<int> kmp_search(const Seq& t, const Seq& p) {
 // ---------- 削除可: 最小周期（本体が必要） ----------
 // 返り値: s[i] = s[i + d] がすべての i で成り立つ最小の d（d が |s| を割り切るとは限らない）
 // 「s がある文字列の繰り返しか」は (n % d == 0 && d < n) で判定できる
+// ◆ min_period(s) : 最小周期 d（全部の i で s[i] = s[i + d]）。空なら 0
+//   s : string か vector。「繰り返しでできているか」は n % d == 0 && d < n で判定
 template <class Seq>
 int min_period(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp

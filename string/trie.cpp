@@ -23,6 +23,15 @@ using namespace std;
 //   tr.count(s)            s が登録されている個数
 //   tr.count_prefix(p)     p で始まる登録済みの文字列の個数（重複も数える）
 //   tr.nodes[v]            頂点 v の情報 { nxt[c]: 子（なければ -1）, pass: v を通る文字列の数, end: v で終わる数, depth }
+// ◆ struct Trie : 文字列の集合を木で持つ（接頭辞の個数などを O(|s|) で）
+//   insert(s)          : s を登録（同じ文字列を何回でも）。s の終わりの頂点番号を返す
+//   erase(s)           : s を 1 つ削除（登録されていなければ false）
+//   find(s)            : s に対応する頂点番号（なければ −1）
+//   count(s)           : s が登録されている個数
+//   count_prefix(p)    : p で始まる登録済みの文字列の個数
+//   lcp_with_others(s) : s と他の登録済み文字列との最長共通接頭辞の長さ
+//   sum_lcp_pairs()    : 全ペアの最長共通接頭辞の和
+//   K, BASE : 文字の種類数と最初の文字（既定 26, 'a'）。範囲外の文字を入れると壊れる
 template <int K = 26, char BASE = 'a'>
 struct Trie {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/trie.cpp
@@ -33,6 +42,7 @@ struct Trie {
     };
     vector<Node> nodes = {Node(0)};  // 頂点 0 が根（空文字列）
 
+    // insert(s) : s : 登録する文字列（空文字列もよい）
     int insert(const string& s) {
         int v = 0;
         nodes[0].pass++;
@@ -48,6 +58,7 @@ struct Trie {
         nodes[v].end++;
         return v;
     }
+    // find(s) : s : 調べる文字列
     int find(const string& s) const {  // s の頂点番号（なければ -1）
         int v = 0;
         for (char ch : s) {
@@ -56,8 +67,11 @@ struct Trie {
         }
         return v;
     }
+    // count(s) : s が登録されている個数
     int count(const string& s) const { int v = find(s); return v == -1 ? 0 : nodes[v].end; }
+    // count_prefix(p) : p : 接頭辞（空なら登録数の合計）
     int count_prefix(const string& p) const { int v = find(p); return v == -1 ? 0 : nodes[v].pass; }
+    // erase(s) : s : 消す文字列（1 つだけ消す）
     bool erase(const string& s) {
         if (count(s) == 0) return false;
         int v = 0;
@@ -69,6 +83,7 @@ struct Trie {
 
     // --- 削除可: 他の文字列との最長共通接頭辞（s は登録済みであること） ---
     // 返り値: s と、s 以外の登録済み文字列（同じ文字列がもう 1 つあればそれも）との最長共通接頭辞の長さ
+    // lcp_with_others(s) : s は登録済みであること
     int lcp_with_others(const string& s) const {
         int v = 0, res = 0;
         for (char ch : s) {
@@ -78,6 +93,7 @@ struct Trie {
         return res;
     }
     // --- 削除可: 全ペアの最長共通接頭辞の和 Σ_{i<j} LCP(s_i, s_j) ---
+    // sum_lcp_pairs() : Σ_{i<j} LCP(s_i, s_j)
     long long sum_lcp_pairs() const {
         long long res = 0;
         for (size_t v = 1; v < nodes.size(); v++) res += (long long)nodes[v].pass * (nodes[v].pass - 1) / 2;  // ★ 各頂点で、そこを通るペアの数

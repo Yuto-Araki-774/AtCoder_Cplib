@@ -22,12 +22,19 @@ using namespace std;
 //   lc.get(x)                     x での最小値（x は xs に入っている値。まだ何もないなら LICHAO_INF<T>）
 // 最大値がほしいとき: add_line(-a, -b) で入れて、-get(x) を答えにする
 template <class T> constexpr T LICHAO_INF = numeric_limits<T>::max();
+// ◆ struct LiChaoTree : 直線・線分を追加して、ある x での最小値を求める
+//   LiChaoTree(xs)             : クエリで使う x 座標の一覧を先に渡す
+//   add_line(a, b)             : 直線 y = a x + b を追加。O(log N)
+//   add_segment(a, b, l, r)    : l <= x < r だけの線分を追加。O(log^2 N)
+//   get(x)                     : x での最小値（何もなければ LICHAO_INF<T>）。O(log N)
+//   注意 : 最大値は add_line(−a, −b) で入れて −get(x)。a × x + b が T に収まること
 template <class T>
 struct LiChaoTree {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/li_chao_tree.cpp
     int sz;
     vector<T> xs, A, B;
     vector<bool> has;
+    // xs_ : 使う x 座標の一覧（重複・順不同 OK。get に渡す x はこの中の値であること）
     LiChaoTree(vector<T> xs_) : xs(xs_) {
         sort(xs.begin(), xs.end());
         xs.erase(unique(xs.begin(), xs.end()), xs.end());
@@ -37,8 +44,10 @@ struct LiChaoTree {
         xs.resize(sz, xs.back());  // 2 冪にそろえる（余りは最後の x で埋める）
         A.assign(2 * sz, 0), B.assign(2 * sz, 0), has.assign(2 * sz, false);
     }
+    // （内部用）a x + b
     T eval(T a, T b, T x) const { return a * x + b; }
     // ノード k（x の番号 [l, r) を担当）から下へ、直線 (a, b) を入れる
+    // （内部用）ノード k から下へ直線を入れる
     void add_at(int k, int l, int r, T a, T b) {
         while (true) {
             if (!has[k]) { A[k] = a, B[k] = b, has[k] = true; return; }
@@ -54,7 +63,9 @@ struct LiChaoTree {
             else k = 2 * k + 1, l = m;
         }
     }
+    // add_line(a, b) : 傾き a、切片 b
     void add_line(T a, T b) { add_at(1, 0, sz, a, b); }
+    // add_segment(a, b, xl, xr) : 傾き a、切片 b、範囲 xl <= x < xr
     void add_segment(T a, T b, T xl, T xr) {  // 削除可（線分を使わないなら不要）
         int li = lower_bound(xs.begin(), xs.end(), xl) - xs.begin();
         int ri = lower_bound(xs.begin(), xs.end(), xr) - xs.begin();
@@ -68,6 +79,7 @@ struct LiChaoTree {
             st.push_back({2 * k, l, m}), st.push_back({2 * k + 1, m, r});
         }
     }
+    // get(x) : x : xs に入っていた値（入っていないと assert で止まる）
     T get(T x) const {
         int i = lower_bound(xs.begin(), xs.end(), x) - xs.begin();
         assert(i < sz && xs[i] == x);  // x は最初に渡した xs の中の値であること

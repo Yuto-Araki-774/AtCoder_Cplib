@@ -24,12 +24,23 @@ using namespace std;
 //   ac.next(v, c)               状態 v で文字 c（'a' など）を読んだ後の状態（DP 用。根は 0）
 //   ac.cnt[v]                   状態 v に来たとき「ここで終わるパターン」の個数（fail 先の分も含む）
 //   ac.size()                   状態の個数
+// ◆ struct AhoCorasick : たくさんのパターンをまとめて検索するオートマトン
+//   add(s)          : パターンを追加（0, 1, 2, ... の番号が返る）
+//   build()         : 全部 add してから 1 回呼ぶ。O(Σ|パターン| × K)
+//   count_each(t)   : 各パターンが t に何回現れるか（重なりも数える）。O(|t| + 状態数)
+//   count_all(t)    : 全パターンの出現回数の合計。O(|t|)
+//   next(v, c)      : 状態 v で文字 c を読んだ後の状態（根は 0）。DP 用
+//   cnt[v]          : 状態 v で終わるパターンの個数
+//   size()          : 状態の数
+//   K, B : 文字の種類数と最初の文字（既定 26, 'a'）
 template <int K = 26, char B = 'a'>
 struct AhoCorasick {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/aho_corasick.cpp
     vector<array<int, K>> to;
     vector<int> fail, cnt, end_node, bfs;
+    // AhoCorasick() : 空（根だけ）で作る。add でパターンを足していく
     AhoCorasick() : to(1), cnt(1, 0) { to[0].fill(-1); }
+    // add(s) : s : パターン（同じものを 2 回入れてもよい）。build の前に呼ぶ
     int add(const string& s) {
         int v = 0;
         for (char ch : s) {
@@ -45,6 +56,7 @@ struct AhoCorasick {
         end_node.push_back(v);
         return end_node.size() - 1;
     }
+    // build() : add を全部終えてから 1 回だけ呼ぶ（2 回呼ぶと壊れる）
     void build() {
         int n = to.size();
         fail.assign(n, 0);
@@ -63,14 +75,18 @@ struct AhoCorasick {
             }
         }
     }
+    // next(v, ch) : v : 状態（0..size()−1）、ch : 文字（B..B+K−1）
     int next(int v, char ch) const { return to[v][ch - B]; }
+    // size() : 状態の数
     int size() const { return to.size(); }
+    // count_all(t) : t : 検索する文字列
     long long count_all(const string& t) const {
         long long res = 0;
         int v = 0;
         for (char ch : t) v = to[v][ch - B], res += cnt[v];
         return res;
     }
+    // count_each(t) : 返り値の i 番目 = パターン i の出現回数
     vector<long long> count_each(const string& t) const {
         vector<long long> visit(to.size(), 0);
         int v = 0;

@@ -21,6 +21,8 @@ using namespace std;
 // ---------- 本体A: メビウス関数 ----------
 // mobius_table(N) : mu[0..N]（mu[0] = 0）。線形篩で O(N)
 // mobius(n)       : 1 個だけ O(√n)
+// ◆ mobius_table(N) : メビウス関数 μ(0..N) の表（μ(0) = 0）。O(N)
+//   N : 上限（1e7 くらいまで）
 vector<int> mobius_table(int N) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
     vector<int> mu(N + 1, 0), primes;
@@ -37,6 +39,8 @@ vector<int> mobius_table(int N) {
     }
     return mu;
 }
+// ◆ mobius(n) : μ(n) を 1 つだけ。O(√n)
+//   n : 1 以上
 int mobius(long long n) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
     int res = 1;
@@ -57,6 +61,7 @@ int mobius(long long n) {
 //   multiple_zeta(a)   : a[d] ← Σ_{d | n, n <= N} a[n]  （d の倍数での和）
 //   multiple_mobius(a) : multiple_zeta の逆
 // ★ よく使う形: f[d] = 「全部 d の倍数」になる組の数（数えやすい）→ multiple_mobius(f) → f[d] = 「gcd がちょうど d」の組の数
+// （内部用）N 以下の素数の一覧
 vector<int> dt_primes(int N) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
     vector<bool> comp(N + 1, false);
@@ -68,6 +73,8 @@ vector<int> dt_primes(int N) {
     }
     return ps;
 }
+// ◆ divisor_zeta(a) : a[n] ← Σ_{d | n} a[d]（約数での和）。O(N log log N)
+//   a : a[0..N]（a[0] は使わない）。その場で書き換える。T は long long か mint
 template <class T>
 void divisor_zeta(vector<T>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
@@ -75,6 +82,7 @@ void divisor_zeta(vector<T>& a) {
     for (int p : dt_primes(N))
         for (int i = 1; (long long)i * p <= N; i++) a[i * p] += a[i];  // ★ 素数 p ごとに「p の指数方向の累積和」
 }
+// ◆ divisor_mobius(a) : divisor_zeta の逆。a は a[0..N]（その場で書き換える）
 template <class T>
 void divisor_mobius(vector<T>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
@@ -82,6 +90,7 @@ void divisor_mobius(vector<T>& a) {
     for (int p : dt_primes(N))
         for (int i = N / p; i >= 1; i--) a[i * p] -= a[i];  // ★ 累積和の逆 = 差分（大きい方から）
 }
+// ◆ multiple_zeta(a) : a[d] ← Σ_{d | n, n <= N} a[n]（倍数での和）。a は a[0..N]
 template <class T>
 void multiple_zeta(vector<T>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
@@ -89,6 +98,8 @@ void multiple_zeta(vector<T>& a) {
     for (int p : dt_primes(N))
         for (int i = N / p; i >= 1; i--) a[i] += a[i * p];  // ★ 倍数の方から足していく（後ろからの累積和）
 }
+// ◆ multiple_mobius(a) : multiple_zeta の逆。a は a[0..N]
+//   使い方 : a[d] = 「全部 d の倍数」の数 を入れて呼ぶと、a[d] = 「gcd がちょうど d」の数 になる
 template <class T>
 void multiple_mobius(vector<T>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
@@ -99,6 +110,8 @@ void multiple_mobius(vector<T>& a) {
 
 // ---------- 削除可: gcd 畳み込み ----------
 // c[k] = Σ_{gcd(i, j) = k} a[i] b[j]（1 <= i, j <= N）。a, b は同じ長さ N + 1
+// ◆ gcd_convolution(a, b) : c[k] = Σ_{gcd(i, j) = k} a[i] b[j]（1 <= i, j <= N）
+//   a, b : 同じ長さ N + 1（添字 0 は使わない）
 template <class T>
 vector<T> gcd_convolution(vector<T> a, vector<T> b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp

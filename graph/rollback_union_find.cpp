@@ -22,21 +22,37 @@ using namespace std;
 //   int t = uf.snapshot(); ... uf.rollback(t);   t の時点まで戻す
 //   uf.leader(a), uf.same(a, b), uf.size(a), uf.components（連結成分の数）
 //   uf.edges(a)          a の連結成分の中で merge した回数（= 辺の本数。同じ成分どうしの merge も 1 本と数える）
+// ◆ struct RollbackUnionFind : 操作を取り消せる UnionFind（経路圧縮なし。各操作 O(log N)）
+//   RollbackUnionFind(n) : 頂点 0..n−1
+//   merge(a, b)          : a と b をつなぐ（同じ成分でも 1 回として記録）。新しくつないだら true
+//   undo()               : 直前の merge を 1 回取り消す（merge していないときに呼ばないこと）
+//   snapshot()           : 今の時点の番号（今までの merge の回数）
+//   rollback(t)          : snapshot() が t だった時点まで戻す
+//   leader / same / size : 根、同じ成分か、成分の頂点数
+//   edges(a)             : a の成分で merge した回数（辺の本数）
+//   components           : 成分の数
 struct RollbackUnionFind {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/rollback_union_find.cpp
     vector<int> par;  // 根なら -(サイズ)、それ以外は親
     vector<int> ecnt; // 根ごとの辺の本数
     int components;
+    // （内部用）merge 前の値の記録
     struct Rec { int a, pa, ea, b, pb, eb; bool merged; };  // 変更前の値
     vector<Rec> hist;
+    // n : 頂点数
     RollbackUnionFind(int n) : par(n, -1), ecnt(n, 0), components(n) {}
+    // leader(x) : x の成分の根
     int leader(int x) const {
         while (par[x] >= 0) x = par[x];  // ★ 経路圧縮しない（すると取り消せなくなる）
         return x;
     }
+    // same(a, b) : 同じ成分か
     bool same(int a, int b) const { return leader(a) == leader(b); }
+    // size(a) : a の成分の頂点数
     int size(int a) const { return -par[leader(a)]; }
+    // edges(a) : a の成分の中で merge した回数（同じ成分どうしの merge も 1 本と数える）
     int edges(int a) const { return ecnt[leader(a)]; }
+    // merge(a, b) : a, b : つなぐ頂点。同じ成分なら false（それでも undo の対象として記録される）
     bool merge(int a, int b) {
         a = leader(a), b = leader(b);
         hist.push_back({a, par[a], ecnt[a], b, par[b], ecnt[b], a != b});  // ★ 書き換える前の値を覚えておく
@@ -45,13 +61,16 @@ struct RollbackUnionFind {
         par[a] += par[b], par[b] = a, ecnt[a] += ecnt[b] + 1, components--;
         return true;
     }
+    // undo() : 直前の merge を取り消す
     void undo() {
         Rec r = hist.back();
         hist.pop_back();
         par[r.a] = r.pa, par[r.b] = r.pb, ecnt[r.a] = r.ea, ecnt[r.b] = r.eb;  // ★ 覚えておいた値に戻すだけ
         if (r.merged) components++;
     }
+    // snapshot() : 今までの merge の回数（rollback に渡す値）
     int snapshot() const { return hist.size(); }
+    // rollback(t) : t : 戻したい時点の snapshot() の値（今より大きい値なら何もしない）
     void rollback(int t) { while ((int)hist.size() > t) undo(); }
 };
 

@@ -22,6 +22,18 @@ using namespace std;
 // build 後: par[v]（根は -1）, dep[v], wdep[v]（重み付き深さ）, sz[v], children[v], order（BFS 順）
 //           lca(a, b), dist(a, b), wdist(a, b), kth_ancestor(v, k)
 // 木 DP : order を逆順に回すと「子 → 親」の順になる
+// ◆ struct Tree : 木の基本情報（親・深さ・部分木サイズ・BFS 順）と LCA（ダブリング）
+//   Tree(n)              : 頂点 0..n−1 の木を作る準備（辺はまだない）
+//   add_edge(a, b, w)    : 無向辺を足す（w 省略で 1）
+//   build(root)          : 根を決めて前計算する。O(N log N)。辺を全部足してから呼ぶ
+//   kth_ancestor(v, k)   : v の k 個上の祖先（なければ −1）。O(log N)
+//   lca(a, b)            : 最小共通祖先。O(log N)
+//   dist(a, b)           : 辺の本数での距離、wdist(a, b) : 重みでの距離
+//   jump(a, b, k)        : a から b へ k 歩進んだ頂点（はみ出したら −1）
+//   path(a, b)           : a から b への頂点の並び。O(パスの長さ)
+//   is_on_path(a, b, c)  : c が a-b パス上にあるか
+//   diameter()           : 直径 {長さ, 端から端への頂点の並び}（build 不要）
+//   T : 辺の重みの型（既定 long long）
 template <class T = long long>
 struct Tree {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp
@@ -31,9 +43,12 @@ struct Tree {
     vector<T> wdep;
     vector<vector<int>> children, up;  // up[k][v] = v の 2^k 個上
 
+    // n_ : 頂点数
     Tree(int n_) : n(n_), adj(n_) {}
+    // add_edge(a, b, w) : a, b : 端点（0 始まり）、w : 重み（省略で 1。wdep / wdist / diameter で使う）
     void add_edge(int a, int b, T w = T(1)) { adj[a].push_back({b, w}), adj[b].push_back({a, w}); }
 
+    // build(root) : root : 根（省略で 0）。木がつながっていないと、つながっていない頂点の情報は壊れる
     void build(int root = 0) {
         par.assign(n, -1), dep.assign(n, 0), sz.assign(n, 1), wdep.assign(n, T(0)), children.assign(n, {});
         order = {root};
@@ -54,12 +69,14 @@ struct Tree {
             for (int v = 0; v < n; v++) up[k + 1][v] = up[k][up[k][v]];  // ★ 2^k 上の 2^k 上 = 2^(k+1) 上
     }
 
+    // kth_ancestor(v, k) : v : 頂点、k : 何個上か（0 なら v 自身。深さを超えると −1）
     int kth_ancestor(int v, int k) const {  // 存在しなければ -1
         if (k < 0 || k > dep[v]) return -1;
         for (int i = 0; i < LOG; i++)
             if (k >> i & 1) v = up[i][v];  // ★ k を 2 進数で分解して飛ぶ
         return v;
     }
+    // lca(a, b) : a, b : 頂点（build 済みであること）
     int lca(int a, int b) const {
         if (dep[a] < dep[b]) swap(a, b);
         a = kth_ancestor(a, dep[a] - dep[b]);  // ★ まず深さをそろえる
@@ -68,16 +85,20 @@ struct Tree {
             if (up[k][a] != up[k][b]) a = up[k][a], b = up[k][b];  // ★ 合流しない範囲で大きく飛ぶ
         return up[0][a];                                          // ★ その 1 つ上が合流点
     }
+    // dist(a, b) : 辺の本数
     int dist(int a, int b) const { return dep[a] + dep[b] - 2 * dep[lca(a, b)]; }
+    // wdist(a, b) : 辺の重みの和
     T wdist(int a, int b) const { return wdep[a] + wdep[b] - 2 * wdep[lca(a, b)]; }
 
     // --- 削除可: パス関連 ---
+    // jump(a, b, k) : k : 進む歩数（0 なら a、dist(a, b) なら b、それより大きいと −1）
     int jump(int a, int b, int k) const {  // a から b へ k 歩進んだ頂点（はみ出したら -1）
         int l = lca(a, b), da = dep[a] - dep[l], db = dep[b] - dep[l];
         if (k <= da) return kth_ancestor(a, k);
         if (k <= da + db) return kth_ancestor(b, da + db - k);
         return -1;
     }
+    // path(a, b) : a から b への頂点の並び（a と b を含む）
     vector<int> path(int a, int b) const {  // a から b へのパスの頂点列
         int l = lca(a, b);
         vector<int> left, right;
@@ -87,10 +108,12 @@ struct Tree {
         left.insert(left.end(), right.rbegin(), right.rend());
         return left;
     }
+    // is_on_path(a, b, c) : c が a-b パス上（端点を含む）にあるか
     bool is_on_path(int a, int b, int c) const { return dist(a, c) + dist(c, b) == dist(a, b); }
     // --- 削除可ここまで ---
 
     // --- 削除可: 木の直径（build 不要）。{長さ, 端点から端点への頂点列} ---
+    // diameter() : build しなくても呼べる。重みは add_edge の w（負の重みがあると正しくない）
     pair<T, vector<int>> diameter() const {
         auto far = [&](int s, vector<int>& pre) {  // s から一番遠い頂点
             vector<T> d(n, T(0));
@@ -126,19 +149,29 @@ struct Tree {
 //   im.add_path(u, v, x)  u-v パス上の全頂点に x を足す   O(log N)（LCA を使う）
 //   im.build()            各頂点の最終的な値           O(N)
 // 例: 「パス u-v を通る回数」= 各パスに add_path(u, v, 1)
+// ◆ struct TreeImos : 木の上のいもす法（部分木やパスへの加算をまとめて行い、最後に各頂点の値を求める）
+//   TreeImos(t)          : t は build 済みの Tree（参照で持つので t を先に作って残しておく）
+//   add_subtree(v, x)    : v の部分木の全頂点に x を足す。O(1)
+//   add_path(u, v, x)    : u-v パス上の全頂点に x を足す。O(log N)
+//   build()              : 各頂点の値を返す。O(N)
+//   U : 足す値の型、T : Tree の重みの型
 template <class U, class T>
 struct TreeImos {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp
     const Tree<T>& t;
     vector<U> ds, dp;  // ds: 部分木加算用、dp: パス加算用
+    // t_ : build 済みの Tree
     TreeImos(const Tree<T>& t_) : t(t_), ds(t_.n, U(0)), dp(t_.n, U(0)) {}
+    // add_subtree(v, x) : v : 部分木の根、x : 足す値
     void add_subtree(int v, U x) { ds[v] += x; }  // ★ 根の印だけ付けて、後で下に流す
+    // add_path(u, v, x) : u, v : パスの両端（u == v なら u だけ）、x : 足す値
     void add_path(int u, int v, U x) {
         int l = t.lca(u, v);
         dp[u] += x, dp[v] += x;                // ★ 両端に +x
         dp[l] -= x;                            // ★ LCA で 2 回分になるので 1 回引く
         if (t.par[l] != -1) dp[t.par[l]] -= x;  // ★ LCA の親より上には流さない
     }
+    // build() : 返り値 res[v] = 頂点 v に足された値の合計
     vector<U> build() const {
         auto s = ds, p = dp;
         for (int v : t.order)

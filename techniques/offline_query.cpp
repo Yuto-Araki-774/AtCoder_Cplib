@@ -22,6 +22,11 @@ using namespace std;
 // edges[i] = {u, v, w}、queries[j] = {a, b, x}
 // 返り値[j] = {a と b が連結か, a の連結成分の頂点数}（重みが x 以下の辺だけを使ったとき）
 // 「x 以上の辺だけ」なら、w と x を両方 -1 倍して呼ぶ。「x より大きい」なら x+1 以上として扱う
+// ◆ offline_connectivity(n, edges, queries) : 重み x 以下の辺だけを使ったときの連結性（クエリを先読み）。O((M + Q) log)
+//   n       : 頂点数
+//   edges   : 辺 {u, v, w} の一覧（無向）
+//   queries : クエリ {a, b, x} の一覧
+//   返り値[j] : {a と b がつながっているか, a の成分の頂点数}
 template <class T>
 vector<pair<bool, int>> offline_connectivity(int n, vector<tuple<int, int, T>> edges, const vector<tuple<int, int, T>>& queries) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/offline_query.cpp
@@ -43,6 +48,9 @@ vector<pair<bool, int>> offline_connectivity(int n, vector<tuple<int, int, T>> e
 // ---------- 本体B: 区間の中で x 以下の値の個数 ----------
 // queries[j] = {l, r, x}。返り値[j] = a[l..r) の中で x 以下の値の個数
 // 「x 未満」なら x - 1 以下（整数のとき）、「x 以上」なら (r - l) - (x - 1 以下の個数)
+// ◆ offline_count_le(a, queries) : 区間 a[l..r) の中で x 以下の値の個数（クエリを先読み）。O((N + Q) log N)
+//   a       : 数列
+//   queries : {l, r, x} の一覧（0 <= l <= r <= N）
 template <class T>
 vector<int> offline_count_le(const vector<T>& a, const vector<tuple<int, int, T>>& queries) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/offline_query.cpp

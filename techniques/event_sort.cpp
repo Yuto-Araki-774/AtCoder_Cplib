@@ -30,16 +30,26 @@ using namespace std;
 //   es.length_at_least(k)      k 個以上に覆われている長さの合計（k = 1 で「どれかに覆われている長さ」）
 //   es.length_exactly()        ans[k] = ちょうど k 個に覆われている長さ（k = 1..区間の数。0 個の部分は数えない）
 //   es.count_at(x)             点 x を含む区間の個数 O(log N)
+// ◆ struct EventSort : イベントソート（区間の始まり +1、終わり −1 を座標順に処理する）
+//   add(l, r)            : 半開区間 [l, r) を追加（l >= r なら無視）
+//   build()              : 全部 add してから 1 回呼ぶ。O(N log N)
+//   max_overlap()        : 重なりの最大数
+//   length_at_least(k)   : k 個以上に覆われている長さの合計
+//   length_exactly()     : ans[k] = ちょうど k 個に覆われている長さ
+//   count_at(x)          : 点 x を含む区間の個数。O(log N)
+//   注意 : 閉区間 [l, r] の整数（日付など）は add(l, r + 1) として入れる
 template <class T>
 struct EventSort {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/event_sort.cpp
     vector<pair<T, int>> ev;        // {座標, +1 なら始まり / -1 なら終わり}
     vector<pair<T, int>> profile;   // {座標, その座標から先の被覆数}
     int n = 0;
+    // add(l, r) : l, r : 区間 [l, r) の両端
     void add(T l, T r) {
         if (l >= r) return;
         ev.push_back({l, +1}), ev.push_back({r, -1}), n++;
     }
+    // build() : add を全部終えてから呼ぶ（build の後に add しても反映されない）
     void build() {
         sort(ev.begin(), ev.end());  // ★ 座標順。同じ座標では -1（終わり）が +1（始まり）より先に来る
         profile.clear();
@@ -50,23 +60,27 @@ struct EventSort {
             if (profile.empty() || profile.back().second != c) profile.push_back({x, c});
         }
     }
+    // max_overlap() : 一番多く重なっている所の区間の個数
     int max_overlap() const {
         int m = 0;
         for (auto& p : profile) m = max(m, p.second);
         return m;
     }
+    // length_at_least(k) : k : 1 以上（k = 1 で「どれかに覆われている長さ」）
     T length_at_least(int k) const {
         T s = 0;
         for (size_t i = 0; i + 1 < profile.size(); i++)
             if (profile[i].second >= k) s += profile[i + 1].first - profile[i].first;  // ★ 次の変化点までの長さ
         return s;
     }
+    // length_exactly() : 長さ（区間の数 + 1）の配列。ans[0] は 0（隙間の長さは数えない）
     vector<T> length_exactly() const {
         vector<T> ans(n + 1, 0);
         for (size_t i = 0; i + 1 < profile.size(); i++) ans[profile[i].second] += profile[i + 1].first - profile[i].first;
         ans[0] = 0;  // 区間と区間の隙間（0 個の部分）は長さが決まらないので数えない
         return ans;
     }
+    // count_at(x) : x : 調べる点
     int count_at(T x) const {
         auto it = upper_bound(profile.begin(), profile.end(), make_pair(x, INT_MAX));  // ★ x 以下で一番右の変化点
         return it == profile.begin() ? 0 : prev(it)->second;

@@ -26,11 +26,20 @@ using namespace std;
 //   st.total            塗られている長さの合計
 //   st.mp               区間の一覧（map: 左端 → 右端）。for (auto [l, r] : st.mp) で小さい順に見られる
 // 整数の点を扱うなら、点 x を [x, x + 1) として入れる
+// ◆ struct IntervalSet : 区間の集合（塗った範囲を、重ならない区間の map で管理）。各操作ならし O(log N)
+//   insert(l, r)   : [l, r) を塗る
+//   erase(l, r)    : [l, r) を消す
+//   get(x)         : x を含む区間 {l, r}（なければ {x, x}）
+//   contains(x)    : x が塗られているか
+//   mex(x)         : x 以上で塗られていない最小の値
+//   total          : 塗られている長さの合計
+//   mp             : 区間の一覧（左端 → 右端）
 struct IntervalSet {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/interval_set.cpp
     map<long long, long long> mp;  // 重ならず、隣り合ってもいない区間 [l, r)
     long long total = 0;
 
+    // insert(l, r) : l >= r なら何もしない。隣り合う区間はつなげて 1 つにする
     void insert(long long l, long long r) {
         if (l >= r) return;
         auto it = mp.upper_bound(l);
@@ -42,6 +51,7 @@ struct IntervalSet {
         }
         mp[l] = r, total += r - l;
     }
+    // erase(l, r) : l >= r なら何もしない
     void erase(long long l, long long r) {
         if (l >= r) return;
         auto it = mp.upper_bound(l);
@@ -54,12 +64,15 @@ struct IntervalSet {
             if (b > r) mp[r] = b, total += b - r;
         }
     }
+    // get(x) : x : 調べる点
     pair<long long, long long> get(long long x) const {
         auto it = mp.upper_bound(x);  // ★ 左端が x 以下で一番右の区間だけ見ればよい
         if (it != mp.begin() && prev(it)->second > x) return *prev(it);
         return {x, x};
     }
+    // contains(x) : x : 調べる点（整数の点 x は [x, x+1) として入れておく）
     bool contains(long long x) const { auto [l, r] = get(x); return l < r; }
+    // mex(x) : x : ここから右を探す
     long long mex(long long x) const { return get(x).second; }  // ★ x を含む区間があればその右端、なければ x
 };
 

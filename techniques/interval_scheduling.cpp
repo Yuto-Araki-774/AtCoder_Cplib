@@ -19,6 +19,9 @@ using namespace std;
 // ---------- 本体A: 重ならない区間の最大数 ----------
 // iv[i] = {l, r}（半開区間 [l, r)）。返り値: 選んだ区間の番号（個数が答え）
 // 閉区間 [l, r] で「端が同じ点で触れるのもダメ」なら {l, r + 1} として渡す
+// ◆ max_disjoint_intervals(iv) : 重ならないように選べる区間の最大数（終わりが早い順に貪欲）。O(N log N)
+//   iv : 区間 {l, r}（半開区間 [l, r)。端で触れるだけなら重なりではない）
+//   返り値 : 選んだ区間の番号の一覧（個数が答え）
 template <class T>
 vector<int> max_disjoint_intervals(const vector<pair<T, T>>& iv) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/interval_scheduling.cpp
@@ -36,6 +39,9 @@ vector<int> max_disjoint_intervals(const vector<pair<T, T>>& iv) {
 // ---------- 本体B: すべての区間を刺す最小の点の数 ----------
 // iv[i] = {l, r}（閉区間 [l, r]）。返り値: 置く点の座標の一覧（個数が答え）
 // 例: 「a 番目と b 番目の島の間のどこかの橋を壊す」→ 橋 a..b-1 のどれか → 閉区間 [a, b - 1]
+// ◆ min_stabbing_points(iv) : すべての区間に少なくとも 1 点が入るように置く、最小の点の集合。O(N log N)
+//   iv : 区間 {l, r}（閉区間 [l, r]）
+//   返り値 : 置く点の座標の一覧（個数が答え）
 template <class T>
 vector<T> min_stabbing_points(const vector<pair<T, T>>& iv) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/interval_scheduling.cpp

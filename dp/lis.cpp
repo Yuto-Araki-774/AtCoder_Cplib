@@ -21,6 +21,10 @@ using namespace std;
 // 返り値: len[i] = a[i] で終わる LIS の長さ。全体の LIS の長さは *max_element(len)
 // 典型: 「a[i] を必ず含む LIS の長さ」= (a[i] で終わる長さ) + (a[i] から始まる長さ) - 1
 //       a[i] から始まる長さは、列を反転し -1 倍したものの len を逆順に読めば求まる
+// ◆ lis_lengths(a, strict) : 各位置で終わる最長増加部分列の長さ。O(N log N)
+//   a      : 数列（< で比べられる型）
+//   strict : true（既定）なら狭義単調増加（a < b）、false なら広義（a <= b）
+//   返り値 : len[i] = a[i] で終わる LIS の長さ
 template <class T>
 vector<int> lis_lengths(const vector<T>& a, bool strict = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/lis.cpp
@@ -38,6 +42,9 @@ vector<int> lis_lengths(const vector<T>& a, bool strict = true) {
 
 // ---------- 削除可: LIS の復元（本体が必要） ----------
 // 返り値: LIS をなす添字の列（昇順）。値は a[idx[k]]。長さは .size()
+// ◆ lis(a, strict) : 最長増加部分列を 1 つ返す（添字の昇順の列）
+//   a, strict : lis_lengths と同じ
+//   返り値 : LIS をなす添字の列。値は a[idx[k]]
 template <class T>
 vector<int> lis(const vector<T>& a, bool strict = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/lis.cpp

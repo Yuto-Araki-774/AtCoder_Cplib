@@ -33,10 +33,18 @@ using namespace std;
 // 例: パスの和（segtree<long long, op, e> seg(n) に seg.set(pos[v], val[v]) しておく）
 //   long long s = 0; for (auto [l, r] : hld.path(u, v)) s += seg.prod(l, r);
 // 注意: 区間の向きは区別しない。演算の順番に意味がある（非可換な）とき は別の工夫が要る
+// ◆ struct HLD : HL 分解（パスを O(log N) 個の連続した区間に分ける）
+//   HLD(g, root)         : 前計算 O(N)
+//   pos[v]               : 頂点 v の位置（segtree の添字）
+//   path(u, v, edge)     : u-v パスを表す区間 [l, r) の一覧（O(log N) 個）
+//   subtree(v)           : v の部分木の区間 [l, r)
+//   lca(u, v), dist(u, v): O(log N)
+//   par[v], dep[v], sz[v]: 親・深さ・部分木サイズ
 struct HLD {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/hld.cpp
     int n;
     vector<int> par, dep, sz, heavy, head, pos;
+    // g : 木の隣接リスト（両方向）、root : 根（省略で 0）
     HLD(const vector<vector<int>>& g, int root = 0)
         : n(g.size()), par(n, -1), dep(n, 0), sz(n, 1), heavy(n, -1), head(n), pos(n) {
         vector<int> order = {root};
@@ -61,6 +69,9 @@ struct HLD {
             if (heavy[v] != -1) head[heavy[v]] = head[v], st.push_back(heavy[v]);    // ★ 重い子を最後に積む → 次に取り出され、番号が連続する
         }
     }
+    // path(u, v, edge) : u, v : パスの両端
+    //   edge : true なら辺のパス（LCA の頂点を含めない。辺の値は子の側の pos に置いておく）。既定 false（頂点のパス）
+    //   注意 : 区間の向き（u 側から v 側か）は区別しない。順番に意味がある演算では工夫が要る
     vector<pair<int, int>> path(int u, int v, bool edge = false) const {
         vector<pair<int, int>> res;
         while (head[u] != head[v]) {
@@ -72,7 +83,9 @@ struct HLD {
         if (pos[u] + edge < pos[v] + 1) res.push_back({pos[u] + edge, pos[v] + 1});  // u が LCA。edge なら LCA を除く
         return res;
     }
+    // subtree(v) : v の部分木の区間 [pos[v], pos[v] + sz[v])
     pair<int, int> subtree(int v) const { return {pos[v], pos[v] + sz[v]}; }
+    // lca(u, v) : 最小共通祖先
     int lca(int u, int v) const {
         while (head[u] != head[v]) {
             if (dep[head[u]] < dep[head[v]]) swap(u, v);
@@ -80,6 +93,7 @@ struct HLD {
         }
         return dep[u] < dep[v] ? u : v;
     }
+    // dist(u, v) : 辺の本数
     int dist(int u, int v) const { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }
 };
 

@@ -27,11 +27,20 @@ using mint = atcoder::modint998244353;  // 問題に合わせて modint100000000
 // よく使う: 格子経路 (0,0)->(h,w) = C(h+w, h)
 //           n 個を k 箱（空OK）= C(n+k-1, n)、（空NG）= C(n-1, k-1)
 //           カタラン数 = C(2n, n) - C(2n, n+1)
+// ◆ struct Combination : 階乗・階乗の逆元の表で二項係数などを O(1) で（表は足りなければ自動で伸びる）
+//   Combination(n)  : n! まで前計算（省略してもよい）
+//   C(n, k)         : nCk（n < 0, k < 0, k > n なら 0）
+//   P(n, k)         : nPk = n! / (n−k)!
+//   H(n, k)         : 重複組合せ（n 種類から重複を許して k 個）= C(n+k−1, k)
+//   fact(n), ifact(n), inv(n) : n!、1/n!、1/n（inv は n >= 1）
+//   mint : modint の型（mod は素数）。n は mod 未満であること（mod が小さいなら Lucas）
 template <class mint>
 struct Combination {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/combination.cpp
     vector<mint> f, fi;  // f[i] = i!, fi[i] = 1 / i!
+    // n : 前計算しておく最大の n（省略で 0。使うときに自動で伸びる）
     Combination(int n = 0) : f(1, mint(1)), fi(1, mint(1)) { extend(n); }
+    // extend(n) : n! まで表を伸ばす（内部でも呼ぶ）。n >= mod なら assert で止まる
     void extend(int n) {
         int m = f.size();
         if (n < m) return;
@@ -42,23 +51,31 @@ struct Combination {
         fi[nm - 1] = f[nm - 1].inv();                              // ★ 最後だけ逆元を計算し
         for (int i = nm - 1; i > m; i--) fi[i - 1] = fi[i] * mint(i);  // ★ 1/(i-1)! = 1/i! * i で戻る
     }
+    // fact(n) : n!（n >= 0）
     mint fact(int n) { extend(n); return f[n]; }
+    // ifact(n) : 1 / n!（n >= 0）
     mint ifact(int n) { extend(n); return fi[n]; }
+    // inv(n) : 1 / n（n >= 1）
     mint inv(int n) { extend(n); return fi[n] * f[n - 1]; }
+    // C(n, k) : n 個から k 個選ぶ。範囲外は 0
     mint C(int n, int k) {
         if (n < 0 || k < 0 || k > n) return mint(0);
         extend(n);
         return f[n] * fi[k] * fi[n - k];  // ★ n! / (k! (n-k)!)
     }
+    // P(n, k) : n 個から k 個選んで並べる。範囲外は 0
     mint P(int n, int k) {
         if (n < 0 || k < 0 || k > n) return mint(0);
         extend(n);
         return f[n] * fi[n - k];
     }
+    // H(n, k) : n 種類から重複を許して k 個選ぶ（n = 0 なら k = 0 のときだけ 1）
     mint H(int n, int k) { return n == 0 ? mint(k == 0) : C(n + k - 1, k); }
 };
 
 // ---------- 削除可: n が巨大（~1e18）で k が小さいときの nCk。O(k) ----------
+// ◆ comb_large_n<mint>(n, k) : n が巨大（1e18 まで）で k が小さいときの nCk。O(k)
+//   n : 0 以上、k : 0 以上（k が mod 以上だと k! ≡ 0 で割れなくなるので、k < mod）
 template <class mint>
 mint comb_large_n(long long n, int k) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/combination.cpp
@@ -69,6 +86,8 @@ mint comb_large_n(long long n, int k) {
 }
 
 // ---------- 削除可: mod なしのパスカルの三角形（n <= 66 で long long に収まる。ACL 不要） ----------
+// ◆ pascal(n) : mod なしの二項係数の表 c[i][j] = iCj（0 <= j <= i <= n）
+//   n : 66 以下（それより大きいと long long からあふれる値が出る）
 vector<vector<long long>> pascal(int n) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/combination.cpp
     vector<vector<long long>> c(n + 1, vector<long long>(n + 1, 0));
@@ -85,10 +104,14 @@ vector<vector<long long>> pascal(int n) {
 //   lu.C(n, k)   nCk mod p（int）。O(log_p n)
 // ★ n, k を p 進数で書いて、桁ごとの二項係数を掛ける: C(n, k) ≡ Π C(n の i 桁目, k の i 桁目) (mod p)
 //   特に p = 2: nCk が奇数 ⇔ (n & k) == k
+// ◆ struct Lucas : mod が小さい素数 p のときの nCk（Lucas の定理）
+//   Lucas(p)   : 前計算 O(p)。p は素数（1e7 くらいまで）
+//   C(n, k)    : nCk mod p。n, k は 1e18 まで。O(log_p n)
 struct Lucas {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/combination.cpp
     int p;
     vector<long long> f, fi;
+    // p_ : mod（素数であること。素数でないと答えが壊れる）
     Lucas(int p_) : p(p_), f(p_), fi(p_) {
         f[0] = 1;
         for (int i = 1; i < p; i++) f[i] = f[i - 1] * i % p;
@@ -97,7 +120,9 @@ struct Lucas {
         fi[p - 1] = r;
         for (int i = p - 1; i > 0; i--) fi[i - 1] = fi[i] * i % p;
     }
+    // （内部用）n, k < p のときの nCk mod p
     long long small(int n, int k) const { return k > n ? 0 : f[n] * fi[k] % p * fi[n - k] % p; }  // n, k < p
+    // C(n, k) : n, k : 0 以上（k > n や k < 0 なら 0）
     int C(long long n, long long k) const {
         if (k < 0 || n < k) return 0;
         long long r = 1;

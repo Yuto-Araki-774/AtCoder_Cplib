@@ -23,10 +23,15 @@ using namespace std;
 // g      : 隣接リスト（無向なら両方向に入れる）
 // starts : 始点の集合（複数なら「最も近い始点までの距離」）
 // 返り値 : dist[v]（到達不能は -1）、path(t) で経路復元
+// ◆ struct BFSResult : bfs の結果
+//   dist[v]   : 始点から v への最短距離（辺の本数）。行けなければ −1
+//   prev[v]   : 最短路で v の 1 つ前の頂点（始点・行けない頂点は −1）
+//   path(t)   : 始点から t への最短路の頂点の並び（行けなければ空）
 struct BFSResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
     vector<int> dist, prev;
     // --- 削除可: 経路復元 ---
+    // path(t) : t までの最短路（始点 → … → t）。t : 終点の頂点番号
     vector<int> path(int t) const {
         if (dist[t] == -1) return {};
         vector<int> res;
@@ -36,6 +41,10 @@ struct BFSResult {
     }
     // --- 削除可ここまで ---
 };
+// ◆ bfs(g, starts) / bfs(g, s) : 重みなしグラフの最短距離。O(N + M)
+//   g      : 隣接リスト（無向なら両方向に入れておく）
+//   starts : 始点の一覧（多始点。各頂点の距離は「一番近い始点から」の距離）。重複してもよい
+//   s      : 始点が 1 つのとき
 BFSResult bfs(const vector<vector<int>>& g, const vector<int>& starts) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
     int n = g.size();
@@ -55,6 +64,7 @@ BFSResult bfs(const vector<vector<int>>& g, const vector<int>& starts) {
     }
     return r;
 }
+// bfs(g, s) : 始点が 1 つのとき（s : 始点）
 BFSResult bfs(const vector<vector<int>>& g, int s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
     return bfs(g, vector<int>{s});
@@ -63,6 +73,12 @@ BFSResult bfs(const vector<vector<int>>& g, int s) {
 // ---------- 本体B: グリッド BFS ----------
 // grid : H 行の文字列、starts : 始点 {行, 列} の集合、wall : 壁の文字、diag : 8 方向なら true
 // 返り値 : dist[i][j]（到達不能・壁は -1）
+// ◆ grid_bfs(grid, starts, wall, diag) : グリッドの最短距離。O(HW)
+//   grid   : H 行の文字列（各行の長さは同じ W であること）
+//   starts : 始点 {行, 列} の一覧（0 始まり）。壁の上にある始点は無視する
+//   wall   : 通れないマスの文字（既定 '#'）。それ以外の文字のマスは全部通れる
+//   diag   : true なら斜めを含む 8 方向に動ける（既定 false = 上下左右の 4 方向）
+//   返り値 : dist[i][j]（行けない・壁は −1）
 vector<vector<int>> grid_bfs(const vector<string>& grid, const vector<pair<int, int>>& starts,
                              char wall = '#', bool diag = false) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
@@ -95,6 +111,11 @@ vector<vector<int>> grid_bfs(const vector<string>& grid, const vector<pair<int, 
 //   【自分で定義するもの】adj(v, relax) : v から行ける先ごとに relax(行き先, コスト 0 か 1) を呼ぶ（ラムダ）
 // 隣接リスト版:
 //   g[a] に {b, c}（c は 0 か 1）を入れて bfs01(g, s)
+// ◆ bfs01_func(n, starts, adj) : 辺の重みが 0 か 1 だけのグラフの最短距離（01-BFS）。O(N + M)
+//   n      : 頂点（状態）の数。状態は 0..n−1 の番号にしておく（例: (マス, 向き) → (i * W + j) * 4 + dir）
+//   starts : 始点の一覧
+//   adj    : void adj(int v, auto relax)。v から行ける先ごとに relax(行き先, コスト) を呼ぶ。コストは 0 か 1 だけ
+//   返り値 : dist[v]（行けなければ −1）
 template <class F>
 vector<int> bfs01_func(int n, const vector<int>& starts, F adj) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
@@ -116,6 +137,8 @@ vector<int> bfs01_func(int n, const vector<int>& starts, F adj) {
     }
     return dist;
 }
+// ◆ bfs01(g, s) : 隣接リスト版の 01-BFS
+//   g : g[a] = {{行き先, コスト（0 か 1）}, ...}、s : 始点
 vector<int> bfs01(const vector<vector<pair<int, int>>>& g, int s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
     return bfs01_func(g.size(), {s}, [&](int v, auto&& relax) {

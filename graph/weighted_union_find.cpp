@@ -23,24 +23,38 @@ using namespace std;
 //   uf.diff(a, b)      weight(b) - weight(a)（same(a, b) のときだけ意味がある）
 //   uf.size(a)         a のグループの大きさ
 // 典型: 「x_b - x_a = w」という条件が M 個。全部同時に満たせるか / 2 点の差はいくつか
+// ◆ struct WeightedUnionFind : 「b は a より w 大きい」という条件を足していき、矛盾と 2 点の差を調べる UnionFind
+//   WeightedUnionFind(n) : 頂点 0..n−1、最初は全部ばらばら
+//   merge(a, b, w)       : weight(b) − weight(a) = w を追加。今までと矛盾するなら false（何も変えない）
+//   same(a, b)           : 同じグループか（差が決まっているか）
+//   diff(a, b)           : weight(b) − weight(a)。same(a, b) のときだけ意味がある
+//   size(a)              : a のグループの頂点数
+//   leader(a), weight(a) : 根の番号、根との差（内部でも使う）
 template <class T>
 struct WeightedUnionFind {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/weighted_union_find.cpp
     vector<int> par, sz;
     vector<T> pot;  // pot[v] = weight(v) - weight(par[v])
+    // n : 頂点数
     WeightedUnionFind(int n) : par(n), sz(n, 1), pot(n, T(0)) { iota(par.begin(), par.end(), 0); }
 
+    // leader(v) : v のグループの根（経路圧縮あり。再帰の深さは log N 以下）
     int leader(int v) {
         if (par[v] == v) return v;
         int r = leader(par[v]);
         pot[v] += pot[par[v]];  // ★ 親までの差 + 親から根までの差 = 根までの差
         return par[v] = r;      // ★ 根に直接つなぎ替える（経路圧縮）
     }
+    // weight(v) : weight(v) − weight(根)
     T weight(int v) { leader(v); return pot[v]; }  // weight(v) - weight(根)
+    // same(a, b) : 同じグループか
     bool same(int a, int b) { return leader(a) == leader(b); }
+    // diff(a, b) : weight(b) − weight(a)。違うグループなら意味のない値
     T diff(int a, int b) { return weight(b) - weight(a); }
+    // size(v) : v のグループの頂点数
     int size(int v) { return sz[leader(v)]; }
 
+    // merge(a, b, w) : a, b : 頂点、w : weight(b) − weight(a) の値（負でもよい）。矛盾しなければ true
     bool merge(int a, int b, T w) {
         if (same(a, b)) return diff(a, b) == w;  // ★ すでに差が決まっているなら矛盾チェックだけ
         w += weight(a) - weight(b);              // ★ 根どうしの差に変換: weight(rb) - weight(ra)

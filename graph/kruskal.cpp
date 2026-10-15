@@ -27,17 +27,25 @@ using namespace std;
 //   r.used       採用した辺の番号（es の添字）
 //   r.connected  全頂点がつながったか（false なら最小全域「森」の結果）
 // kruskal(n, es, true) で最大全域木
+// ◆ KEdge<T> : 無向辺 {u, v, w: 重み}
 template <class T> struct KEdge {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
     int u, v;
     T w;
 };
+// ◆ KruskalResult<T> : kruskal の結果
+//   cost : 採用した辺の重みの合計、used : 採用した辺の番号（es の添字）、connected : 全部つながったか
 template <class T> struct KruskalResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
     T cost;
     vector<int> used;
     bool connected;
 };
+// ◆ kruskal(n, es, maximize) : 最小全域木（maximize = true なら最大全域木）。O(M log M)
+//   n        : 頂点数
+//   es       : 辺の一覧（vector<KEdge<T>>）
+//   maximize : true なら重みの大きい順に採用（既定 false）
+//   注意 : つながらないグラフでは connected = false で、最小全域森の結果になる
 template <class T>
 KruskalResult<T> kruskal(int n, const vector<KEdge<T>>& es, bool maximize = false) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
@@ -66,12 +74,17 @@ KruskalResult<T> kruskal(int n, const vector<KEdge<T>>& es, bool maximize = fals
 //   r.par[v]     木での v の親（頂点 0 が根。根とつながらない頂点は -1）
 // 例: 平面上の点を全部つなぐ最小コスト（コスト = 2 点のマンハッタン距離など）
 template <class T> constexpr T PRIM_INF = numeric_limits<T>::max() / 4;
+// ◆ PrimResult<T> : prim_dense の結果。cost : 重みの合計、par[v] : 木での親（根 0 と、つながらない頂点は −1）、connected
 template <class T> struct PrimResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
     T cost;
     vector<int> par;
     bool connected;
 };
+// ◆ prim_dense<T>(n, cost) : 辺のリストを作らずに最小全域木を求める（プリム法）。O(N^2) 回 cost を呼ぶ
+//   T    : 重みの型（必ず書く）
+//   n    : 頂点数（N <= 5000 くらい）
+//   cost : T cost(int i, int j)。i と j を結ぶ辺の重み。辺がなければ PRIM_INF<T> を返す
 template <class T, class F>
 PrimResult<T> prim_dense(int n, F cost) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
@@ -104,12 +117,19 @@ PrimResult<T> prim_dense(int n, F cost) {
 //     例: 重み = |a_u − a_v| + … のような式なら、ソートやセグ木で「自分と違う成分の中で一番よいもの」を速く探す
 // auto r = boruvka<T>(n, cheapest);   r.cost, r.connected, r.edges（採用した辺 {u, v}）
 // ★ 成分ごとに「外へ出る一番安い辺」を全部採用 → 成分の数が毎回半分以下になるので、cheapest を呼ぶのは O(log N) 回
+// ◆ BoruvkaResult<T> : boruvka の結果。cost : 重みの合計、connected、edges : 採用した辺 {u, v}
 template <class T> struct BoruvkaResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
     T cost;
     bool connected;
     vector<pair<int, int>> edges;
 };
+// ◆ boruvka<T>(n, cheapest) : 辺が多すぎて列挙できないグラフの最小全域木（ブルーフカ法）
+//   T        : 重みの型（必ず書く）
+//   n        : 頂点数
+//   cheapest : vector<pair<T, int>> cheapest(const vector<int>& comp)。comp[v] = v の今の成分の番号。
+//              各頂点 v について、成分が違う頂点 u への一番安い辺 {重み, u}（なければ {何でも, −1}）を返す
+//   注意 : cheapest が同じ成分の頂点を返すと assert で止まる。呼ばれる回数は O(log N) 回
 template <class T, class F>
 BoruvkaResult<T> boruvka(int n, F cheapest) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp

@@ -23,6 +23,10 @@ using namespace std;
 // ---------- 本体A: 1 つの始点から K 回移動した先 ----------
 // f[v] : v の次の頂点（0-indexed）
 // 返り値: s から K 回移動した頂点
+// ◆ walk_k(f, s, K) : 「v の次は f[v]」で s から K 回進んだ頂点。O(N)
+//   f : 次の頂点の表（0 始まり。全部の頂点に次がちょうど 1 つあること）
+//   s : 出発する頂点
+//   K : 進む回数（0 以上。1e18 でもよい）
 int walk_k(const vector<int>& f, int s, long long K) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/functional_graph.cpp
     vector<long long> first(f.size(), -1);  // first[v] = 初めて v に来た回数
@@ -47,11 +51,18 @@ int walk_k(const vector<int>& f, int s, long long K) {
 //   ※ 表は 2^j ≤ maxK の段まで作るので、maxK × (w の最大) が long long（約 9e18）に収まること
 //     （例: ABC241 E は K ≤ 1e12、A ≤ 1e6 なので 1e18 で収まる。w を使わないなら制限なし）
 //   db.jump_sum(v, k)                    {k 回移動した先, 通った k 頂点（出発点を含み到着点を含まない）の w の和}
+// ◆ struct Doubling : ダブリング（2^j 回先を前計算して、何回先でも O(log K) で求める）
+//   Doubling(f, maxK, w) : 前計算 O(N log maxK)
+//   jump(v, k)           : v から k 回進んだ頂点
+//   jump_sum(v, k)       : {k 回進んだ頂点, 通った k 個の頂点（出発点を含み、到着点を含まない）の w の和}
 struct Doubling {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/functional_graph.cpp
     int n, LOG = 1;
     vector<vector<int>> nxt;        // nxt[j][v] = v から 2^j 回移動した頂点
     vector<vector<long long>> sum;  // sum[j][v] = その間にもらえる値の和
+    // f    : 次の頂点の表（0 始まり）
+    // maxK : 進む回数の最大（これを超える k で jump を呼ばないこと）
+    // w    : 各頂点の値（省略可。jump_sum を使うときだけ必要）。maxK × w の最大 が long long に収まること
     Doubling(const vector<int>& f, long long maxK, const vector<long long>& w = {}) : n(f.size()) {
         while ((1LL << LOG) <= maxK) LOG++;
         nxt.assign(LOG, f);
@@ -62,12 +73,14 @@ struct Doubling {
                 sum[j + 1][v] = sum[j][v] + sum[j][nxt[j][v]];  // ★ 値は前半と後半の和
             }
     }
+    // jump_sum(v, k) : v : 出発点、k : 進む回数（0 <= k <= maxK）
     pair<int, long long> jump_sum(int v, long long k) const {
         long long s = 0;
         for (int j = 0; j < LOG; j++)
             if (k >> j & 1) s += sum[j][v], v = nxt[j][v];  // ★ k を 2 進数に分解して飛ぶ
         return {v, s};
     }
+    // jump(v, k) : v : 出発点、k : 進む回数（0 <= k <= maxK）
     int jump(int v, long long k) const { return jump_sum(v, k).first; }
 };
 
@@ -78,10 +91,17 @@ struct Doubling {
 //   fg.dist[v]       v から閉路に入るまでの移動回数（閉路上なら 0）
 //   fg.entry[v]      v から進んで最初に着く閉路上の頂点（閉路上なら v 自身）
 // 例: v が入る閉路の長さ = fg.cycles[fg.cycle_id[fg.entry[v]]].size()
+// ◆ struct FunctionalGraph : 「v の次は f[v]」のグラフを閉路と、閉路へ流れ込む木に分解する。O(N)
+//   FunctionalGraph(f) : f は次の頂点の表（0 始まり）
+//   cycle_id[v] : v が閉路上ならその閉路の番号、そうでなければ −1
+//   cycles[c]   : 閉路 c の頂点の並び（f でたどる順）
+//   dist[v]     : v から閉路に入るまでの回数（閉路上なら 0）
+//   entry[v]    : v から進んで最初に着く閉路上の頂点
 struct FunctionalGraph {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/functional_graph.cpp
     vector<int> cycle_id, dist, entry;
     vector<vector<int>> cycles;
+    // f : 次の頂点の表（0 始まり。f[v] は 0..N−1）
     FunctionalGraph(const vector<int>& f) {
         int n = f.size();
         cycle_id.assign(n, -1), dist.assign(n, -1), entry.assign(n, -1);
