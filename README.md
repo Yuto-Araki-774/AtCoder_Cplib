@@ -22,7 +22,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 | [math/](#math--数学) | 数学: 累乗・拡張ユークリッド、行列累乗、二項係数、素数・素因数分解、メビウス変換、ガウスの消去法 など | 7 |
 | [string/](#string--文字列) | 文字列: ローリングハッシュ、KMP、回文（Manacher など）、括弧列、部分列、接尾辞配列、Trie、Aho-Corasick | 9 |
 | [dp/](#dp--dp) | DP: ナップサック、LCS、LIS、桁 DP、区間 DP、巡回セールスマン、期待値 DP、Alien DP など | 9 |
-| [util/](#util--提出テンプレート) | 提出テンプレート: ヘッダ・mint・chmin/chmax・INF・デバッグ出力。コンパイル・テスト実行用のスクリプト `r` | 2 |
+| [util/](#util--提出テンプレート) | 提出テンプレート: ヘッダ・mint・chmin/chmax・INF・デバッグ出力。コンパイル・テスト実行用のスクリプト `r`（Windows は `r.bat`） | 3 |
 | [ds/](#ds--データ構造) | データ構造: 2 次元 BIT、平方分割、Mo、区間の集合、削除できるヒープ、Li Chao Tree、動的・永続セグ木、Wavelet Matrix | 9 |
 | [geometry/](#geometry--幾何) | 幾何: 外積・内積、線分の交差、凸包、面積、内外判定、偏角ソート（整数で誤差なし） | 1 |
 | [techniques/](#techniques--解法パターン) | 解法パターン: イベントソート、オフラインクエリ、区間スケジューリング、包除原理、平面走査 | 5 |
@@ -51,7 +51,7 @@ techniques/ 解法パターン  event_sort, offline_query, interval_scheduling, 
                            plane_sweep_2d、patterns.md（使いどころと考え方の解説）
 string/  文字列            rolling_hash, kmp, manacher, palindrome, bracket, subsequence,
                            suffix_array, trie, aho_corasick
-util/    提出テンプレート  template（全ヘッダ・mint・chmin/chmax・INF・方向配列・出力・デバッグ）、r（コンパイル・実行スクリプト）
+util/    提出テンプレート  template（全ヘッダ・mint・chmin/chmax・INF・方向配列・出力・デバッグ）、r / r.bat（コンパイル・実行スクリプト。r.bat は Windows 用）
 ```
 
 Sparse Table は `basic/` に置いている（データ構造だが、累積和の仲間として使うことが多いため）。
@@ -864,6 +864,17 @@ F2 版は「スイッチ j を押すとランプ i が反転」型の問題（`A
 
 入力は `input.txt`、出力は `output.txt`、デバッグ出力（`cerr`・`debug(...)`）は `debug.txt`。実行時間と、実行時エラーなら終了コードを表示し、`output.txt` の先頭 30 行も画面に出す。
 ACL（`atcoder/`）は g++ の include パスに入れておく前提（`-I` は付けていない）。
+
+**Windows の場合は [`r.bat`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/r.bat) を使う。** `r` は bash 用なので、コマンドプロンプトや PowerShell では動かない。`A.cpp` と同じフォルダに `r.bat` を置き、使い方は同じ（`chmod` は不要）。
+
+| コマンド | 何をするか |
+|---|---|
+| `r` / `r c`（コマンドプロンプト） | 実行だけ / コンパイルしてから実行 |
+| `./r` / `./r c`（PowerShell） | 同上（`.\r c` でもよい） |
+
+- 実行ファイルは `a.exe`。g++（MinGW など）に PATH が通っていること
+- Windows はスタックが 1 MB しかなく深い再帰で落ちるので、`-Wl,--stack,268435456`（256 MB）を付けてコンパイルする
+- 画面に出るメッセージは英語（.bat に日本語を書くと、文字コードの設定によっては壊れるため）
 
 
 ---
