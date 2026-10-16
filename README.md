@@ -20,7 +20,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 | [graph/](#graph--グラフ) | グラフ: BFS・DFS、ダイクストラ、最短路、トポロジカルソート、最小全域木、二部グラフ、SCC、橋・関節点、マッチング など | 22 |
 | [tree/](#tree--木) | 木: LCA・直径、木 DP、全方位木 DP、オイラーツアー、HLD、重心分解、虚樹 など | 8 |
 | [math/](#math--数学) | 数学: 累乗・拡張ユークリッド、行列累乗、二項係数、素数・素因数分解、メビウス変換、ガウスの消去法 など | 7 |
-| [string/](#string--文字列) | 文字列: ローリングハッシュ、KMP、Manacher、Trie、Aho-Corasick | 5 |
+| [string/](#string--文字列) | 文字列: ローリングハッシュ、KMP、回文（Manacher など）、括弧列、部分列、接尾辞配列、Trie、Aho-Corasick | 9 |
 | [dp/](#dp--dp) | DP: ナップサック、LCS、LIS、桁 DP、区間 DP、巡回セールスマン、期待値 DP、Alien DP など | 9 |
 | [util/](#util--提出テンプレート) | 提出テンプレート: ヘッダ・mint・chmin/chmax・INF・デバッグ出力。コンパイル・テスト実行用のスクリプト `r` | 2 |
 | [ds/](#ds--データ構造) | データ構造: 2 次元 BIT、平方分割、Mo、区間の集合、削除できるヒープ、Li Chao Tree、動的・永続セグ木、Wavelet Matrix | 9 |
@@ -49,7 +49,8 @@ ds/      データ構造        bit2d, sqrt_decomposition, mo, interval_set, era
 geometry/ 幾何            geometry（外積・内積・向き・線分の交差・凸包・面積・内外判定・偏角ソート）
 techniques/ 解法パターン  event_sort, offline_query, interval_scheduling, inclusion_exclusion,
                            plane_sweep_2d、patterns.md（使いどころと考え方の解説）
-string/  文字列            rolling_hash, kmp, manacher, trie, aho_corasick
+string/  文字列            rolling_hash, kmp, manacher, palindrome, bracket, subsequence,
+                           suffix_array, trie, aho_corasick
 util/    提出テンプレート  template（全ヘッダ・mint・chmin/chmax・INF・方向配列・出力・デバッグ）、r（コンパイル・実行スクリプト）
 ```
 
@@ -650,8 +651,12 @@ F2 版は「スイッチ j を押すとランプ i が反転」型の問題（`A
 | ファイル | 何をするか | 自分で定義するもの |
 |---|---|---|
 | [`rolling_hash.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/rolling_hash.cpp) | 部分文字列のハッシュを O(1)、部分文字列の一致判定、LCP | なし |
-| [`kmp.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp) | KMP（パターンの出現位置をすべて）、失敗関数、最小周期 | なし |
-| [`manacher.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/manacher.cpp) | Manacher（各中心の最長回文）、区間の回文判定 O(1)、最長回文、回文の個数 | なし |
+| [`kmp.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp) | KMP（パターンの出現位置をすべて）、失敗関数、最小周期、KMP オートマトン（パターンを含まない文字列の数え上げ） | なし |
+| [`manacher.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/manacher.cpp) | Manacher（各中心の最長回文）、区間の回文判定 O(1)、最長回文、回文の個数、回文分割 | なし |
+| [`palindrome.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/palindrome.cpp) | 回文の小物: 書き換えて回文にする最小回数、並べ替えて回文にできるか、最長回文部分列 | なし |
+| [`bracket.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/bracket.cpp) | 括弧列: 正しいかの判定（何種類でも）、最小の補い方、最長の正しい部分、区間の判定 O(1)、'?' の置き方の数 | なし |
+| [`subsequence.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/subsequence.cpp) | 部分列: 次の文字の位置の表（部分列か・部分列でない最短の文字列）、種類の違う部分列の数、辞書順最小の部分列 | なし（文字の種類を変えるなら `Subsequence<26, 'A'>` など） |
+| [`suffix_array.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/suffix_array.cpp) | 接尾辞配列（ACL）の使い方: 部分文字列の種類数・k 番目・出現回数、2 つの接尾辞の LCP O(1)、最長共通部分文字列 | なし |
 | [`trie.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/trie.cpp) | Trie（接頭辞の個数、他の文字列との最長共通接頭辞、全ペアの最長共通接頭辞の和） | なし（文字の種類を変えるなら `Trie<26, 'A'>` など） |
 | [`aho_corasick.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/aho_corasick.cpp) | Aho-Corasick（たくさんのパターンをまとめて検索、パターンを含まない文字列の DP） | なし（文字の種類を変えるなら `AhoCorasick<26, 'A'>` など） |
 
@@ -672,12 +677,59 @@ F2 版は「スイッチ j を押すとランプ i が反転」型の問題（`A
 | 本体 | `prefix_function(s)` | 失敗関数 `pi[i]`（s[0..i] の「接頭辞かつ接尾辞」の最長） |
 | 削除可 | `kmp_search(t, p)` | t の中の p の出現位置すべて O(\|t\| + \|p\|) |
 | 削除可 | `min_period(s)` | 最小周期。「s が繰り返しか」は `n % d == 0 && d < n` |
+| 削除可 | `kmp_automaton(p, sigma, base)` | `nx[k][c]` = 「p の先頭 k 文字まで一致」の状態で文字 c を読んだ後の状態（0..\|p\|）。DP の状態遷移に使う |
+| 削除可 | `count_avoid<mint>(p, N, sigma)` | 長さ N の文字列で p を含まないものの数 O(N \|p\| sigma)。含むものは sigma^N − これ |
+
+パターンが複数なら `aho_corasick.cpp`。N が 1e18 などと大きいときは、`nx` から遷移行列を作って行列累乗（`math/matrix.cpp`）。
 
 ### [manacher.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/manacher.cpp)
 | 区分 | 機能 | 何をするか |
 |---|---|---|
 | 本体 | `Palindrome pal(s)` | 前計算 O(N) |
 | 本体 | `is_pal(l, r)`, `longest()`, `count()` | 区間の回文判定 O(1)、最長回文 {開始, 長さ}、回文の部分文字列の個数 |
+| 削除可 | `pal_partition_min(s)`, `pal_partition_count<mint>(s)` | 回文（連続）に区切る最小個数・区切り方の数 O(N^2) |
+
+### [palindrome.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/palindrome.cpp) — 回文の小物
+| 区分 | 関数 | 何をするか |
+|---|---|---|
+| 本体A | `pal_min_changes(s)` | 1 文字ずつ書き換えて回文にする最小回数（対応する 2 文字が違う組の数） |
+| 本体A | `can_rearrange_pal(s)` | 並べ替えて回文にできるか（奇数回出る文字が 1 種類以下） |
+| 本体B | `longest_pal_subseq(s)` | 最長回文部分列（飛び飛びでよい）の長さ O(N^2)、メモリ O(N) |
+
+最小何文字「消す」または「挿入する」と回文になるかは、どちらも N − `longest_pal_subseq(s)`。「長さ N の回文で〇〇を満たすものの数」は、前半分 ⌈N/2⌉ 文字だけ決めればよいので、前半分で数える（桁 DP と組み合わせることも多い）。
+
+### [bracket.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/bracket.cpp) — 括弧列
+| 区分 | 関数 | 何をするか |
+|---|---|---|
+| 本体A | `is_balanced(s, open, close)` | 正しい括弧列か。何種類でもよい（例: `is_balanced(s, "([<", ")]>")`） |
+| 本体A | `bracket_fix(s)` | `{a, b}`: 先頭に `(` を a 個、末尾に `)` を b 個足すと正しくなる（最短・辞書順最小） |
+| 本体B | `longest_balanced(s)` | 正しい括弧列になっている最長の部分文字列 {開始, 長さ} |
+| 本体C | `BracketRange br(s)`, `br.ok(l, r)` | `s[l..r)` が正しい括弧列か O(1) |
+| 本体D | `count_bracket_fill<mint>(s)` | `?` を `(` か `)` にして正しい括弧列になる置き方の数 O(N^2) |
+
+基本: `(` を +1、`)` を −1 とした累積和が「途中で負にならず、最後に 0」なら正しい。文字の書き換えがあって区間を何度も聞かれるなら、{和, 累積和の最小} を持つ ACL の segtree にする。長さ 2n の正しい括弧列の数はカタラン数 C(2n, n) / (n + 1)。
+
+### [subsequence.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/subsequence.cpp) — 部分列
+| 区分 | 機能 | 何をするか |
+|---|---|---|
+| 本体A | `Subsequence<> sub(s)`, `nxt(i, c)` | i 以降で文字 c が最初に出る位置（なければ N）。前計算 O(26N) |
+| 本体A | `is_subseq(t)`, `match(t, i)`, `end_of(t, i)` | t が部分列か、s[i..) で t の先頭から何文字とれるか、t を部分列として含む最短の区間 [i, e) の e |
+| 本体A | `shortest_absent()` | s の部分列でない最短の文字列（辞書順最小） |
+| 本体B | `count_distinct_subseq<mint>(s)` | 種類の違う（空でない）部分列の数 |
+| 本体C | `min_subseq(s, k, largest)` | 長さ k の部分列で辞書順最小（`largest = true` で最大）。「K 文字消して最小」は `min_subseq(s, N − K)` |
+
+部分列の判定は「前から貪欲に、一番早く出てくる位置を使う」でよい。2 つの列の最長共通部分列は `dp/lcs.cpp`。
+
+### [suffix_array.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/suffix_array.cpp) — 接尾辞配列
+| 区分 | 機能 | 何をするか |
+|---|---|---|
+| 本体 | `SuffixArray sa(s)` | `sa.sa`, `sa.rnk`, `sa.lcp`（ACL の suffix_array・lcp_array）と Sparse Table。O(N log N) |
+| 本体 | `lcp_of(i, j)`, `compare(l1, r1, l2, r2)` | 2 つの接尾辞の最長共通接頭辞、2 つの部分文字列の辞書順比較。どちらも O(1) |
+| 本体 | `count_distinct()`, `longest_repeated()` | 種類の違う部分文字列の数、2 回以上現れる最長の部分文字列 |
+| 本体 | `kth_substring(k)`, `find(t)` | 辞書順 k 番目の部分文字列（種類の違うもの）、t の出現範囲 [lo, hi)（出現回数 = hi − lo） |
+| 削除可 | `longest_common_substring(s, t)` | 2 つの文字列の最長共通部分文字列 {s での開始, t での開始, 長さ} |
+
+部分文字列の比較・一致判定だけならローリングハッシュでもできる。接尾辞配列は衝突がなく、「辞書順」が絡む問題に強い。
 
 ### [trie.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/trie.cpp)
 | 区分 | 機能 | 何をするか |
@@ -1108,6 +1160,15 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 | [`trie.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/trie.cpp) | [ABC287 E - Karuta](https://atcoder.jp/contests/abc287/tasks/abc287_e) | 全部 insert してから、各文字列の lcp_with_others |
 |  | [ABC353 E - Yet Another Sigma Problem](https://atcoder.jp/contests/abc353/tasks/abc353_e) | 全部 insert して sum_lcp_pairs |
 | [`aho_corasick.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/aho_corasick.cpp) | [ABC268 Ex - Taboo](https://atcoder.jp/contests/abc268/tasks/abc268_h) | S を前から読み、cnt[v] > 0 の状態（どれかの T_i で終わった）に来たらその文字を * にして根に戻す貪欲 |
+| [`bracket.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/bracket.cpp) | [ABC394 D - Colorful Bracket Sequence](https://atcoder.jp/contests/abc394/tasks/abc394_d) | is_balanced(s, "([<", ")]>") がそのまま答え |
+|  | [ABC064 D - Insertion](https://atcoder.jp/contests/abc064/tasks/abc064_d) | bracket_fix(s) = {a, b} で、'(' を a 個 + s + ')' を b 個 |
+|  | [ABC312 D - Count Bracket Sequences](https://atcoder.jp/contests/abc312/tasks/abc312_d) | count_bracket_fill<atcoder::modint998244353>(s) |
+| [`subsequence.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/subsequence.cpp) | [ARC081 E - Don't Be a Subsequence](https://atcoder.jp/contests/arc081/tasks/arc081_c) | Subsequence<>(a).shortest_absent() がそのまま答え |
+|  | [ABC452 D - No-Subsequence Substring](https://atcoder.jp/contests/abc452/tasks/abc452_d) | 各開始位置 l で e = sub.end_of(t, l)。t を含む区間は N − e + 1 個なので、全体 N(N+1)/2 から引く |
+|  | [ABC138 E - Strings of Impurity](https://atcoder.jp/contests/abc138/tasks/abc138_e) | s を 2 回つなげたもので nxt を作り、t の文字ごとに nxt(i % \|s\|, c) で次の位置へ進んで、何周したかを数える |
+| [`palindrome.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/palindrome.cpp) | [ABC147 B - Palindrome-philia](https://atcoder.jp/contests/abc147/tasks/abc147_b) | pal_min_changes(s) がそのまま答え |
+| [`suffix_array.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/suffix_array.cpp) | [ALPC I - Number of Substrings](https://atcoder.jp/contests/practice2/tasks/practice2_i) | SuffixArray(s).count_distinct() がそのまま答え（ABC ではないが ACL 公式の練習問題） |
+|  | [ABC213 F - Common Prefixes](https://atcoder.jp/contests/abc213/tasks/abc213_f) | 答え(k) = Σ_i lcp_of(k, i)。sa の順に並べると LCP は間の lcp[] の最小なので、前から・後ろからスタックで「最小値の和」を持って O(N) |
 
 ### ds/ — データ構造
 

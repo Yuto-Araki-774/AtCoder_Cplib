@@ -2,7 +2,8 @@
 // string/manacher.cpp  Manacher 法（回文）
 //   すべての中心について「そこを中心とする最長の回文」の長さを O(N) で求める
 //   → 最長回文部分文字列、任意の区間が回文かの判定 O(1)、回文の個数
-//   ※ ハッシュで回文を判定したいなら rolling_hash.cpp
+//   削除可: 回文分割（回文に分ける最小個数・分け方の数）O(N^2)
+//   ※ ハッシュで回文を判定したいなら rolling_hash.cpp。書き換え・並べ替え・最長回文部分列（飛び飛び）は palindrome.cpp
 // 依存: なし
 // ABC / ARC での使用例:
 //   ABC398 F - ABCBA  https://atcoder.jp/contests/abc398/tasks/abc398_f
@@ -72,6 +73,38 @@ struct Palindrome {
     }
 };
 
+// ---------- 削除可: 回文分割（本体が必要） ----------
+// ◆ pal_partition_min(s) : s を回文（連続した部分文字列）に区切るときの最小個数。O(N^2)（N <= 5000 程度）
+//   s : string か vector。空なら 0
+template <class Seq>
+int pal_partition_min(const Seq& s) {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/manacher.cpp
+    int n = s.size();
+    Palindrome pal(s);
+    vector<int> dp(n + 1, INT_MAX);  // dp[r] = s[0..r) を区切る最小個数
+    dp[0] = 0;
+    for (int r = 1; r <= n; r++)
+        for (int l = 0; l < r; l++)
+            if (pal.is_pal(l, r)) dp[r] = min(dp[r], dp[l] + 1);  // ★ 最後の 1 個が s[l..r)
+    return dp[n];
+}
+
+// ◆ pal_partition_count<T>(s) : s を回文に区切る方法の数。O(N^2)
+//   T : 数の型（mint 推奨。必ず書く）
+//   s : string か vector。空なら 1（何も区切らない 1 通り）
+template <class T, class Seq>
+T pal_partition_count(const Seq& s) {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/manacher.cpp
+    int n = s.size();
+    Palindrome pal(s);
+    vector<T> dp(n + 1, T(0));  // dp[r] = s[0..r) の区切り方の数
+    dp[0] = T(1);
+    for (int r = 1; r <= n; r++)
+        for (int l = 0; l < r; l++)
+            if (pal.is_pal(l, r)) dp[r] += dp[l];
+    return dp[n];
+}
+
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 // ===================== 使用例・動作確認（コピー不要） =====================
@@ -101,6 +134,23 @@ int main() {
             }
         auto [st, len] = p.longest();
         assert(p.count() == cnt && len == best && p.is_pal(st, st + len));
+        // 回文分割: 区切り方 2^(n−1) 通りを全部試す
+        int mn = INT_MAX;
+        long long ways = 0;
+        for (int mask = 0; mask < (1 << (n - 1)); mask++) {
+            int l = 0, pieces = 0;
+            bool ok = true;
+            for (int i = 1; i <= n; i++)
+                if (i == n || (mask >> (i - 1) & 1)) {
+                    string u = t.substr(l, i - l);
+                    ok &= equal(u.begin(), u.end(), u.rbegin());
+                    l = i, pieces++;
+                }
+            if (ok) mn = min(mn, pieces), ways++;
+        }
+        assert(pal_partition_min(t) == mn && pal_partition_count<long long>(t) == ways);
     }
+    assert(pal_partition_min(string("aab")) == 2 && pal_partition_count<long long>(string("aab")) == 2);  // aa|b, a|a|b
+    assert(pal_partition_min(string("")) == 0 && pal_partition_count<long long>(string("")) == 1);
     puts("OK");
 }
