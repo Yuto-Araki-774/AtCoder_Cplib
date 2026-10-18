@@ -73,18 +73,32 @@ void yes_no(bool cond) {
 }
 
 // ---------- デバッグ出力 ----------
-// debug(x, v, ...) で変数名と値を標準エラーに出す。vector / pair / set / map も表示できる
+// debug(x, v, ...) で変数名と値を標準エラーに出す。pair / tuple / vector / set / multiset / map とその入れ子も表示できる
+// mint は debug(x.val()) と書く
 #ifdef LOCAL
+template <class A, class B> ostream& operator<<(ostream& os, const pair<A, B>& p);
+template <class... Ts> ostream& operator<<(ostream& os, const tuple<Ts...>& t);
 template <class T> ostream& operator<<(ostream& os, const vector<T>& v);
-template <class A, class B> ostream& operator<<(ostream& os, const pair<A, B>& p) { return os << '(' << p.first << ", " << p.second << ')'; }
-template <class T> ostream& operator<<(ostream& os, const vector<T>& v) {
+template <class T> ostream& operator<<(ostream& os, const set<T>& s);
+template <class T> ostream& operator<<(ostream& os, const multiset<T>& s);
+template <class K, class V> ostream& operator<<(ostream& os, const map<K, V>& m);
+template <class It> ostream& print_range(ostream& os, It first, It last) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
     os << '[';
-    for (size_t i = 0; i < v.size(); i++) os << (i ? ", " : "") << v[i];
+    for (It it = first; it != last; ++it) os << (it == first ? "" : ", ") << *it;
     return os << ']';
 }
-template <class T> ostream& operator<<(ostream& os, const set<T>& s) { return os << vector<T>(s.begin(), s.end()); }
-template <class K, class V> ostream& operator<<(ostream& os, const map<K, V>& m) { return os << vector<pair<K, V>>(m.begin(), m.end()); }
+template <class A, class B> ostream& operator<<(ostream& os, const pair<A, B>& p) { return os << '(' << p.first << ", " << p.second << ')'; }
+template <class... Ts> ostream& operator<<(ostream& os, const tuple<Ts...>& t) {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
+    os << '(';
+    apply([&](const auto&... xs) { int i = 0; ((os << (i++ ? ", " : "") << xs), ...); }, t);
+    return os << ')';
+}
+template <class T> ostream& operator<<(ostream& os, const vector<T>& v) { return print_range(os, v.begin(), v.end()); }
+template <class T> ostream& operator<<(ostream& os, const set<T>& s) { return print_range(os, s.begin(), s.end()); }
+template <class T> ostream& operator<<(ostream& os, const multiset<T>& s) { return print_range(os, s.begin(), s.end()); }
+template <class K, class V> ostream& operator<<(ostream& os, const map<K, V>& m) { return print_range(os, m.begin(), m.end()); }
 void debug_out(const char*) { cerr << endl; }
 template <class H, class... T> void debug_out(const char* names, const H& h, const T&... t) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
