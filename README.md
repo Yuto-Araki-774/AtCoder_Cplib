@@ -340,6 +340,7 @@ f は下に凸（谷が 1 つ）であること。最大値を探すときは `-
 |---|---|---|
 | 本体 | `topological_sort(g)` / `(g, true)` | 辺の向きに矛盾しない並び（true で辞書順最小）。閉路があれば空 |
 | 削除可 | `dag_longest_path(g)` | 各頂点で終わる最長パスの辺数 |
+| 削除可 | `dag_longest_path_vertices(g)` | 一番長い道（辺の本数が最大）の頂点の並びを 1 つ。閉路があれば空。※ `topological_sort` の結果は全頂点の並びで、最長の道ではない |
 | 削除可 | `dag_path<T>(g, s, maximize)` | 重み付き DAG の最短路（true で最長路）。負の重み OK。`ok`（閉路なし）, `dist`, `reachable(v)`, `path(t)`。`s = -1` で始点自由 |
 
 `dag_path` の `g` は `vector<vector<pair<int, T>>>`（`g[v] = {{行き先, 重み}, ...}`）。ふつうのグラフの最長路は難しいが、DAG ならトポロジカル順に 1 回ずつ緩和するだけで求まる。

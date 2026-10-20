@@ -1,7 +1,7 @@
 // =====================================================================
 // graph/topological_sort.cpp  トポロジカルソート（Kahn 法）
 //   有向グラフを「辺 u->v なら u が先」になるよう並べる。閉路検出、DAG 上の DP に使う
-//   削除可: DAG の最長路（辺の本数）、DAG 上の重み付き最短路・最長路（負の重みも OK、経路復元つき）
+//   削除可: DAG の最長路（辺の本数・最長の道そのもの）、DAG 上の重み付き最短路・最長路（負の重みも OK、経路復元つき）
 //   O(N + M)（辞書順最小版は O((N + M) log N)）
 // 依存: なし
 // ABC / ARC での使用例:
@@ -9,6 +9,7 @@
 //     → 辞書順最小のトポロジカルソート（lex_min = true）
 //   ABC139 E - League  https://atcoder.jp/contests/abc139/tasks/abc139_e
 //     → 試合を頂点にした DAG の最長路（dag_longest_path）。閉路なら -1
+//   ※ トポロジカルソートの結果は「全頂点の並び」で、最長の道ではない。最長の道そのものは dag_longest_path_vertices
 // 貼る場所: コピー範囲を main 関数の外（using namespace std; の後、main より上）に貼る
 // =====================================================================
 #include <bits/stdc++.h>
@@ -60,6 +61,27 @@ vector<long long> dag_longest_path(const vector<vector<int>>& g) {
     for (int v : ord)
         for (int to : g[v]) dp[to] = max(dp[to], dp[v] + 1);  // ★ トポロジカル順なら前が確定済み
     return dp;
+}
+
+// ◆ dag_longest_path_vertices(g) : 一番長い道（辺の本数が最大）の頂点の並びを 1 つ返す（重みなし）。O(N + M)
+//   g : 有向グラフ（閉路があれば空を返す）
+//   返り値 : 始点から終点までの頂点の並び（辺の本数 = 返り値の長さ − 1）。辺がなければ頂点 1 個だけ
+//   例: 辺 1→2, 3→4, 4→5（0 始まりなら 0→1, 2→3, 3→4）なら {2, 3, 4}
+vector<long long> dag_longest_path_vertices(const vector<vector<int>>& g) {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp
+    auto ord = topological_sort(g);
+    if (ord.empty()) return {};
+    int n = g.size();
+    vector<long long> dp(n, 0);  // dp[v] = v で終わる最長の道の辺の本数
+    vector<int> prev(n, -1);     // prev[v] = その道で v の 1 つ前の頂点
+    for (int v : ord)
+        for (int to : g[v])
+            if (dp[v] + 1 > dp[to]) dp[to] = dp[v] + 1, prev[to] = v;  // ★ 伸ばせたら「どこから来たか」も覚える
+    int t = max_element(dp.begin(), dp.end()) - dp.begin();          // ★ 一番長い道の終点
+    vector<long long> path;
+    for (int v = t; v != -1; v = prev[v]) path.push_back(v);         // ★ 終点から prev を逆にたどる
+    reverse(path.begin(), path.end());
+    return path;
 }
 
 // ---------- 削除可: DAG 上の重み付き最短路・最長路 O(N + M)（本体が必要） ----------
@@ -130,6 +152,14 @@ int main() {
     assert((topological_sort(g, true) == vector<long long>{0, 1, 2, 3}));
     assert(topological_sort({{1}, {0}}).empty());  // 閉路
     assert(dag_longest_path(g)[3] == 2);
+    // 頂点 1..6、辺 2→3, 4→5, 5→6（0 始まりに直して入れる）→ 最長の道は 4 → 5 → 6
+    {
+        vector<vector<int>> h(6);
+        for (auto [a, b] : vector<pair<int, int>>{{2, 3}, {4, 5}, {5, 6}}) h[a - 1].push_back(b - 1);
+        assert((dag_longest_path_vertices(h) == vector<long long>{3, 4, 5}));
+        assert((dag_longest_path_vertices(vector<vector<int>>(3)) == vector<long long>{0}));  // 辺なし
+        assert(dag_longest_path_vertices({{1}, {0}}).empty());                               // 閉路
+    }
     // ランダムテスト: 順列を全部試して「辺の向きに矛盾しない最初の順列」と比較、最長路は全経路を再帰で
     {
         mt19937 rr(114);
@@ -163,6 +193,11 @@ int main() {
             };
             auto lp = dag_longest_path(h);
             for (int v = 0; v < n; v++) assert(lp[v] == longest_to(v));
+            // 最長の道そのもの: 長さが最大で、隣どうしが本当に辺でつながっているか
+            auto path = dag_longest_path_vertices(h);
+            assert((long long)path.size() - 1 == *max_element(lp.begin(), lp.end()));
+            for (int i = 0; i + 1 < (int)path.size(); i++)
+                assert(find(h[path[i]].begin(), h[path[i]].end(), path[i + 1]) != h[path[i]].end());
         }
     }
     // 重み付き: 0 → 1 (5), 0 → 2 (-3), 2 → 1 (4), 1 → 3 (2), 2 → 3 (11)
