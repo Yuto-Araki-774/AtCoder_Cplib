@@ -22,7 +22,7 @@ using namespace std;
 //   g    : 有向グラフの隣接リスト（g[v] = v から出る辺の行き先）
 //   root : 始点
 //   返り値 : idom[v] = v の直接支配点（root は root、root から行けない頂点は −1）
-vector<int> dominator_tree(const vector<vector<int>>& g, int root) {
+vector<long long> dominator_tree(const vector<vector<int>>& g, int root) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dominator_tree.cpp
     int n = g.size();
     vector<vector<int>> rg(n), bucket(n);
@@ -40,7 +40,8 @@ vector<int> dominator_tree(const vector<vector<int>>& g, int root) {
         }
     }
     int k = vs.size();
-    vector<int> semi(n), idom(n, -1), anc(n, -1), label(n);
+    vector<int> semi(n), anc(n, -1), label(n);
+    vector<long long> idom(n, -1);
     for (int v = 0; v < n; v++) semi[v] = ord[v], label[v] = v;
     auto eval = [&](int v) {  // v から（森の）根までで、semi が一番小さい頂点。経路圧縮つき（再帰なし）
         if (anc[v] == -1) return v;
@@ -86,7 +87,7 @@ int main() {
     {
         vector<vector<int>> g = {{1, 2}, {3}, {3}, {4}, {1}, {4}};
         auto idom = dominator_tree(g, 0);
-        assert((idom == vector<int>{0, 0, 0, 0, 3, -1}));
+        assert((idom == vector<long long>{0, 0, 0, 0, 3, -1}));
     }
     // ランダムテスト: 「頂点 d を取り除くと root から v に行けなくなる ⇔ d は v の支配点」で求めた答えと比較
     {

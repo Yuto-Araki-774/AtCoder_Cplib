@@ -114,9 +114,9 @@ struct WaveletMatrix {
         return res;
     }
     // count_less(l, r, x) : x : 境目の値（入っていない値でもよい）
-    int count_less(int l, int r, T x) const { return count_less_id(l, r, lower_bound(vals.begin(), vals.end(), x) - vals.begin()); }
+    long long count_less(int l, int r, T x) const { return count_less_id(l, r, lower_bound(vals.begin(), vals.end(), x) - vals.begin()); }
     // range_freq(l, r, lo, hi) : lo >= hi なら 0
-    int range_freq(int l, int r, T lo, T hi) const { return lo >= hi ? 0 : count_less(l, r, hi) - count_less(l, r, lo); }
+    long long range_freq(int l, int r, T lo, T hi) const { return lo >= hi ? 0 : count_less(l, r, hi) - count_less(l, r, lo); }
     // prev_value(l, r, x) : x 未満で最大の値
     optional<T> prev_value(int l, int r, T x) const {
         int c = count_less(l, r, x);

@@ -62,7 +62,7 @@ struct RollingHash {
 
     // --- 削除可: LCP（s[a..) と s[b..) の最長共通接頭辞の長さ）O(log N) ---
     // lcp(a, b) : a, b : 開始位置（0..N）
-    int lcp(int a, int b) const {
+    long long lcp(int a, int b) const {
         int ok = 0, ng = min(h.size() - a, h.size() - b);  // 長さ ng はとれない
         while (ng - ok > 1) {
             int mid = (ok + ng) / 2;

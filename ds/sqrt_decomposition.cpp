@@ -98,7 +98,7 @@ struct SqrtCountLess {
         a[i] = x;
     }
     // count_less(l, r, x) : 区間 [l, r)、x : 境目（x 以下なら x + 1 を渡す）
-    int count_less(int l, int r, long long x) const {
+    long long count_less(int l, int r, long long x) const {
         int c = 0;
         while (l < r && l % B != 0) c += a[l] < x, l++;
         while (l + B <= r) {

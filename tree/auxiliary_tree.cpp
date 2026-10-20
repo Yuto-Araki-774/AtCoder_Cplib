@@ -57,7 +57,7 @@ struct AuxiliaryTree {
             for (int v = 0; v < n; v++) up[k][v] = up[k - 1][up[k - 1][v]];
     }
     // lca(u, v) : 最小共通祖先
-    int lca(int u, int v) const {
+    long long lca(int u, int v) const {
         if (dep[u] < dep[v]) swap(u, v);
         for (int k = LOG - 1; k >= 0; k--) if (dep[u] - (1 << k) >= dep[v]) u = up[k][u];
         if (u == v) return u;
@@ -65,10 +65,10 @@ struct AuxiliaryTree {
         return up[0][u];
     }
     // dist(u, v) : 辺の本数
-    int dist(int u, int v) const { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }
+    long long dist(int u, int v) const { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }
     // build(S) : S : 指定する頂点の一覧（重複・順不同 OK）。O(|S| log N)
     //   返り値の頂点数は 2|S| − 1 以下。元の木での辺の長さは dep[vs[i]] − dep[vs[par[i]]]
-    pair<vector<int>, vector<int>> build(vector<int> vs) {
+    pair<vector<long long>, vector<long long>> build(vector<int> vs) {
         auto by_tin = [&](int a, int b) { return tin[a] < tin[b]; };
         sort(vs.begin(), vs.end(), by_tin);
         vs.erase(unique(vs.begin(), vs.end()), vs.end());
@@ -77,10 +77,10 @@ struct AuxiliaryTree {
         sort(vs.begin(), vs.end(), by_tin);
         vs.erase(unique(vs.begin(), vs.end()), vs.end());
         for (int i = 0; i < (int)vs.size(); i++) pos[vs[i]] = i;
-        vector<int> par(vs.size(), -1);
+        vector<long long> par(vs.size(), -1);
         for (int i = 1; i < (int)vs.size(); i++) par[i] = pos[lca(vs[i - 1], vs[i])];  // ★ 1 つ前の頂点との LCA が親になる
         for (int v : vs) pos[v] = -1;
-        return {vs, par};
+        return {vector<long long>(vs.begin(), vs.end()), par};
     }
 };
 

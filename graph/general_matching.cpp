@@ -13,7 +13,7 @@ using namespace std;
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
 // ---------- 本体 ----------
-// GeneralMatching gm(n);  gm.add_edge(a, b);  int k = gm.solve();
+// GeneralMatching gm(n);  gm.add_edge(a, b);  ll k = gm.solve();
 //   k = マッチングの大きさ（辺の本数）、gm.mate[v] = v の相手（いなければ -1）
 // ◆ struct GeneralMatching : 一般グラフの最大マッチング（Edmonds の花アルゴリズム）。O(N^3)
 //   GeneralMatching(n) : 頂点 0..n−1
@@ -87,7 +87,7 @@ struct GeneralMatching {
         return -1;
     }
     // solve() : 辺を全部足してから呼ぶ。返り値 = マッチングの本数
-    int solve() {
+    long long solve() {
         for (int v = 0; v < n; v++)  // 最初に貪欲にマッチさせておく（速くなる）
             if (mate[v] == -1)
                 for (int to : g[v])

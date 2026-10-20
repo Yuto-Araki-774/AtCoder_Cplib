@@ -22,10 +22,10 @@ using namespace std;
 // ◆ prefix_function(s) : 失敗関数。pi[i] = s[0..i] の「接頭辞かつ接尾辞」の最長の長さ（全体は除く）。O(N)
 //   s : string か vector
 template <class Seq>
-vector<int> prefix_function(const Seq& s) {
+vector<long long> prefix_function(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp
     int n = s.size();
-    vector<int> pi(n, 0);
+    vector<long long> pi(n, 0);
     for (int i = 1; i < n; i++) {
         int k = pi[i - 1];                             // ★ 1 つ前で一致していた長さから始める
         while (k > 0 && s[i] != s[k]) k = pi[k - 1];   // ★ 合わなければ、より短い「接頭辞かつ接尾辞」に戻る
@@ -40,9 +40,9 @@ vector<int> prefix_function(const Seq& s) {
 // ◆ kmp_search(t, p) : t の中で p が現れる開始位置の一覧（重なりも含む）。O(|t| + |p|)
 //   t : 探される側の文字列、p : パターン（空なら空の結果）。t と p は同じ型
 template <class Seq>
-vector<int> kmp_search(const Seq& t, const Seq& p) {
+vector<long long> kmp_search(const Seq& t, const Seq& p) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp
-    vector<int> res;
+    vector<long long> res;
     if (p.empty()) return res;
     auto pi = prefix_function(p);
     int k = 0;  // 今 p の先頭 k 文字が一致している
@@ -60,7 +60,7 @@ vector<int> kmp_search(const Seq& t, const Seq& p) {
 // ◆ min_period(s) : 最小周期 d（全部の i で s[i] = s[i + d]）。空なら 0
 //   s : string か vector。「繰り返しでできているか」は n % d == 0 && d < n で判定
 template <class Seq>
-int min_period(const Seq& s) {
+long long min_period(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp
     if (s.empty()) return 0;
     return s.size() - prefix_function(s).back();  // ★ 全体の「接頭辞かつ接尾辞」を除いた長さが周期
@@ -74,11 +74,11 @@ int min_period(const Seq& s) {
 //   p     : パターン（1 文字以上）
 //   sigma : 文字の種類数（既定 26）、base : 最初の文字（既定 'a'）
 //   状態 m（p を読み終えた）からの遷移もある（重なりを含めて出現回数を数えるとき用）
-vector<vector<int>> kmp_automaton(const string& p, int sigma = 26, char base = 'a') {
+vector<vector<long long>> kmp_automaton(const string& p, int sigma = 26, char base = 'a') {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/kmp.cpp
     int m = p.size();
     auto pi = prefix_function(p);
-    vector<vector<int>> nx(m + 1, vector<int>(sigma));
+    vector<vector<long long>> nx(m + 1, vector<long long>(sigma));
     for (int k = 0; k <= m; k++)
         for (int c = 0; c < sigma; c++) {
             if (k < m && p[k] - base == c) nx[k][c] = k + 1;  // ★ 一致が 1 文字伸びる
@@ -113,12 +113,12 @@ T count_avoid(const string& p, long long N, int sigma = 26, char base = 'a') {
 
 // ===================== 使用例・動作確認（コピー不要） =====================
 int main() {
-    assert((prefix_function(string("abcabd")) == vector<int>{0, 0, 0, 1, 2, 0}));
-    assert((kmp_search(string("abababa"), string("aba")) == vector<int>{0, 2, 4}));
+    assert((prefix_function(string("abcabd")) == vector<long long>{0, 0, 0, 1, 2, 0}));
+    assert((kmp_search(string("abababa"), string("aba")) == vector<long long>{0, 2, 4}));
     assert(kmp_search(string("abc"), string("d")).empty());
     assert(min_period(string("abcabcab")) == 3 && min_period(string("aaaa")) == 1 && min_period(string("abcd")) == 4);
     // 数列でも使える
-    assert((kmp_search(vector<int>{1, 2, 1, 2, 1}, vector<int>{1, 2, 1}) == vector<int>{0, 2}));
+    assert((kmp_search(vector<int>{1, 2, 1, 2, 1}, vector<int>{1, 2, 1}) == vector<long long>{0, 2}));
 
     // ランダムテスト: 愚直な検索と比較
     mt19937 rng(14);
@@ -126,7 +126,7 @@ int main() {
         string t, p;
         for (int i = rng() % 20; i > 0; i--) t += char('a' + rng() % 2);
         for (int i = rng() % 4 + 1; i > 0; i--) p += char('a' + rng() % 2);
-        vector<int> ref;
+        vector<long long> ref;
         for (int i = 0; i + (int)p.size() <= (int)t.size(); i++) if (t.compare(i, p.size(), p) == 0) ref.push_back(i);
         assert(kmp_search(t, p) == ref);
         if (!t.empty()) {
@@ -138,7 +138,7 @@ int main() {
     // KMP オートマトン: 状態を持って読むと kmp_search と同じ回数だけ状態 m に来る
     {
         auto nx = kmp_automaton("aba", 2);
-        assert((nx[3] == vector<int>{1, 2}));  // "aba" の後に a → "a"（1）、b → "ab"（2）
+        assert((nx[3] == vector<long long>{1, 2}));  // "aba" の後に a → "a"（1）、b → "ab"（2）
         assert(count_avoid<long long>("aa", 3, 2) == 5);  // aba, abb, bab, bba, bbb
         assert(count_avoid<long long>("a", 4, 3) == 16);  // 2^4
     }

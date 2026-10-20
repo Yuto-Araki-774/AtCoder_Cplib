@@ -42,7 +42,7 @@ struct LowLink {
     // n_ : 頂点数（つながっていなくてもよい）
     LowLink(int n_) : n(n_), g(n_) {}
     // add_edge(a, b) : a, b : 端点（多重辺もよい）。返り値 = 辺の番号（is_bridge の添字）
-    int add_edge(int a, int b) {
+    long long add_edge(int a, int b) {
         int id = edges.size();
         g[a].push_back({b, id}), g[b].push_back({a, id});
         edges.push_back({a, b});
@@ -95,8 +95,8 @@ struct LowLink {
     // 橋をすべて取り除いたときの連結成分。comp[v] = v の成分番号（0 から）
     // 成分を頂点、橋を辺にすると木（森）になる（橋木）
     // two_edge_cc() : build の後に呼ぶ。返り値 comp[v] = 橋を全部消したときの成分番号
-    vector<int> two_edge_cc() const {
-        vector<int> comp(n, -1);
+    vector<long long> two_edge_cc() const {
+        vector<long long> comp(n, -1);
         int c = 0;
         for (int s = 0; s < n; s++) {
             if (comp[s] != -1) continue;
@@ -119,9 +119,9 @@ struct LowLink {
     //   ★ 関節点 v を取り除くと、v を含んでいた成分は「v を含むブロックの数」個に分かれる
     //   ★ 2 頂点 a, b の間のどの道も必ず通る頂点 = 木の上の a-b のパスにある関節点
     // bcc() : 返り値 = ブロックごとの頂点の一覧（自己ループは無視）
-    vector<vector<int>> bcc() const {
+    vector<vector<long long>> bcc() const {
         vector<int> ord2(n, -1), low2(n, 0), pe(n, -1), it(n, 0), vst;
-        vector<vector<int>> res;
+        vector<vector<long long>> res;
         int k = 0;
         for (int s = 0; s < n; s++) {
             if (ord2[s] != -1) continue;
@@ -146,7 +146,7 @@ struct LowLink {
                     int p = st.back();
                     low2[p] = min(low2[p], low2[v]);
                     if (low2[v] >= ord2[p]) {  // ★ v の側は p を通らないと外に出られない → p と「v 以降に積んだ頂点」で 1 ブロック
-                        vector<int> comp = {p};
+                        vector<long long> comp = {p};
                         while (true) {
                             int x = vst.back();
                             vst.pop_back();
@@ -234,7 +234,7 @@ int main() {
     {
         auto b = ll.bcc();
         set<vector<int>> got;
-        for (auto c : b) sort(c.begin(), c.end()), got.insert(c);
+        for (auto c : b) sort(c.begin(), c.end()), got.insert(vector<int>(c.begin(), c.end()));
         assert((got == set<vector<int>>{{0, 1, 2}, {2, 3}, {3, 4}, {5, 6}}));
         auto t = ll.block_cut_tree();
         assert(t.size() == 7 + 4 && t[2].size() == 2 && t[3].size() == 2 && t[0].size() == 1);  // 関節点 2, 3 は 2 つのブロックに入る
@@ -282,7 +282,7 @@ int main() {
             for (int v = 0; v < n; v++) if (!has_edge[v]) want.insert({v});
             auto b = L.bcc();
             set<vector<int>> got;
-            for (auto c : b) sort(c.begin(), c.end()), got.insert(c);
+            for (auto c : b) sort(c.begin(), c.end()), got.insert(vector<int>(c.begin(), c.end()));
             assert(got == want && b.size() == want.size());
             // Block-Cut Tree は森で、関節点 ⇔ 2 つ以上のブロックに入る（辺のある頂点について）
             L.build();

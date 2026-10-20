@@ -61,7 +61,7 @@ struct EventSort {
         }
     }
     // max_overlap() : 一番多く重なっている所の区間の個数
-    int max_overlap() const {
+    long long max_overlap() const {
         int m = 0;
         for (auto& p : profile) m = max(m, p.second);
         return m;
@@ -81,7 +81,7 @@ struct EventSort {
         return ans;
     }
     // count_at(x) : x : 調べる点
-    int count_at(T x) const {
+    long long count_at(T x) const {
         auto it = upper_bound(profile.begin(), profile.end(), make_pair(x, INT_MAX));  // ★ x 以下で一番右の変化点
         return it == profile.begin() ? 0 : prev(it)->second;
     }

@@ -54,7 +54,7 @@ struct XorBasis {
         return x;
     }
     // rank() : 基底の数
-    int rank() const { return cnt; }
+    long long rank() const { return cnt; }
 };
 
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑

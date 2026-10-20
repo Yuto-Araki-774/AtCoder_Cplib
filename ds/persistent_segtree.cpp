@@ -18,11 +18,11 @@ using namespace std;
 // ---------- 本体 ----------
 // 【自分で定義するもの】ACL の segtree と同じ S, op（グローバル関数）, e（グローバル関数）
 // PersistentSegTree<S, op, e> seg(n);
-//   int r0 = seg.build(v);          初期の版（v は長さ n。省略すると全部 e()）。版は「根の番号」(int) で表す
-//   int r1 = seg.set(r0, p, x);     版 r0 で a[p] = x にした新しい版（r0 はそのまま残る）
+//   ll r0 = seg.build(v);           初期の版（v は長さ n。省略すると全部 e()）。版は「根の番号」(ll) で表す
+//   ll r1 = seg.set(r0, p, x);      版 r0 で a[p] = x にした新しい版（r0 はそのまま残る）
 //   seg.get(r, p)                   版 r の a[p]
 //   seg.prod(r, l, x)               版 r の op(a[l], ..., a[x−1])
-// 版の一覧は自分で vector<int> roots などに入れて持つ
+// 版の一覧は自分で vector<long long> roots などに入れて持つ
 // ◆ struct PersistentSegTree : 永続セグ木（更新しても昔の版が残る）。各操作 O(log N)、メモリ O(N + Q log N)
 //   PersistentSegTree(n)   : 長さ n
 //   build(v)               : 最初の版を作り、その根の番号を返す（v 省略で全部 e()）
@@ -42,7 +42,7 @@ struct PersistentSegTree {
     // n_ : 配列の長さ（1 以上）
     PersistentSegTree(int n_) : n(n_) {}
     // build(v) : v : 長さ n の初期値（省略で全部 e()）。何回呼んでもよい（別の版ができる）
-    int build(const vector<S>& v = {}) {
+    long long build(const vector<S>& v = {}) {
         // 再帰の深さは log N なので再帰で書いている
         auto rec = [&](auto self, int lo, int hi) -> int {
             if (hi - lo == 1) {
@@ -58,7 +58,7 @@ struct PersistentSegTree {
         return rec(rec, 0, n);
     }
     // set(root, p, x) : root : 元にする版、p : 0..n−1、x : 新しい値
-    int set(int root, int p, S x) {
+    long long set(int root, int p, S x) {
         auto rec = [&](auto self, int k, int lo, int hi) -> int {
             if (hi - lo == 1) {
                 nd.push_back({x, -1, -1});
@@ -118,7 +118,7 @@ int main() {
     {
         vector<int> a = {3, 1, 4, 1, 5};
         PersistentSegTree<long long, op_sum, e_sum> seg(6);  // 値は 0..5
-        vector<int> roots = {seg.build()};
+        vector<long long> roots = {seg.build()};
         for (int x : a) roots.push_back(seg.set(roots.back(), x, seg.get(roots.back(), x) + 1));
         auto count_less = [&](int l, int r, int x) { return seg.prod(roots[r], 0, x) - seg.prod(roots[l], 0, x); };
         assert(count_less(1, 4, 4) == 2 && count_less(0, 5, 6) == 5 && count_less(2, 3, 4) == 0);
@@ -131,7 +131,7 @@ int main() {
             PersistentSegTree<string, op_cat, e_cat> seg(n);
             vector<string> init(n);
             for (auto& s : init) s = string(1, (char)('a' + rr() % 26));
-            vector<int> roots = {seg.build(init)};
+            vector<long long> roots = {seg.build(init)};
             vector<vector<string>> arr = {init};
             for (int q = 0; q < 60; q++) {
                 int ver = rr() % roots.size();

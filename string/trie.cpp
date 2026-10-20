@@ -43,7 +43,7 @@ struct Trie {
     vector<Node> nodes = {Node(0)};  // 頂点 0 が根（空文字列）
 
     // insert(s) : s : 登録する文字列（空文字列もよい）
-    int insert(const string& s) {
+    long long insert(const string& s) {
         int v = 0;
         nodes[0].pass++;
         for (char ch : s) {
@@ -59,7 +59,7 @@ struct Trie {
         return v;
     }
     // find(s) : s : 調べる文字列
-    int find(const string& s) const {  // s の頂点番号（なければ -1）
+    long long find(const string& s) const {  // s の頂点番号（なければ -1）
         int v = 0;
         for (char ch : s) {
             v = nodes[v].nxt[ch - BASE];
@@ -68,9 +68,9 @@ struct Trie {
         return v;
     }
     // count(s) : s が登録されている個数
-    int count(const string& s) const { int v = find(s); return v == -1 ? 0 : nodes[v].end; }
+    long long count(const string& s) const { int v = find(s); return v == -1 ? 0 : nodes[v].end; }
     // count_prefix(p) : p : 接頭辞（空なら登録数の合計）
-    int count_prefix(const string& p) const { int v = find(p); return v == -1 ? 0 : nodes[v].pass; }
+    long long count_prefix(const string& p) const { int v = find(p); return v == -1 ? 0 : nodes[v].pass; }
     // erase(s) : s : 消す文字列（1 つだけ消す）
     bool erase(const string& s) {
         if (count(s) == 0) return false;
@@ -84,7 +84,7 @@ struct Trie {
     // --- 削除可: 他の文字列との最長共通接頭辞（s は登録済みであること） ---
     // 返り値: s と、s 以外の登録済み文字列（同じ文字列がもう 1 つあればそれも）との最長共通接頭辞の長さ
     // lcp_with_others(s) : s は登録済みであること
-    int lcp_with_others(const string& s) const {
+    long long lcp_with_others(const string& s) const {
         int v = 0, res = 0;
         for (char ch : s) {
             v = nodes[v].nxt[ch - BASE];

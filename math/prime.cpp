@@ -47,8 +47,8 @@ struct Sieve {
     // is_prime(x) : x : 0..N
     bool is_prime(int x) const { return x >= 2 && spf[x] == x; }
     // factorize(x) : x : 1..N（1 なら空）
-    vector<pair<int, int>> factorize(int x) const {  // {{素数, 指数}, ...}
-        vector<pair<int, int>> res;
+    vector<pair<long long, long long>> factorize(int x) const {  // {{素数, 指数}, ...}
+        vector<pair<long long, long long>> res;
         while (x > 1) {
             int p = spf[x], e = 0;  // ★ 最小素因数で割れるだけ割る
             while (x % p == 0) x /= p, e++;
@@ -58,8 +58,8 @@ struct Sieve {
     }
     // --- 削除可: 約数列挙（昇順） ---
     // divisors(x) : x : 1..N
-    vector<int> divisors(int x) const {
-        vector<int> res = {1};
+    vector<long long> divisors(int x) const {
+        vector<long long> res = {1};
         for (auto [p, e] : factorize(x)) {
             int sz = res.size(), pk = 1;
             for (int k = 1; k <= e; k++) {
@@ -85,9 +85,9 @@ bool is_prime(long long x) {
 }
 // ◆ factorize(x) : 素因数分解 {{素数, 指数}, ...}（素数の昇順）。O(√x)
 //   x : 1 以上（1 なら空）。1e12 くらいまで（もっと大きいなら factorize_fast）
-vector<pair<long long, int>> factorize(long long x) {  // {{素数, 指数}, ...}
+vector<pair<long long, long long>> factorize(long long x) {  // {{素数, 指数}, ...}
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
-    vector<pair<long long, int>> res;
+    vector<pair<long long, long long>> res;
     for (long long p = 2; p * p <= x; p++) {
         if (x % p) continue;
         int e = 0;
@@ -150,9 +150,9 @@ long long euler_phi(long long n) {
 }
 // ◆ phi_table(N) : φ(0..N) の表（φ(0) = 0）。O(N log log N)
 //   N : 上限（1e7 くらいまで）
-vector<int> phi_table(int N) {
+vector<long long> phi_table(int N) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
-    vector<int> phi(N + 1);
+    vector<long long> phi(N + 1);
     iota(phi.begin(), phi.end(), 0);
     for (int p = 2; p <= N; p++)
         if (phi[p] == p)  // ★ まだ変わっていない = 素数
@@ -230,7 +230,7 @@ long long pollard_rho(long long x) {  // x は合成数。1 より大きく x �
 }
 // ◆ factorize_fast(x) : 素因数分解 {{素数, 指数}, ...}（素数の昇順）。1e18 でも一瞬
 //   x : 1 以上（1 なら空）
-vector<pair<long long, int>> factorize_fast(long long x) {
+vector<pair<long long, long long>> factorize_fast(long long x) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/prime.cpp
     vector<long long> ps, st;
     for (long long p : {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37})  // 小さい素数は先に割っておく
@@ -244,7 +244,7 @@ vector<pair<long long, int>> factorize_fast(long long x) {
         st.push_back(d), st.push_back(v / d);
     }
     sort(ps.begin(), ps.end());
-    vector<pair<long long, int>> res;
+    vector<pair<long long, long long>> res;
     for (long long p : ps) {
         if (!res.empty() && res.back().first == p) res.back().second++;
         else res.push_back({p, 1});
@@ -258,10 +258,10 @@ vector<pair<long long, int>> factorize_fast(long long x) {
 int main() {
     Sieve sv(100);
     assert(sv.primes.size() == 25 && sv.is_prime(97) && !sv.is_prime(91));
-    assert((sv.factorize(12) == vector<pair<int, int>>{{2, 2}, {3, 1}}));
-    assert((sv.divisors(12) == vector<int>{1, 2, 3, 4, 6, 12}));
+    assert((sv.factorize(12) == vector<pair<long long, long long>>{{2, 2}, {3, 1}}));
+    assert((sv.divisors(12) == vector<long long>{1, 2, 3, 4, 6, 12}));
     assert(is_prime(1000000007) && !is_prime(1));
-    assert((factorize(2000000014LL) == vector<pair<long long, int>>{{2, 1}, {1000000007, 1}}));
+    assert((factorize(2000000014LL) == vector<pair<long long, long long>>{{2, 1}, {1000000007, 1}}));
     assert((divisors(36) == vector<long long>{1, 2, 3, 4, 6, 9, 12, 18, 36}));
 
     // 区間篩: 愚直な is_prime と比較（小さい区間、大きい区間）
@@ -293,7 +293,7 @@ int main() {
                 for (int i = 0; i < e; i++) prod *= p;
             }
             assert(prod == x);
-            vector<int> dv;
+            vector<long long> dv;
             for (int d = 1; d <= x; d++) if (x % d == 0) dv.push_back(d);
             assert(s2.divisors(x) == dv);
         }
@@ -316,8 +316,8 @@ int main() {
     {
         assert(is_prime_mr(2) && is_prime_mr(999999999999999989LL) && is_prime_mr(2305843009213693951LL));  // 2^61 - 1
         assert(!is_prime_mr(1) && !is_prime_mr(561) && !is_prime_mr(3825123056546413051LL));  // カーマイケル数、強擬素数
-        assert((factorize_fast(3825123056546413051LL) == vector<pair<long long, int>>{{149491, 1}, {747451, 1}, {34233211, 1}}));
-        assert((factorize_fast(1000000000000000000LL) == vector<pair<long long, int>>{{2, 18}, {5, 18}}));
+        assert((factorize_fast(3825123056546413051LL) == vector<pair<long long, long long>>{{149491, 1}, {747451, 1}, {34233211, 1}}));
+        assert((factorize_fast(1000000000000000000LL) == vector<pair<long long, long long>>{{2, 18}, {5, 18}}));
         assert(factorize_fast(1).empty());
         Sieve big(1000000);
         for (int v = 0; v <= 1000000; v++) assert(is_prime_mr(v) == big.is_prime(v));

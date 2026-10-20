@@ -122,12 +122,12 @@ long long mod_pos(long long a, long long m) {
 // ◆ to_base(x, b) : x を b 進数にした桁の列（上の桁から。x = 0 なら {0}）
 //   x : 変換する数（b >= 2 なら 0 以上。b <= −2 なら負でもよい）
 //   b : 基数（2 以上、または −2 以下。−1, 0, 1 は assert で止まる）
-vector<int> to_base(long long x, long long b) {
+vector<long long> to_base(long long x, long long b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     assert(b >= 2 || b <= -2);
     assert(b < 0 || x >= 0);
     if (x == 0) return {0};
-    vector<int> d;
+    vector<long long> d;
     while (x != 0) {
         long long r = x % b;  // ★ 一番下の桁 = b で割った余り
         x /= b;
@@ -139,10 +139,10 @@ vector<int> to_base(long long x, long long b) {
 }
 // ◆ from_base(d, b) : 桁の列（上の桁から）を数に戻す
 //   d : 各桁（0..|b|−1）、b : 基数（負でもよい）。結果が long long に収まること
-long long from_base(const vector<int>& d, long long b) {
+long long from_base(const vector<long long>& d, long long b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/integer.cpp
     long long x = 0;
-    for (int c : d) x = x * b + c;  // ★ 上の桁から「b 倍して足す」
+    for (long long c : d) x = x * b + c;  // ★ 上の桁から「b 倍して足す」
     return x;
 }
 // ◆ to_base_str(x, b) : to_base の結果を文字列で（10 以上の桁は A, B, ...）
@@ -201,7 +201,7 @@ int main() {
         }
     // 進数変換
     {
-        assert((to_base(6, 2) == vector<int>{1, 1, 0}) && from_base({1, 1, 0}, 2) == 6);
+        assert((to_base(6, 2) == vector<long long>{1, 1, 0}) && from_base({1, 1, 0}, 2) == 6);
         assert(to_base_str(255, 16) == "FF" && to_base_str(0, 7) == "0" && to_base_str(35, 36) == "Z");
         assert(to_base_str(-9, -2) == "1011");  // -8 + 0 + (-2) + 1 = -9
         assert(to_base_str(6, -2) == "11010");  // 16 - 8 + 0 + (-2) + 0 = 6
@@ -217,10 +217,10 @@ int main() {
             if (b == 10) assert(to_base_str(x, b) == to_string(x));
         }
         // -2 進数: 長さ 10 までの 0/1 の列を全部作り、値ごとの表現がちょうど 1 つで to_base と一致するか
-        map<long long, vector<int>> rep;
+        map<long long, vector<long long>> rep;
         for (int len = 1; len <= 10; len++)
             for (int m = 0; m < (1 << len); m++) {
-                vector<int> d(len);
+                vector<long long> d(len);
                 for (int i = 0; i < len; i++) d[i] = m >> (len - 1 - i) & 1;
                 if (len > 1 && d[0] == 0) continue;
                 long long v = from_base(d, -2);

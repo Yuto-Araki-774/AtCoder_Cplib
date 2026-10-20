@@ -17,7 +17,7 @@ using namespace std;
 // ---------- 本体 ----------
 // K : 文字の種類数、B : 最初の文字（英小文字なら 26, 'a'。大文字なら 26, 'A'。数字なら 10, '0'）
 // AhoCorasick<26, 'a'> ac;
-//   int id = ac.add(s);         パターンを追加（0, 1, 2, ... の番号が返る）
+//   ll id = ac.add(s);          パターンを追加（0, 1, 2, ... の番号が返る）
 //   ac.build();                 全部追加してから 1 回呼ぶ
 //   ac.count_each(t)            各パターンが t に何回出てくるか（重なりも数える）
 //   ac.count_all(t)             全パターンの出現回数の合計
@@ -41,7 +41,7 @@ struct AhoCorasick {
     // AhoCorasick() : 空（根だけ）で作る。add でパターンを足していく
     AhoCorasick() : to(1), cnt(1, 0) { to[0].fill(-1); }
     // add(s) : s : パターン（同じものを 2 回入れてもよい）。build の前に呼ぶ
-    int add(const string& s) {
+    long long add(const string& s) {
         int v = 0;
         for (char ch : s) {
             int c = ch - B;
@@ -76,9 +76,9 @@ struct AhoCorasick {
         }
     }
     // next(v, ch) : v : 状態（0..size()−1）、ch : 文字（B..B+K−1）
-    int next(int v, char ch) const { return to[v][ch - B]; }
+    long long next(int v, char ch) const { return to[v][ch - B]; }
     // size() : 状態の数
-    int size() const { return to.size(); }
+    long long size() const { return to.size(); }
     // count_all(t) : t : 検索する文字列
     long long count_all(const string& t) const {
         long long res = 0;

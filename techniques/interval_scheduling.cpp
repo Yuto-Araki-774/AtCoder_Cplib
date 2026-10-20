@@ -23,12 +23,12 @@ using namespace std;
 //   iv : 区間 {l, r}（半開区間 [l, r)。端で触れるだけなら重なりではない）
 //   返り値 : 選んだ区間の番号の一覧（個数が答え）
 template <class T>
-vector<int> max_disjoint_intervals(const vector<pair<T, T>>& iv) {
+vector<long long> max_disjoint_intervals(const vector<pair<T, T>>& iv) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/interval_scheduling.cpp
     vector<int> ord(iv.size());
     iota(ord.begin(), ord.end(), 0);
     sort(ord.begin(), ord.end(), [&](int a, int b) { return iv[a].second < iv[b].second; });  // ★ 終わりが早い順
-    vector<int> chosen;
+    vector<long long> chosen;
     bool any = false;
     T last = T();
     for (int i : ord)

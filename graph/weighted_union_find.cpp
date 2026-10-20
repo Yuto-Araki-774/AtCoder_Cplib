@@ -39,7 +39,7 @@ struct WeightedUnionFind {
     WeightedUnionFind(int n) : par(n), sz(n, 1), pot(n, T(0)) { iota(par.begin(), par.end(), 0); }
 
     // leader(v) : v のグループの根（経路圧縮あり。再帰の深さは log N 以下）
-    int leader(int v) {
+    long long leader(int v) {
         if (par[v] == v) return v;
         int r = leader(par[v]);
         pot[v] += pot[par[v]];  // ★ 親までの差 + 親から根までの差 = 根までの差
@@ -52,7 +52,7 @@ struct WeightedUnionFind {
     // diff(a, b) : weight(b) − weight(a)。違うグループなら意味のない値
     T diff(int a, int b) { return weight(b) - weight(a); }
     // size(v) : v のグループの頂点数
-    int size(int v) { return sz[leader(v)]; }
+    long long size(int v) { return sz[leader(v)]; }
 
     // merge(a, b, w) : a, b : 頂点、w : weight(b) − weight(a) の値（負でもよい）。矛盾しなければ true
     bool merge(int a, int b, T w) {

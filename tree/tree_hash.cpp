@@ -14,7 +14,7 @@ using namespace std;
 // TreeCanon tc;                     比べたい木はすべて同じ tc で番号を振ること（番号の表を共有するため）
 //   auto id = tc.rooted(g, r);      根を r にしたとき、各頂点 v の部分木の形の番号 id[v]
 //                                   id[u] == id[v] ⇔ u の部分木と v の部分木が同じ形（根付きで）
-//   int t = tc.unrooted(g);         根なし木としての形の番号（2 つの木が同型 ⇔ 番号が同じ）
+//   ll t = tc.unrooted(g);          根なし木としての形の番号（2 つの木が同型 ⇔ 番号が同じ）
 // g : 木の隣接リスト（頂点 0..n-1）
 // ◆ struct TreeCanon : 木の同型判定（形が同じ木・部分木に同じ番号を振る。衝突なし）
 //   rooted(g, r)  : 根を r にしたときの、各頂点の部分木の形の番号の配列。O(N log N)
@@ -24,9 +24,10 @@ struct TreeCanon {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_hash.cpp
     map<vector<int>, int> table;  // ★ 子の番号の列（ソート済み）→ 番号
     // rooted(g, root) : g : 木の隣接リスト（両方向、0..n−1）、root : 根
-    vector<int> rooted(const vector<vector<int>>& g, int root) {
+    vector<long long> rooted(const vector<vector<int>>& g, int root) {
         int n = g.size();
-        vector<int> id(n, -1), par(n, -1), ord;
+        vector<long long> id(n, -1);
+        vector<int> par(n, -1), ord;
         ord.reserve(n);
         vector<int> st = {root};
         par[root] = root;
@@ -48,7 +49,7 @@ struct TreeCanon {
         return id;
     }
     // unrooted(g) : g : 木の隣接リスト。中心（1 個か 2 個）を根にしたときの番号の小さい方を返す
-    int unrooted(const vector<vector<int>>& g) {
+    long long unrooted(const vector<vector<int>>& g) {
         int n = g.size();
         // ★ 葉を外側から 1 枚ずつはがして、最後に残った 1 〜 2 頂点が中心
         vector<int> deg(n), cur;
@@ -65,7 +66,7 @@ struct TreeCanon {
                     if (--deg[to] == 1) nxt.push_back(to);
             cur = nxt;
         }
-        int best = INT_MAX;
+        long long best = LLONG_MAX;
         for (int c : cur) best = min(best, rooted(g, c)[c]);
         return best;
     }

@@ -72,8 +72,8 @@ struct HLD {
     // path(u, v, edge) : u, v : パスの両端
     //   edge : true なら辺のパス（LCA の頂点を含めない。辺の値は子の側の pos に置いておく）。既定 false（頂点のパス）
     //   注意 : 区間の向き（u 側から v 側か）は区別しない。順番に意味がある演算では工夫が要る
-    vector<pair<int, int>> path(int u, int v, bool edge = false) const {
-        vector<pair<int, int>> res;
+    vector<pair<long long, long long>> path(int u, int v, bool edge = false) const {
+        vector<pair<long long, long long>> res;
         while (head[u] != head[v]) {
             if (dep[head[u]] < dep[head[v]]) swap(u, v);
             res.push_back({pos[head[u]], pos[u] + 1});  // ★ u から鎖の先頭までは番号が連続
@@ -84,9 +84,9 @@ struct HLD {
         return res;
     }
     // subtree(v) : v の部分木の区間 [pos[v], pos[v] + sz[v])
-    pair<int, int> subtree(int v) const { return {pos[v], pos[v] + sz[v]}; }
+    pair<long long, long long> subtree(int v) const { return {pos[v], pos[v] + sz[v]}; }
     // lca(u, v) : 最小共通祖先
-    int lca(int u, int v) const {
+    long long lca(int u, int v) const {
         while (head[u] != head[v]) {
             if (dep[head[u]] < dep[head[v]]) swap(u, v);
             u = par[head[u]];
@@ -94,7 +94,7 @@ struct HLD {
         return dep[u] < dep[v] ? u : v;
     }
     // dist(u, v) : 辺の本数
-    int dist(int u, int v) const { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }
+    long long dist(int u, int v) const { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }
 };
 
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑

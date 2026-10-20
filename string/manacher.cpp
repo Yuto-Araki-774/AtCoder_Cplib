@@ -59,7 +59,7 @@ struct Palindrome {
         return rad[l + r - 1] >= r - l;  // ★ 区間 [l, r) の中心は区切り入りの列の l + r - 1 番目
     }
     // longest() : 同じ長さが複数あれば一番左
-    pair<int, int> longest() const {
+    pair<long long, long long> longest() const {
         int best = 0, start = 0;
         for (int i = 0; i < (int)rad.size(); i++)
             if (rad[i] > best) best = rad[i], start = (i + 1) / 2 - rad[i] / 2;
@@ -77,7 +77,7 @@ struct Palindrome {
 // ◆ pal_partition_min(s) : s を回文（連続した部分文字列）に区切るときの最小個数。O(N^2)（N <= 5000 程度）
 //   s : string か vector。空なら 0
 template <class Seq>
-int pal_partition_min(const Seq& s) {
+long long pal_partition_min(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/manacher.cpp
     int n = s.size();
     Palindrome pal(s);
@@ -112,7 +112,7 @@ int main() {
     string s = "abacabadd";
     Palindrome pal(s);
     assert(pal.is_pal(0, 7) && !pal.is_pal(0, 8) && pal.is_pal(7, 9) && pal.is_pal(3, 4));
-    assert(pal.longest() == make_pair(0, 7));  // "abacaba"
+    assert((pal.longest() == pair<long long, long long>(0, 7)));  // "abacaba"
     assert(Palindrome(string("aaaa")).count() == 10);
 
     // ランダムテスト: 全区間を愚直に比較

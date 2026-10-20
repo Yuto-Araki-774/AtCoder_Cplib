@@ -61,27 +61,27 @@ double bin_search_real(double ok, double ng, F f, int iter = 100) {
 // ◆ count_range(v, l, r) : l 以上 r 未満の個数（l >= r なら 0）
 //   v : 昇順にソート済みであること（ソートしていないと答えが壊れる）
 //   x, l, r : 比べる値（v の要素と同じ型。違う型だとコンパイルエラーになることがある → 型をそろえる）
-template <class T> int count_lt(const vector<T>& v, T x) {  // x 未満
+template <class T> long long count_lt(const vector<T>& v, T x) {  // x 未満
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return lower_bound(v.begin(), v.end(), x) - v.begin();
 }
 // count_le(v, x) : x 以下の個数
-template <class T> int count_le(const vector<T>& v, T x) {  // x 以下
+template <class T> long long count_le(const vector<T>& v, T x) {  // x 以下
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return upper_bound(v.begin(), v.end(), x) - v.begin();
 }
 // count_gt(v, x) : x より大きい個数
-template <class T> int count_gt(const vector<T>& v, T x) {  // x より大
+template <class T> long long count_gt(const vector<T>& v, T x) {  // x より大
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return (int)v.size() - count_le(v, x);
 }
 // count_ge(v, x) : x 以上の個数
-template <class T> int count_ge(const vector<T>& v, T x) {  // x 以上
+template <class T> long long count_ge(const vector<T>& v, T x) {  // x 以上
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return (int)v.size() - count_lt(v, x);
 }
 // count_range(v, l, r) : l 以上 r 未満の個数（l >= r なら 0）
-template <class T> int count_range(const vector<T>& v, T l, T r) {  // [l, r)
+template <class T> long long count_range(const vector<T>& v, T l, T r) {  // [l, r)
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/binary_search.cpp
     return l >= r ? 0 : count_lt(v, r) - count_lt(v, l);
 }

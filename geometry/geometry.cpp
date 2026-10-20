@@ -63,7 +63,7 @@ template <class T> T norm2(const Pt<T>& a) {
 }
 // ◆ ccw(a, b, c) : a → b → c の向き。反時計回りなら 1、時計回りなら −1、一直線なら 0
 //   a, b, c : 3 点（同じ点を含んでもよい。そのときは 0）
-template <class T> int ccw(const Pt<T>& a, const Pt<T>& b, const Pt<T>& c) {
+template <class T> long long ccw(const Pt<T>& a, const Pt<T>& b, const Pt<T>& c) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     T v = cross(b - a, c - a);  // ★ a から見た b と c の向き
     return (v > 0) - (v < 0);
@@ -124,7 +124,7 @@ template <class T> T area2(const vector<Pt<T>>& poly) {
 }
 // ◆ point_in_polygon(p, poly) : 点 p が多角形の内部なら 2、辺の上なら 1、外部なら 0
 //   p : 調べる点、poly : 頂点を順番に並べたもの（時計回り・反時計回りどちらでもよい）
-template <class T> int point_in_polygon(const Pt<T>& p, const vector<Pt<T>>& poly) {
+template <class T> long long point_in_polygon(const Pt<T>& p, const vector<Pt<T>>& poly) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/geometry/geometry.cpp
     bool in = false;
     for (size_t i = 0; i < poly.size(); i++) {

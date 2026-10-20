@@ -52,7 +52,7 @@ struct SuffixArray {
         }
     }
     // lcp_of(i, j) : 0 <= i, j <= N（N は空の接尾辞）
-    int lcp_of(int i, int j) const {
+    long long lcp_of(int i, int j) const {
         if (i == n || j == n) return 0;
         if (i == j) return n - i;
         int a = rnk[i], b = rnk[j];
@@ -61,29 +61,29 @@ struct SuffixArray {
         return min(mn[k][a], mn[k][b - (1 << k)]);  // ★ 順位 a と b の間の lcp の最小
     }
     // compare(l1, r1, l2, r2) : 2 つの区間 [l1, r1), [l2, r2)
-    int compare(int l1, int r1, int l2, int r2) const {
-        int len1 = r1 - l1, len2 = r2 - l2;
-        int c = min({lcp_of(l1, l2), len1, len2});
+    long long compare(int l1, int r1, int l2, int r2) const {
+        long long len1 = r1 - l1, len2 = r2 - l2;
+        long long c = min({lcp_of(l1, l2), len1, len2});
         if (c == min(len1, len2)) return len1 < len2 ? -1 : (len1 > len2 ? 1 : 0);  // 一方がもう一方の接頭辞
         return s[l1 + c] < s[l2 + c] ? -1 : 1;  // ★ 最初に違う文字で決まる
     }
     // count_distinct() : N(N+1)/2 − Σ lcp
     long long count_distinct() const { return cum[n]; }
     // longest_repeated() : 同じ長さなら辞書順で最小のもの
-    pair<int, int> longest_repeated() const {
+    pair<long long, long long> longest_repeated() const {
         int best = 0, st = 0;
         for (int i = 0; i + 1 < n; i++)
             if (lcp[i] > best) best = lcp[i], st = sa[i];
         return {st, best};
     }
     // kth_substring(k) : k が count_distinct() 以上なら {−1, −1}
-    pair<int, int> kth_substring(long long k) const {
+    pair<long long, long long> kth_substring(long long k) const {
         if (k < 0 || k >= cum[n]) return {-1, -1};
         int i = upper_bound(cum.begin(), cum.end(), k) - cum.begin() - 1;  // ★ sa[i] の接尾辞が生む部分文字列の中にある
         return {sa[i], (i ? lcp[i - 1] : 0) + 1 + int(k - cum[i])};        // 長さ lcp[i−1]+1, +2, ... の順に並ぶ
     }
     // find(t) : t は s と同じ型。t が空なら [0, N)
-    pair<int, int> find(const Seq& t) const {
+    pair<long long, long long> find(const Seq& t) const {
         int m = t.size();
         auto cmp = [&](int i) {  // s[sa[i]..) の先頭 m 文字と t の比較（−1, 0, 1）
             int p = sa[i];
@@ -107,7 +107,7 @@ struct SuffixArray {
 //   s, t : 同じ型の string か vector（vector の値に LLONG_MIN があってはいけない）。共通部分がなければ長さ 0
 //   ★ s + 区切り + t の接尾辞配列で、隣どうしが「s 側と t 側」になっている所の lcp の最大
 template <class Seq>
-tuple<int, int, int> longest_common_substring(const Seq& s, const Seq& t) {
+tuple<long long, long long, long long> longest_common_substring(const Seq& s, const Seq& t) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/suffix_array.cpp
     int n = s.size();
     vector<long long> u;
@@ -138,10 +138,10 @@ int main() {
         SuffixArray sa(string("banana"));
         assert((sa.sa == vector<int>{5, 3, 1, 0, 4, 2}));
         assert(sa.lcp_of(1, 3) == 3 && sa.lcp_of(0, 1) == 0 && sa.lcp_of(2, 2) == 4 && sa.lcp_of(6, 1) == 0);
-        assert(sa.longest_repeated() == make_pair(3, 3));  // "ana"（位置 1 と 3 に現れる。返すのは sa で先に来る方）
+        assert((sa.longest_repeated() == pair<long long, long long>(3, 3)));  // "ana"（位置 1 と 3 に現れる。返すのは sa で先に来る方）
         auto [lo, hi] = sa.find(string("an"));
         assert(hi - lo == 2);
-        assert(sa.kth_substring(0) == make_pair(5, 1));    // "a"
+        assert((sa.kth_substring(0) == pair<long long, long long>(5, 1)));    // "a"
         assert(sa.compare(1, 3, 3, 5) == 0 && sa.compare(0, 1, 1, 2) == 1 && sa.compare(1, 2, 1, 4) == -1);
     }
     {

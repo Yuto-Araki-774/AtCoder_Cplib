@@ -19,7 +19,7 @@ using namespace std;
 // ---------- 本体 ----------
 // BipartiteMatching bm(L, R);   左 0..L-1、右 0..R-1（左右で番号は別）
 //   bm.add_edge(l, r)            左 l と右 r をつなぐ
-//   int k = bm.solve()           最大マッチングの本数
+//   ll k = bm.solve()            最大マッチングの本数
 //   bm.match_l[l]                左 l の相手の右の番号（いなければ -1）
 //   bm.match_r[r]                右 r の相手の左の番号（いなければ -1）
 // 典型: 「人と仕事」「赤い点と青い点」をペアにする最大数。
@@ -70,7 +70,7 @@ struct BipartiteMatching {
         return false;
     }
     // solve() : 最大マッチングの本数。何回呼んでもよい（辺を足してから呼び直すと続きから増やす）
-    int solve() {
+    long long solve() {
         int res = 0;
         for (int l = 0; l < L; l++) res += match_l[l] != -1;
         while (bfs()) {  // ★ 1 回の BFS で、最短の増加道をまとめて全部使う（√V 回で終わる）
@@ -86,7 +86,7 @@ struct BipartiteMatching {
     // 返り値: {左側で選ぶ頂点, 右側で選ぶ頂点}
     // 最大独立集合（どの 2 頂点も辺でつながらない最大の集合）= 最小頂点被覆の補集合
     // min_vertex_cover() : solve の後に呼ぶ。返り値 = {左側で選ぶ頂点, 右側で選ぶ頂点}
-    pair<vector<int>, vector<int>> min_vertex_cover() const {
+    pair<vector<long long>, vector<long long>> min_vertex_cover() const {
         vector<bool> vl(L, false), vr(R, false);
         queue<int> q;
         for (int l = 0; l < L; l++)
@@ -101,7 +101,7 @@ struct BipartiteMatching {
                     if (nl != -1 && !vl[nl]) vl[nl] = true, q.push(nl);
                 }
         }
-        vector<int> cl, cr;
+        vector<long long> cl, cr;
         for (int l = 0; l < L; l++) if (!vl[l]) cl.push_back(l);  // ★ 左は「たどれなかった」頂点
         for (int r = 0; r < R; r++) if (vr[r]) cr.push_back(r);   // ★ 右は「たどれた」頂点
         return {cl, cr};

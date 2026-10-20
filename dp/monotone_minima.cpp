@@ -23,9 +23,9 @@ using namespace std;
 //   注意 : 行 i の最小値の位置（一番左）が i について単調増加であること（Monge なら成り立つ）
 //   返り値 : pos[i] = 行 i の最小値の列
 template <class T, class F>
-vector<int> monotone_minima(int H, int W, F f) {
+vector<long long> monotone_minima(int H, int W, F f) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/monotone_minima.cpp
-    vector<int> pos(H, 0);
+    vector<long long> pos(H, 0);
     if (H == 0 || W == 0) return pos;
     vector<array<int, 4>> st = {{0, H, 0, W}};  // {行の範囲 [t, b), 列の範囲 [l, r)}
     while (!st.empty()) {
@@ -77,7 +77,7 @@ int main() {
     // A[i][j] = (j − 2i)^2（行 i の最小値は列 2i 付近 → 位置が右下がり）。3 × 6: pos = 0, 2, 4
     {
         auto f = [](int i, int j) { return (long long)(j - 2 * i) * (j - 2 * i); };
-        assert((monotone_minima<long long>(3, 6, f) == vector<int>{0, 2, 4}));
+        assert((monotone_minima<long long>(3, 6, f) == vector<long long>{0, 2, 4}));
     }
     // 凸との畳み込み: a = {0, 5, 1}, b = {0, 1, 4}（凸）→ c[0] = 0, c[1] = 1, c[2] = min(4, 6, 1) = 1, c[3] = min(5+4, 1+1) = 2, c[4] = 1 + 4 = 5
     {

@@ -42,9 +42,9 @@ struct DijkstraResult {
     bool reachable(int v) const { return dist[v] != INF; }
     // --- 削除可: 経路復元 ---
     // path(t) : t までの最短路（始点 → … → t）。t : 終点
-    vector<int> path(int t) const {
+    vector<long long> path(int t) const {
         if (!reachable(t)) return {};
-        vector<int> res;
+        vector<long long> res;
         for (int v = t; v != -1; v = prev[v]) res.push_back(v);
         reverse(res.begin(), res.end());
         return res;
@@ -184,7 +184,7 @@ int main() {
     g[0].push_back({2, 1});
     g[2].push_back({1, 2});
     auto r = dijkstra(g, 0);
-    assert(r.dist[1] == 3 && !r.reachable(3) && (r.path(1) == vector<int>{0, 2, 1}));
+    assert(r.dist[1] == 3 && !r.reachable(3) && (r.path(1) == vector<long long>{0, 2, 1}));
 
     // 拡張ダイクストラ: 「クーポン K 枚まで、辺を 1 本無料にできる」
     // 【自分で定義するもの】状態 → 整数 id の対応。ここでは (頂点 v, 残り枚数 k) → v * (K+1) + k

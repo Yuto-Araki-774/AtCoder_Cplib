@@ -21,7 +21,7 @@ using namespace std;
 // ◆ pal_min_changes(s) : 1 文字ずつ書き換えて回文にするときの最小回数。O(N)
 //   s : string か vector
 template <class Seq>
-int pal_min_changes(const Seq& s) {
+long long pal_min_changes(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/palindrome.cpp
     int n = s.size(), c = 0;
     for (int i = 0; i < n / 2; i++) c += s[i] != s[n - 1 - i];  // ★ 対応する 2 文字が違えば、どちらかを 1 回書き換える
@@ -46,7 +46,7 @@ bool can_rearrange_pal(const Seq& s) {
 //   s : string か vector
 //   最小何文字消せば回文か = 最小何文字挿入すれば回文か = N − longest_pal_subseq(s)
 template <class Seq>
-int longest_pal_subseq(const Seq& s) {
+long long longest_pal_subseq(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/palindrome.cpp
     int n = s.size();
     if (n == 0) return 0;

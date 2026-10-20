@@ -23,9 +23,10 @@ using namespace std;
 // mobius(n)       : 1 個だけ O(√n)
 // ◆ mobius_table(N) : メビウス関数 μ(0..N) の表（μ(0) = 0）。O(N)
 //   N : 上限（1e7 くらいまで）
-vector<int> mobius_table(int N) {
+vector<long long> mobius_table(int N) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
-    vector<int> mu(N + 1, 0), primes;
+    vector<long long> mu(N + 1, 0);
+    vector<int> primes;
     vector<bool> comp(N + 1, false);
     if (N >= 1) mu[1] = 1;
     for (int i = 2; i <= N; i++) {
@@ -41,7 +42,7 @@ vector<int> mobius_table(int N) {
 }
 // ◆ mobius(n) : μ(n) を 1 つだけ。O(√n)
 //   n : 1 以上
-int mobius(long long n) {
+long long mobius(long long n) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/math/divisor_transform.cpp
     int res = 1;
     for (long long p = 2; p * p <= n; p++) {
@@ -129,7 +130,7 @@ int main() {
     // メビウス関数: mu(1..12) = 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0
     {
         auto mu = mobius_table(12);
-        assert((mu == vector<int>{0, 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0}));
+        assert((mu == vector<long long>{0, 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0}));
         for (int n = 1; n <= 12; n++) assert(mobius(n) == mu[n]);
     }
     // 使用例: 1..K の数を N 個並べる（K^N 通り）ときの gcd の和（ABC162 E と同じ形）

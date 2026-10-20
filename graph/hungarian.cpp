@@ -21,7 +21,7 @@ using namespace std;
 //   返り値 : {最小の合計, match}。match[i] = 人 i の仕事の番号
 //   注意 : 最大化したいなら a を −1 倍して、合計も −1 倍する
 template <class T>
-pair<T, vector<int>> hungarian(const vector<vector<T>>& a) {
+pair<T, vector<long long>> hungarian(const vector<vector<T>>& a) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/hungarian.cpp
     int n = a.size(), m = n ? a[0].size() : 0;
     assert(n <= m);
@@ -55,7 +55,7 @@ pair<T, vector<int>> hungarian(const vector<vector<T>>& a) {
             j0 = j1;
         } while (j0);
     }
-    vector<int> match(n);
+    vector<long long> match(n);
     for (int j = 1; j <= m; j++) if (p[j]) match[p[j] - 1] = j - 1;
     T cost = 0;
     for (int i = 0; i < n; i++) cost += a[i][match[i]];
@@ -69,10 +69,10 @@ int main() {
     // 3 人 × 3 仕事: 4 1 3 / 2 0 5 / 3 2 2 → 人 0 に仕事 1 (1)、人 1 に仕事 0 (2)、人 2 に仕事 2 (2) = 5
     {
         auto [c, mt] = hungarian<long long>({{4, 1, 3}, {2, 0, 5}, {3, 2, 2}});
-        assert(c == 5 && (mt == vector<int>{1, 0, 2}));
+        assert(c == 5 && (mt == vector<long long>{1, 0, 2}));
         // 2 人 × 3 仕事（余る仕事がある）: 1 9 9 / 9 9 1 → 1 + 1 = 2
         auto [c2, m2] = hungarian<long long>({{1, 9, 9}, {9, 9, 1}});
-        assert(c2 == 2 && (m2 == vector<int>{0, 2}));
+        assert(c2 == 2 && (m2 == vector<long long>{0, 2}));
     }
     // ランダムテスト: 仕事の選び方（順列）を全部試す
     {

@@ -7,6 +7,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 - 各関数・構造体の 1 行目に、そのファイルの GitHub の URL（出典）が書いてある
 - 各ファイルの下半分は使用例とテスト（ランダムテストで素朴な解法と比較済み）。コピーは不要
 - 区間はすべて半開区間 `[l, r)`、頂点・添字はすべて 0-indexed。C++17 以上
+- 関数が返す整数（個数・位置・頂点番号など）は `long long` / `vector<long long>`。受け取りは `auto` か `ll` で書く（`vector<int> x = ...` だとコンパイルエラーになる）。ただしグラフの隣接リストは引数・返り値とも `vector<vector<int>>` のまま
 
 ## 目次
 
@@ -954,7 +955,7 @@ ACL（`atcoder/`）は g++ の include パスに入れておく前提（`-I` は
 ### [persistent_segtree.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/persistent_segtree.cpp) — 永続セグ木
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `PersistentSegTree<S, op, e> seg(n)`, `build(v)` | 最初の版（根の番号 int）を作る |
+| 本体 | `PersistentSegTree<S, op, e> seg(n)`, `build(v)` | 最初の版（根の番号 long long）を作る |
 | 本体 | `set(root, p, x)`, `get(root, p)`, `prod(root, l, r)` | 版 root から 1 点を変えた新しい版を作る（root は残る）、取得、区間の積。各 O(log N) |
 
 典型: 版 i = 「A の先頭 i 個を、値の位置に足したもの」にすると、版 R と版 L の差で「区間 [L, R) の中で x 以下の個数・和」がオンラインで答えられる（使用例の ABC339 G）。

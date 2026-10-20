@@ -23,10 +23,10 @@ using namespace std;
 // ◆ bipartite_coloring(g) : 二部グラフ判定と 2 色塗り分け。O(N + M)
 //   g : 無向グラフの隣接リスト（両方向に入れる）。つながっていなくてもよい
 //   返り値 : color[v] = 0 か 1（各成分で番号の一番小さい頂点が 0）。二部グラフでなければ空
-vector<int> bipartite_coloring(const vector<vector<int>>& g) {
+vector<long long> bipartite_coloring(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bipartite.cpp
     int n = g.size();
-    vector<int> color(n, -1);
+    vector<long long> color(n, -1);
     for (int s = 0; s < n; s++) {
         if (color[s] != -1) continue;
         color[s] = 0;  // ★ 連結成分ごとに、最初の頂点を色 0 にする
@@ -50,16 +50,16 @@ vector<int> bipartite_coloring(const vector<vector<int>>& g) {
 //      （各成分の 2 色は入れ替えてよいので、どちらの数を取るかを選べる）
 // ◆ bipartite_components(g) : 成分ごとの {色 0 の個数, 色 1 の個数}
 //   g : 無向グラフ。二部グラフでなければ空を返す
-vector<pair<int, int>> bipartite_components(const vector<vector<int>>& g) {
+vector<pair<long long, long long>> bipartite_components(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bipartite.cpp
     auto color = bipartite_coloring(g);
     if (color.empty() && !g.empty()) return {};
     int n = g.size();
     vector<bool> seen(n, false);
-    vector<pair<int, int>> res;
+    vector<pair<long long, long long>> res;
     for (int s = 0; s < n; s++) {
         if (seen[s]) continue;
-        pair<int, int> cnt = {0, 0};
+        pair<long long, long long> cnt = {0, 0};
         vector<int> st = {s};
         seen[s] = true;
         while (!st.empty()) {
@@ -87,7 +87,7 @@ int main() {
     for (int v = 0; v < 7; v++)
         for (int to : g[v]) assert(col[v] != col[to]);
     auto comps = bipartite_components(g);
-    assert((comps == vector<pair<int, int>>{{2, 2}, {1, 1}, {1, 0}}));
+    assert((comps == vector<pair<long long, long long>>{{2, 2}, {1, 1}, {1, 0}}));
 
     add(0, 2);  // 0-1-2-0 で長さ 3 の閉路 → 二部グラフでない
     assert(bipartite_coloring(g).empty() && bipartite_components(g).empty());

@@ -28,14 +28,14 @@ using namespace std;
 //   queries : クエリ {a, b, x} の一覧
 //   返り値[j] : {a と b がつながっているか, a の成分の頂点数}
 template <class T>
-vector<pair<bool, int>> offline_connectivity(int n, vector<tuple<int, int, T>> edges, const vector<tuple<int, int, T>>& queries) {
+vector<pair<bool, long long>> offline_connectivity(int n, vector<tuple<int, int, T>> edges, const vector<tuple<int, int, T>>& queries) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/offline_query.cpp
     sort(edges.begin(), edges.end(), [](auto& p, auto& q) { return get<2>(p) < get<2>(q); });
     vector<int> ord(queries.size());
     iota(ord.begin(), ord.end(), 0);
     sort(ord.begin(), ord.end(), [&](int i, int j) { return get<2>(queries[i]) < get<2>(queries[j]); });  // ★ クエリを x の小さい順に
     atcoder::dsu uf(n);
-    vector<pair<bool, int>> ans(queries.size());
+    vector<pair<bool, long long>> ans(queries.size());
     size_t e = 0;
     for (int j : ord) {
         auto [a, b, x] = queries[j];
@@ -52,7 +52,7 @@ vector<pair<bool, int>> offline_connectivity(int n, vector<tuple<int, int, T>> e
 //   a       : 数列
 //   queries : {l, r, x} の一覧（0 <= l <= r <= N）
 template <class T>
-vector<int> offline_count_le(const vector<T>& a, const vector<tuple<int, int, T>>& queries) {
+vector<long long> offline_count_le(const vector<T>& a, const vector<tuple<int, int, T>>& queries) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/techniques/offline_query.cpp
     int n = a.size();
     vector<int> idx(n), ord(queries.size());
@@ -60,7 +60,7 @@ vector<int> offline_count_le(const vector<T>& a, const vector<tuple<int, int, T>
     sort(idx.begin(), idx.end(), [&](int i, int j) { return a[i] < a[j]; });  // 値の小さい順
     sort(ord.begin(), ord.end(), [&](int i, int j) { return get<2>(queries[i]) < get<2>(queries[j]); });
     atcoder::fenwick_tree<int> bit(n);
-    vector<int> ans(queries.size());
+    vector<long long> ans(queries.size());
     int p = 0;
     for (int j : ord) {
         auto [l, r, x] = queries[j];
@@ -77,11 +77,11 @@ int main() {
     // 辺 0-1 (重み 5)、1-2 (重み 3)、2-3 (重み 8)
     vector<tuple<int, int, long long>> es = {{0, 1, 5}, {1, 2, 3}, {2, 3, 8}};
     auto r = offline_connectivity<long long>(4, es, {{0, 2, 4}, {0, 2, 5}, {0, 3, 7}, {3, 3, 0}});
-    assert((r == vector<pair<bool, int>>{{false, 1}, {true, 3}, {false, 3}, {true, 1}}));
+    assert((r == vector<pair<bool, long long>>{{false, 1}, {true, 3}, {false, 3}, {true, 1}}));
 
     vector<int> a = {5, 1, 4, 2, 3};
     auto c = offline_count_le<int>(a, {{0, 5, 3}, {1, 4, 1}, {2, 3, 10}, {0, 0, 5}});
-    assert((c == vector<int>{3, 1, 1, 0}));  // {1,2,3} / {1} / {4} / 空
+    assert((c == vector<long long>{3, 1, 1, 0}));  // {1,2,3} / {1} / {4} / 空
 
     // ランダムテスト: 愚直と比較
     mt19937 rr(134);

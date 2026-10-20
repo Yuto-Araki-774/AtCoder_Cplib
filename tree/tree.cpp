@@ -70,14 +70,14 @@ struct Tree {
     }
 
     // kth_ancestor(v, k) : v : 頂点、k : 何個上か（0 なら v 自身。深さを超えると −1）
-    int kth_ancestor(int v, int k) const {  // 存在しなければ -1
+    long long kth_ancestor(int v, int k) const {  // 存在しなければ -1
         if (k < 0 || k > dep[v]) return -1;
         for (int i = 0; i < LOG; i++)
             if (k >> i & 1) v = up[i][v];  // ★ k を 2 進数で分解して飛ぶ
         return v;
     }
     // lca(a, b) : a, b : 頂点（build 済みであること）
-    int lca(int a, int b) const {
+    long long lca(int a, int b) const {
         if (dep[a] < dep[b]) swap(a, b);
         a = kth_ancestor(a, dep[a] - dep[b]);  // ★ まず深さをそろえる
         if (a == b) return a;
@@ -86,22 +86,22 @@ struct Tree {
         return up[0][a];                                          // ★ その 1 つ上が合流点
     }
     // dist(a, b) : 辺の本数
-    int dist(int a, int b) const { return dep[a] + dep[b] - 2 * dep[lca(a, b)]; }
+    long long dist(int a, int b) const { return dep[a] + dep[b] - 2 * dep[lca(a, b)]; }
     // wdist(a, b) : 辺の重みの和
     T wdist(int a, int b) const { return wdep[a] + wdep[b] - 2 * wdep[lca(a, b)]; }
 
     // --- 削除可: パス関連 ---
     // jump(a, b, k) : k : 進む歩数（0 なら a、dist(a, b) なら b、それより大きいと −1）
-    int jump(int a, int b, int k) const {  // a から b へ k 歩進んだ頂点（はみ出したら -1）
+    long long jump(int a, int b, int k) const {  // a から b へ k 歩進んだ頂点（はみ出したら -1）
         int l = lca(a, b), da = dep[a] - dep[l], db = dep[b] - dep[l];
         if (k <= da) return kth_ancestor(a, k);
         if (k <= da + db) return kth_ancestor(b, da + db - k);
         return -1;
     }
     // path(a, b) : a から b への頂点の並び（a と b を含む）
-    vector<int> path(int a, int b) const {  // a から b へのパスの頂点列
+    vector<long long> path(int a, int b) const {  // a から b へのパスの頂点列
         int l = lca(a, b);
-        vector<int> left, right;
+        vector<long long> left, right;
         for (int v = a; v != l; v = par[v]) left.push_back(v);
         left.push_back(l);
         for (int v = b; v != l; v = par[v]) right.push_back(v);
@@ -114,7 +114,7 @@ struct Tree {
 
     // --- 削除可: 木の直径（build 不要）。{長さ, 端点から端点への頂点列} ---
     // diameter() : build しなくても呼べる。重みは add_edge の w（負の重みがあると正しくない）
-    pair<T, vector<int>> diameter() const {
+    pair<T, vector<long long>> diameter() const {
         auto far = [&](int s, vector<int>& pre) {  // s から一番遠い頂点
             vector<T> d(n, T(0));
             pre.assign(n, -1);
@@ -134,7 +134,7 @@ struct Tree {
         vector<int> pre;
         int u = far(0, pre).first;   // ★ 適当な点から一番遠い点 u
         auto [v, len] = far(u, pre);  // ★ u から一番遠い点 v。u-v が直径
-        vector<int> p;
+        vector<long long> p;
         for (int x = v; x != -1; x = pre[x]) p.push_back(x);
         return {len, p};
     }
@@ -201,7 +201,7 @@ int main() {
     assert(t.lca(3, 4) == 1 && t.lca(3, 5) == 0 && t.dist(3, 5) == 4 && t.wdist(3, 5) == 19);
     assert(t.kth_ancestor(3, 2) == 0 && t.kth_ancestor(3, 3) == -1 && t.sz[1] == 3);
     assert(t.jump(3, 5, 3) == 2 && t.jump(3, 5, 5) == -1);
-    assert((t.path(4, 5) == vector<int>{4, 1, 0, 2, 5}) && t.is_on_path(4, 5, 0));
+    assert((t.path(4, 5) == vector<long long>{4, 1, 0, 2, 5}) && t.is_on_path(4, 5, 0));
     assert(t.diameter().first == 19);
 
     // 木 DP の例: 部分木に含まれる重みの合計（葉から順に処理）
@@ -258,7 +258,7 @@ int main() {
                     int l = naive_lca(a, b);
                     assert(tt.lca(a, b) == l && tt.dist(a, b) == D[a] + D[b] - 2 * D[l] && tt.wdist(a, b) == WD[a] + WD[b] - 2 * WD[l]);
                     dm = max(dm, WD[a] + WD[b] - 2 * WD[l]);
-                    vector<int> path, tail;
+                    vector<long long> path, tail;
                     for (int x = a; x != l; x = P[x]) path.push_back(x);
                     path.push_back(l);
                     for (int x = b; x != l; x = P[x]) tail.push_back(x);

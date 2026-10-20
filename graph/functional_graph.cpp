@@ -27,7 +27,7 @@ using namespace std;
 //   f : 次の頂点の表（0 始まり。全部の頂点に次がちょうど 1 つあること）
 //   s : 出発する頂点
 //   K : 進む回数（0 以上。1e18 でもよい）
-int walk_k(const vector<int>& f, int s, long long K) {
+long long walk_k(const vector<int>& f, int s, long long K) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/functional_graph.cpp
     vector<long long> first(f.size(), -1);  // first[v] = 初めて v に来た回数
     int v = s;
@@ -74,14 +74,14 @@ struct Doubling {
             }
     }
     // jump_sum(v, k) : v : 出発点、k : 進む回数（0 <= k <= maxK）
-    pair<int, long long> jump_sum(int v, long long k) const {
+    pair<long long, long long> jump_sum(int v, long long k) const {
         long long s = 0;
         for (int j = 0; j < LOG; j++)
             if (k >> j & 1) s += sum[j][v], v = nxt[j][v];  // ★ k を 2 進数に分解して飛ぶ
         return {v, s};
     }
     // jump(v, k) : v : 出発点、k : 進む回数（0 <= k <= maxK）
-    int jump(int v, long long k) const { return jump_sum(v, k).first; }
+    long long jump(int v, long long k) const { return jump_sum(v, k).first; }
 };
 
 // ---------- 本体C: 閉路分解 ----------
@@ -135,7 +135,7 @@ int main() {
 
     Doubling db(f, (long long)1e12, {10, 20, 30, 40, 50, 60});  // 1e12 × 60 は long long に収まる
     assert(db.jump(4, 5) == 1 && db.jump(0, 3) == 3);  // 4→0→1→2→3→1、0→1→2→3
-    assert(db.jump_sum(4, 3) == make_pair(2, 50LL + 10 + 20));
+    assert((db.jump_sum(4, 3) == pair<long long, long long>(2, 50LL + 10 + 20)));
 
     FunctionalGraph fg(f);
     assert(fg.cycles.size() == 2);
@@ -156,7 +156,7 @@ int main() {
             int v = s;
             long long sm = 0;
             for (int k = 0; k <= 200; k++) {
-                assert(walk_k(g, s, k) == v && d.jump_sum(s, k) == make_pair(v, sm));
+                assert((walk_k(g, s, k) == v && d.jump_sum(s, k) == pair<long long, long long>(v, sm)));
                 sm += w[v], v = g[v];
             }
             // 閉路上 ⇔ n 回以内に自分に戻る

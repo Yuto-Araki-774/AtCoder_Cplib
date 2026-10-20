@@ -45,7 +45,7 @@ Seq lcs(const Seq& a, const Seq& b) {
 // ◆ edit_distance(a, b) : 編集距離（1 文字の挿入・削除・置換で a を b にする最小回数）。O(NM)
 //   a, b : string か vector（同じ型）
 template <class Seq>
-int edit_distance(const Seq& a, const Seq& b) {
+long long edit_distance(const Seq& a, const Seq& b) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/lcs.cpp
     int n = a.size(), m = b.size();
     vector<vector<int>> dp(n + 1, vector<int>(m + 1));  // dp[i][j] = a の先頭 i 個を b の先頭 j 個にする最小回数

@@ -26,10 +26,10 @@ using namespace std;
 //   strict : true（既定）なら狭義単調増加（a < b）、false なら広義（a <= b）
 //   返り値 : len[i] = a[i] で終わる LIS の長さ
 template <class T>
-vector<int> lis_lengths(const vector<T>& a, bool strict = true) {
+vector<long long> lis_lengths(const vector<T>& a, bool strict = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/lis.cpp
     vector<T> tail;  // tail[k] = 長さ k+1 の増加列の末尾として最小の値
-    vector<int> len(a.size());
+    vector<long long> len(a.size());
     for (int i = 0; i < (int)a.size(); i++) {
         auto it = strict ? lower_bound(tail.begin(), tail.end(), a[i])   // ★ a[i] 以上の最初の位置（狭義）
                          : upper_bound(tail.begin(), tail.end(), a[i]);  // ★ a[i] より大きい最初の位置（広義）
@@ -46,11 +46,11 @@ vector<int> lis_lengths(const vector<T>& a, bool strict = true) {
 //   a, strict : lis_lengths と同じ
 //   返り値 : LIS をなす添字の列。値は a[idx[k]]
 template <class T>
-vector<int> lis(const vector<T>& a, bool strict = true) {
+vector<long long> lis(const vector<T>& a, bool strict = true) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/lis.cpp
     auto len = lis_lengths(a, strict);
     int need = len.empty() ? 0 : *max_element(len.begin(), len.end());
-    vector<int> idx;
+    vector<long long> idx;
     for (int i = (int)a.size() - 1; i >= 0 && need > 0; i--) {  // ★ 後ろから「長さ need で終わり、次の要素につながる」ものを拾う
         if (len[i] != need) continue;
         if (!idx.empty() && !(strict ? a[i] < a[idx.back()] : a[i] <= a[idx.back()])) continue;
@@ -67,7 +67,7 @@ int main() {
     vector<int> a = {3, 1, 4, 1, 5, 9, 2, 6};
     auto len = lis_lengths(a);
     assert(*max_element(len.begin(), len.end()) == 4);  // 1 4 5 9 / 3 4 5 6 など
-    assert((len == vector<int>{1, 1, 2, 1, 3, 4, 2, 4}));
+    assert((len == vector<long long>{1, 1, 2, 1, 3, 4, 2, 4}));
     auto idx = lis(a);
     assert(idx.size() == 4);
     for (int k = 1; k < 4; k++) assert(idx[k - 1] < idx[k] && a[idx[k - 1]] < a[idx[k]]);

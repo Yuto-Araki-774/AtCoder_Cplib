@@ -19,7 +19,7 @@ using namespace std;
 // RollbackUnionFind uf(n);
 //   uf.merge(a, b)       つなぐ（もともと同じなら何もせず false）。どちらの場合も「1 回」として記録される
 //   uf.undo()            直前の merge を 1 回取り消す
-//   int t = uf.snapshot(); ... uf.rollback(t);   t の時点まで戻す
+//   ll t = uf.snapshot(); ... uf.rollback(t);   t の時点まで戻す
 //   uf.leader(a), uf.same(a, b), uf.size(a), uf.components（連結成分の数）
 //   uf.edges(a)          a の連結成分の中で merge した回数（= 辺の本数。同じ成分どうしの merge も 1 本と数える）
 // ◆ struct RollbackUnionFind : 操作を取り消せる UnionFind（経路圧縮なし。各操作 O(log N)）
@@ -42,16 +42,16 @@ struct RollbackUnionFind {
     // n : 頂点数
     RollbackUnionFind(int n) : par(n, -1), ecnt(n, 0), components(n) {}
     // leader(x) : x の成分の根
-    int leader(int x) const {
+    long long leader(int x) const {
         while (par[x] >= 0) x = par[x];  // ★ 経路圧縮しない（すると取り消せなくなる）
         return x;
     }
     // same(a, b) : 同じ成分か
     bool same(int a, int b) const { return leader(a) == leader(b); }
     // size(a) : a の成分の頂点数
-    int size(int a) const { return -par[leader(a)]; }
+    long long size(int a) const { return -par[leader(a)]; }
     // edges(a) : a の成分の中で merge した回数（同じ成分どうしの merge も 1 本と数える）
-    int edges(int a) const { return ecnt[leader(a)]; }
+    long long edges(int a) const { return ecnt[leader(a)]; }
     // merge(a, b) : a, b : つなぐ頂点。同じ成分なら false（それでも undo の対象として記録される）
     bool merge(int a, int b) {
         a = leader(a), b = leader(b);
@@ -69,7 +69,7 @@ struct RollbackUnionFind {
         if (r.merged) components++;
     }
     // snapshot() : 今までの merge の回数（rollback に渡す値）
-    int snapshot() const { return hist.size(); }
+    long long snapshot() const { return hist.size(); }
     // rollback(t) : t : 戻したい時点の snapshot() の値（今より大きい値なら何もしない）
     void rollback(int t) { while ((int)hist.size() > t) undo(); }
 };

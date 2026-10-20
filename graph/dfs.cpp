@@ -64,10 +64,10 @@ void dfs_walk(const vector<vector<int>>& g, int s, vector<bool>& seen, Enter on_
 // ◆ connected_components(g) : 無向グラフの連結成分の番号付け。O(N + M)
 //   g : 隣接リスト（両方向に入れておくこと。有向のままだと成分が正しく分かれない）
 //   返り値 : comp[v] = v の成分の番号（0 から、頂点番号の小さい順に振る）
-vector<int> connected_components(const vector<vector<int>>& g) {
+vector<long long> connected_components(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp
     int n = g.size(), c = 0;
-    vector<int> comp(n, -1);
+    vector<long long> comp(n, -1);
     vector<bool> seen(n, false);
     for (int s = 0; s < n; s++) {
         if (seen[s]) continue;
@@ -83,7 +83,7 @@ vector<int> connected_components(const vector<vector<int>>& g) {
 // ◆ find_cycle_directed(g) : 有向グラフの閉路を 1 つ見つける。O(N + M)
 //   g : 有向グラフの隣接リスト（g[v] = v から出る辺の行き先）
 //   返り値 : 閉路の頂点の並び（最後の頂点から最初の頂点へ辺がある）。閉路がなければ空。自己ループは {v}
-vector<int> find_cycle_directed(const vector<vector<int>>& g) {
+vector<long long> find_cycle_directed(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp
     int n = g.size();
     vector<int> state(n, 0), pos(n, -1);  // state: 0 未訪問、1 探索中（スタックに乗っている）、2 探索済み
@@ -96,7 +96,7 @@ vector<int> find_cycle_directed(const vector<vector<int>>& g) {
             if (i < (int)g[v].size()) {
                 int to = g[v][i++];
                 if (state[to] == 1) {  // ★ 探索中の頂点に戻ってきた = 閉路
-                    vector<int> cyc;
+                    vector<long long> cyc;
                     for (int k = pos[to]; k < (int)st.size(); k++) cyc.push_back(st[k].first);  // ★ スタック上の to から今まで
                     return cyc;
                 }
@@ -117,7 +117,7 @@ vector<int> find_cycle_directed(const vector<vector<int>>& g) {
 //   g : 両方向に辺を入れた隣接リスト。多重辺は長さ 2 の閉路として見つける
 //   返り値 : 閉路の頂点の並び。閉路がなければ空
 //   注意 : 自己ループ（v-v）は g[v] に v が 2 回入るので、長さ 1 の閉路 {v} として見つかる
-vector<int> find_cycle_undirected(const vector<vector<int>>& g) {
+vector<long long> find_cycle_undirected(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp
     int n = g.size();
     vector<int> state(n, 0), pos(n, -1);
@@ -133,7 +133,7 @@ vector<int> find_cycle_undirected(const vector<vector<int>>& g) {
                 int to = g[f.v][f.i++];
                 if (to == f.p && !f.skipped) { f.skipped = true; continue; }  // ★ 来た辺を戻るのは閉路ではない（1 本だけ）
                 if (state[to] == 1) {  // ★ 祖先に戻る辺 = 閉路
-                    vector<int> cyc;
+                    vector<long long> cyc;
                     for (int k = pos[to]; k < (int)st.size(); k++) cyc.push_back(st[k].v);
                     return cyc;
                 }
@@ -179,7 +179,7 @@ int main() {
 
     // 有向グラフの閉路: 0→1→2→0、3→1
     vector<vector<int>> d = {{1}, {2}, {0}, {1}};
-    assert((find_cycle_directed(d) == vector<int>{0, 1, 2}));
+    assert((find_cycle_directed(d) == vector<long long>{0, 1, 2}));
     assert(find_cycle_directed({{1}, {2}, {}}).empty());
 
     // 無向グラフの閉路

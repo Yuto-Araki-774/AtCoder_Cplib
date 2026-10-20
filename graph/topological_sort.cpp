@@ -24,10 +24,11 @@ using namespace std;
 //   g       : 有向グラフの隣接リスト（g[v] = v から出る辺の行き先）
 //   lex_min : true なら並べ方のうち辞書順最小のものを返す（既定 false = どれか 1 つ）
 //   返り値  : 頂点の並び。閉路があれば空
-vector<int> topological_sort(const vector<vector<int>>& g, bool lex_min = false) {
+vector<long long> topological_sort(const vector<vector<int>>& g, bool lex_min = false) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp
     int n = g.size();
-    vector<int> indeg(n, 0), order;
+    vector<int> indeg(n, 0);
+    vector<long long> order;
     for (int v = 0; v < n; v++)
         for (int to : g[v]) indeg[to]++;  // ★ 入次数（自分に向かってくる辺の数）を数える
     priority_queue<int, vector<int>, greater<int>> pq;  // lex_min 用
@@ -51,11 +52,11 @@ vector<int> topological_sort(const vector<vector<int>>& g, bool lex_min = false)
 // res[v] = v で終わる最長パスの辺数（閉路があれば空）
 // ◆ dag_longest_path(g) : 各頂点で終わる最長の道の辺の本数（重みなし）
 //   g : 有向グラフ（閉路があれば空を返す）
-vector<int> dag_longest_path(const vector<vector<int>>& g) {
+vector<long long> dag_longest_path(const vector<vector<int>>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp
     auto ord = topological_sort(g);
     if (ord.empty()) return {};
-    vector<int> dp(g.size(), 0);
+    vector<long long> dp(g.size(), 0);
     for (int v : ord)
         for (int to : g[v]) dp[to] = max(dp[to], dp[v] + 1);  // ★ トポロジカル順なら前が確定済み
     return dp;
@@ -86,9 +87,9 @@ struct DagPathResult {
     // reachable(v) : v に行けるか
     bool reachable(int v) const { return reach[v]; }
     // path(t) : t で終わる最短（最長）の道の頂点の並び。t : 終点
-    vector<int> path(int t) const {
+    vector<long long> path(int t) const {
         if (!reach[t]) return {};
-        vector<int> p;
+        vector<long long> p;
         for (int v = t; v != -1; v = prev[v]) p.push_back(v);
         reverse(p.begin(), p.end());
         return p;
@@ -126,7 +127,7 @@ DagPathResult<T> dag_path(const vector<vector<pair<int, T>>>& g, int s, bool max
 // ===================== 使用例・動作確認（コピー不要） =====================
 int main() {
     vector<vector<int>> g = {{2}, {2}, {3}, {}};  // 0->2, 1->2, 2->3
-    assert((topological_sort(g, true) == vector<int>{0, 1, 2, 3}));
+    assert((topological_sort(g, true) == vector<long long>{0, 1, 2, 3}));
     assert(topological_sort({{1}, {0}}).empty());  // 閉路
     assert(dag_longest_path(g)[3] == 2);
     // ランダムテスト: 順列を全部試して「辺の向きに矛盾しない最初の順列」と比較、最長路は全経路を再帰で
@@ -140,7 +141,7 @@ int main() {
                 int a = rr() % n, b = rr() % n;
                 h[a].push_back(b), es.push_back({a, b});
             }
-            vector<int> p(n), first;
+            vector<long long> p(n), first;
             iota(p.begin(), p.end(), 0);
             do {
                 vector<int> pos(n);
@@ -169,10 +170,10 @@ int main() {
     {
         vector<vector<pair<int, long long>>> wg = {{{1, 5}, {2, -3}}, {{3, 2}}, {{1, 4}, {3, 11}}, {}};
         auto mn = dag_path<long long>(wg, 0), mx = dag_path<long long>(wg, 0, true);
-        assert(mn.ok && mn.dist[3] == 3 && (mn.path(3) == vector<int>{0, 2, 1, 3}));
-        assert(mx.dist[3] == 8 && (mx.path(3) == vector<int>{0, 2, 3}) && mx.dist[1] == 5);
+        assert(mn.ok && mn.dist[3] == 3 && (mn.path(3) == vector<long long>{0, 2, 1, 3}));
+        assert(mx.dist[3] == 8 && (mx.path(3) == vector<long long>{0, 2, 3}) && mx.dist[1] == 5);
         auto any = dag_path<long long>(wg, -1, true);  // どこから始めてもよい最長路: 3 で終わるなら 2 → 3 = 11、1 で終わるなら 0 → 1 = 5
-        assert(any.dist[3] == 11 && (any.path(3) == vector<int>{2, 3}) && any.dist[1] == 5 && any.dist[0] == 0);
+        assert(any.dist[3] == 11 && (any.path(3) == vector<long long>{2, 3}) && any.dist[1] == 5 && any.dist[0] == 0);
         vector<vector<pair<int, long long>>> cyc = {{{1, 1}}, {{0, 1}}};
         assert(!dag_path<long long>(cyc, 0).ok);
         auto un = dag_path<long long>({{}, {{0, 1}}}, 0);  // 0 から 1 へは行けない

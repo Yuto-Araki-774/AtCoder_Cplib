@@ -36,9 +36,9 @@ using namespace std;
 //   注意 : 「区間を縮めても条件は満たされたまま」（単調性）が成り立つこと。そうでないと尺取り法は使えない
 //   返り値 : R[l] = [l, R[l]) が条件を満たす最大の右端
 template <class CanPush, class Push, class Pop>
-vector<int> two_pointers(int n, CanPush can_push, Push push, Pop pop) {
+vector<long long> two_pointers(int n, CanPush can_push, Push push, Pop pop) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/two_pointers.cpp
-    vector<int> R(n);
+    vector<long long> R(n);
     int r = 0;
     for (int l = 0; l < n; l++) {
         while (r < n && can_push(r)) push(r), r++;  // ★ 右端を伸ばせるだけ伸ばす
@@ -74,7 +74,7 @@ int main() {
                               [&](int r) { return kinds + (cnt[a[r]] == 0) <= K; },
                               [&](int r) { if (cnt[a[r]]++ == 0) kinds++; },
                               [&](int l) { if (--cnt[a[l]] == 0) kinds--; });
-        int best = 0;
+        long long best = 0;
         for (int l = 0; l < (int)a.size(); l++) best = max(best, R[l] - l);
         assert(best == 5);  // [3, 3, 3, 2, 2]
     }
@@ -86,7 +86,7 @@ int main() {
                               [&](int r) { return sum + a[r] <= K; },
                               [&](int r) { sum += a[r]; },
                               [&](int l) { sum -= a[l]; });
-        assert((R == vector<int>{1, 1, 3}));
+        assert((R == vector<long long>{1, 1, 3}));
     }
     // ランダムテスト: 和が K 以下の最大右端を愚直解と比較
     mt19937 rng(1);

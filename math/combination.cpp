@@ -123,7 +123,7 @@ struct Lucas {
     // （内部用）n, k < p のときの nCk mod p
     long long small(int n, int k) const { return k > n ? 0 : f[n] * fi[k] % p * fi[n - k] % p; }  // n, k < p
     // C(n, k) : n, k : 0 以上（k > n や k < 0 なら 0）
-    int C(long long n, long long k) const {
+    long long C(long long n, long long k) const {
         if (k < 0 || n < k) return 0;
         long long r = 1;
         while (n > 0 || k > 0) {

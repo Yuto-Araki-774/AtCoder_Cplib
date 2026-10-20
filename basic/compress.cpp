@@ -45,17 +45,17 @@ struct Compress {
         xs.erase(unique(xs.begin(), xs.end()), xs.end());  // ★ 重複を消す
     }
     // x : 番号を知りたい値。入っていない値でもよい（x 以上で最小の値の番号になる）
-    int get(const T& x) const { return lower_bound(xs.begin(), xs.end(), x) - xs.begin(); }  // ★ 位置 = 番号
+    long long get(const T& x) const { return lower_bound(xs.begin(), xs.end(), x) - xs.begin(); }  // ★ 位置 = 番号
     const T& operator[](int i) const { return xs[i]; }
     // 値の種類数
-    int size() const { return xs.size(); }
+    long long size() const { return xs.size(); }
 
     // --- 削除可: 便利関数 ---
     // v : まとめて追加する値の一覧（この後 build が必要）
     void add(const vector<T>& v) { xs.insert(xs.end(), v.begin(), v.end()); }
     // v : 番号に変換したい値の一覧。返り値の i 番目 = get(v[i])
-    vector<int> get(const vector<T>& v) const {
-        vector<int> res(v.size());
+    vector<long long> get(const vector<T>& v) const {
+        vector<long long> res(v.size());
         for (int i = 0; i < (int)v.size(); i++) res[i] = get(v[i]);
         return res;
     }
@@ -71,7 +71,7 @@ int main() {
     vector<long long> a = {100, -5, 100, 7};
     Compress<long long> cp(a);
     assert(cp.size() == 3 && cp.get(7) == 1 && cp[2] == 100 && cp.get(8) == 2);
-    assert((cp.get(a) == vector<int>{2, 0, 2, 1}));
+    assert((cp.get(a) == vector<long long>{2, 0, 2, 1}));
     // ランダムテスト: 大小関係が保たれるか、番号から値に戻るか
     {
         mt19937 rr(103);

@@ -21,9 +21,9 @@ using namespace std;
 // ◆ run_length(s) : 同じ値が続く塊ごとに {値, 個数} にまとめる。O(N)
 //   s : string か vector など（== で比べられる要素の列）
 template <class Seq>
-vector<pair<typename Seq::value_type, int>> run_length(const Seq& s) {
+vector<pair<typename Seq::value_type, long long>> run_length(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/run_length.cpp
-    vector<pair<typename Seq::value_type, int>> res;
+    vector<pair<typename Seq::value_type, long long>> res;
     for (const auto& x : s) {
         if (!res.empty() && res.back().first == x) res.back().second++;  // ★ 直前と同じなら個数を増やす
         else res.push_back({x, 1});                                     // ★ 違えば新しい塊を始める
@@ -36,9 +36,9 @@ vector<pair<typename Seq::value_type, int>> run_length(const Seq& s) {
 // ◆ run_length_range(s) : 塊ごとに {値, 開始位置, 終了位置（含まない）}
 //   s : string か vector など
 template <class Seq>
-vector<tuple<typename Seq::value_type, int, int>> run_length_range(const Seq& s) {
+vector<tuple<typename Seq::value_type, long long, long long>> run_length_range(const Seq& s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/run_length.cpp
-    vector<tuple<typename Seq::value_type, int, int>> res;
+    vector<tuple<typename Seq::value_type, long long, long long>> res;
     int n = s.size();
     for (int l = 0, r = 0; l < n; l = r) {
         while (r < n && s[r] == s[l]) r++;  // ★ 同じ値が続く限り右へ
@@ -50,7 +50,7 @@ vector<tuple<typename Seq::value_type, int, int>> run_length_range(const Seq& s)
 // ---------- 削除可: 復元（文字列用） ----------
 // ◆ run_length_decode(rl) : {文字, 個数} の列を文字列に戻す
 //   rl : run_length(string) の返り値の形
-string run_length_decode(const vector<pair<char, int>>& rl) {
+string run_length_decode(const vector<pair<char, long long>>& rl) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/run_length.cpp
     string s;
     for (auto [c, k] : rl) s += string(k, c);
@@ -63,7 +63,7 @@ string run_length_decode(const vector<pair<char, int>>& rl) {
 int main() {
     string s = "aaabccdddd";
     auto rl = run_length(s);
-    assert((rl == vector<pair<char, int>>{{'a', 3}, {'b', 1}, {'c', 2}, {'d', 4}}));
+    assert((rl == vector<pair<char, long long>>{{'a', 3}, {'b', 1}, {'c', 2}, {'d', 4}}));
     assert(run_length_decode(rl) == s);
 
     // 圧縮した文字列を "a3b1c2d4" の形で出力
@@ -73,7 +73,7 @@ int main() {
 
     vector<long long> v = {5, 5, 1, 1, 1, 5};
     auto rv = run_length(v);
-    assert(rv.size() == 3 && rv[1] == make_pair(1LL, 3));
+    assert((rv.size() == 3 && rv[1] == pair<long long, long long>(1LL, 3)));
 
     auto rr = run_length_range(s);
     assert(rr.size() == 4 && get<1>(rr[3]) == 6 && get<2>(rr[3]) == 10);

@@ -46,7 +46,7 @@ bool is_balanced(const string& s, const string& open = "(", const string& close 
 //   返り値 : 先頭に open を a 個、末尾に close を b 個足すと正しくなる（足す個数 a + b は最小）
 //            この足し方は、最短のものの中で辞書順最小でもある（'(' < ')' なので）
 //   s : 調べる文字列（open, close 以外の文字は無視）
-pair<int, int> bracket_fix(const string& s, char open = '(', char close = ')') {
+pair<long long, long long> bracket_fix(const string& s, char open = '(', char close = ')') {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/bracket.cpp
     int bal = 0, need = 0;  // bal = 今開いている数、need = 相手のいなかった閉じ括弧の数
     for (char c : s) {
@@ -63,7 +63,7 @@ pair<int, int> bracket_fix(const string& s, char open = '(', char close = ')') {
 // ◆ longest_balanced(s, open, close) : 正しい括弧列になっている部分文字列のうち最長のもの {開始位置, 長さ}。O(N)
 //   s : 調べる文字列。open, close 以外の文字は「壁」（それをまたぐ部分文字列は数えない）
 //   返り値 : 同じ長さが複数あれば一番左。1 つもなければ {0, 0}
-pair<int, int> longest_balanced(const string& s, char open = '(', char close = ')') {
+pair<long long, long long> longest_balanced(const string& s, char open = '(', char close = ')') {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/string/bracket.cpp
     vector<int> st = {-1};  // ★ 一番下は「ここより右から始められる」という区切りの位置
     int best = 0, start = 0;
@@ -141,13 +141,13 @@ int main() {
     assert(is_balanced("(()())") && !is_balanced("())(") && !is_balanced("(") && is_balanced(""));
     assert(is_balanced("([])<>()", "([<", ")]>") && !is_balanced("([<)]>", "([<", ")]>") && !is_balanced("())", "([<", ")]>"));
     assert(is_balanced("(a(b)c)"));  // 括弧以外は無視
-    assert(bracket_fix("())") == make_pair(1, 0));         // "(())"
-    assert(bracket_fix(")))())") == make_pair(4, 0));      // "(((()))())"
-    assert(bracket_fix("))))((((") == make_pair(4, 4));    // "(((())))(((())))"
-    assert(longest_balanced(")()())") == make_pair(1, 4));
-    assert(longest_balanced("(()") == make_pair(1, 2));
-    assert(longest_balanced("((((") == make_pair(0, 0));
-    assert(longest_balanced("()x(())") == make_pair(3, 4));
+    assert((bracket_fix("())") == pair<long long, long long>(1, 0)));         // "(())"
+    assert((bracket_fix(")))())") == pair<long long, long long>(4, 0)));      // "(((()))())"
+    assert((bracket_fix("))))((((") == pair<long long, long long>(4, 4)));    // "(((())))(((())))"
+    assert((longest_balanced(")()())") == pair<long long, long long>(1, 4)));
+    assert((longest_balanced("(()") == pair<long long, long long>(1, 2)));
+    assert((longest_balanced("((((") == pair<long long, long long>(0, 0)));
+    assert((longest_balanced("()x(())") == pair<long long, long long>(3, 4)));
     {
         BracketRange br("(()())");
         assert(br.ok(0, 6) && br.ok(1, 3) && br.ok(1, 5) && !br.ok(0, 3) && !br.ok(2, 4) && br.ok(3, 3));

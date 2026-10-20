@@ -46,9 +46,9 @@ struct Subsequence {
         }
     }
     // nxt(i, c) : c は文字そのもの（'a' など）
-    int nxt(int i, char c) const { return nx[i][c - BASE]; }
+    long long nxt(int i, char c) const { return nx[i][c - BASE]; }
     // match(t, i) : i : 探し始める位置（0 <= i <= N、省略で 0）
-    int match(const string& t, int i = 0) const {
+    long long match(const string& t, int i = 0) const {
         int k = 0;
         for (char c : t) {
             int j = nx[i][c - BASE];
@@ -60,7 +60,7 @@ struct Subsequence {
     // is_subseq(t) : 空の t は常に true
     bool is_subseq(const string& t) const { return match(t) == (int)t.size(); }
     // end_of(t, i) : i : 探し始める位置（0 <= i <= N）。t が空なら i
-    int end_of(const string& t, int i = 0) const {
+    long long end_of(const string& t, int i = 0) const {
         for (char c : t) {
             int j = nx[i][c - BASE];
             if (j == n) return -1;

@@ -32,9 +32,9 @@ struct BFSResult {
     vector<int> dist, prev;
     // --- 削除可: 経路復元 ---
     // path(t) : t までの最短路（始点 → … → t）。t : 終点の頂点番号
-    vector<int> path(int t) const {
+    vector<long long> path(int t) const {
         if (dist[t] == -1) return {};
-        vector<int> res;
+        vector<long long> res;
         for (int v = t; v != -1; v = prev[v]) res.push_back(v);  // ★ prev を逆にたどる
         reverse(res.begin(), res.end());
         return res;
@@ -79,12 +79,12 @@ BFSResult bfs(const vector<vector<int>>& g, int s) {
 //   wall   : 通れないマスの文字（既定 '#'）。それ以外の文字のマスは全部通れる
 //   diag   : true なら斜めを含む 8 方向に動ける（既定 false = 上下左右の 4 方向）
 //   返り値 : dist[i][j]（行けない・壁は −1）
-vector<vector<int>> grid_bfs(const vector<string>& grid, const vector<pair<int, int>>& starts,
+vector<vector<long long>> grid_bfs(const vector<string>& grid, const vector<pair<int, int>>& starts,
                              char wall = '#', bool diag = false) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
     static const int DR[8] = {1, 0, -1, 0, 1, 1, -1, -1}, DC[8] = {0, 1, 0, -1, 1, -1, 1, -1};
     int h = grid.size(), w = grid[0].size(), k = diag ? 8 : 4;
-    vector<vector<int>> dist(h, vector<int>(w, -1));
+    vector<vector<long long>> dist(h, vector<long long>(w, -1));
     queue<pair<int, int>> q;
     for (auto [r, c] : starts)
         if (grid[r][c] != wall && dist[r][c] == -1) dist[r][c] = 0, q.push({r, c});
@@ -117,10 +117,10 @@ vector<vector<int>> grid_bfs(const vector<string>& grid, const vector<pair<int, 
 //   adj    : void adj(int v, auto relax)。v から行ける先ごとに relax(行き先, コスト) を呼ぶ。コストは 0 か 1 だけ
 //   返り値 : dist[v]（行けなければ −1）
 template <class F>
-vector<int> bfs01_func(int n, const vector<int>& starts, F adj) {
+vector<long long> bfs01_func(int n, const vector<int>& starts, F adj) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
-    vector<int> dist(n, -1);
-    deque<pair<int, int>> dq;  // {距離, 頂点}
+    vector<long long> dist(n, -1);
+    deque<pair<long long, int>> dq;  // {距離, 頂点}
     for (int s : starts)
         if (dist[s] != 0) dist[s] = 0, dq.push_back({0, s});
     while (!dq.empty()) {
@@ -139,7 +139,7 @@ vector<int> bfs01_func(int n, const vector<int>& starts, F adj) {
 }
 // ◆ bfs01(g, s) : 隣接リスト版の 01-BFS
 //   g : g[a] = {{行き先, コスト（0 か 1）}, ...}、s : 始点
-vector<int> bfs01(const vector<vector<pair<int, int>>>& g, int s) {
+vector<long long> bfs01(const vector<vector<pair<int, int>>>& g, int s) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp
     return bfs01_func(g.size(), {s}, [&](int v, auto&& relax) {
         for (auto [to, c] : g[v]) relax(to, c);
@@ -152,7 +152,7 @@ vector<int> bfs01(const vector<vector<pair<int, int>>>& g, int s) {
 int main() {
     vector<vector<int>> g = {{1}, {0, 2}, {1}, {}};
     auto r = bfs(g, 0);
-    assert(r.dist[2] == 2 && r.dist[3] == -1 && (r.path(2) == vector<int>{0, 1, 2}));
+    assert(r.dist[2] == 2 && r.dist[3] == -1 && (r.path(2) == vector<long long>{0, 1, 2}));
 
     vector<string> S = {"..#", ".#.", "..."};
     auto d = grid_bfs(S, {{0, 0}});
@@ -164,7 +164,7 @@ int main() {
     vector<vector<pair<int, int>>> g01(4);
     g01[0] = {{1, 1}, {2, 0}}, g01[2] = {{1, 0}}, g01[1] = {{3, 1}};
     auto d01 = bfs01(g01, 0);
-    assert((d01 == vector<int>{0, 0, 0, 1}));
+    assert((d01 == vector<long long>{0, 0, 0, 1}));
 
     // 01-BFS（グリッド）: 普通に進むとコスト 0、壁 '#' を壊して進むとコスト 1
     vector<string> G = {"..#..", "####.", "....."};

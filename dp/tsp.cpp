@@ -74,11 +74,11 @@ T tsp_path(const vector<vector<T>>& d, const vector<vector<T>>& dp) {
 //   d, dp : tsp_dp の表と返り値、s : 出発点、end : 終点
 //   一周の順番がほしいなら、tsp_cycle を達成する end（dp[全部][end] + d[end][s] が最小のもの）を選んで呼ぶ
 template <class T>
-vector<int> tsp_restore(const vector<vector<T>>& d, const vector<vector<T>>& dp, int s, int end) {
+vector<long long> tsp_restore(const vector<vector<T>>& d, const vector<vector<T>>& dp, int s, int end) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/dp/tsp.cpp
     int n = d.size(), mask = (1 << n) - 1, v = end;
     if (dp[mask][v] == TSP_INF<T>) return {};
-    vector<int> order = {v};
+    vector<long long> order = {v};
     while (v != s || mask != (1 << s)) {  // ★ 後ろから「どこから来たか」をたどる
         int pm = mask ^ (1 << v);
         for (int u = 0; u < n; u++)
@@ -102,7 +102,7 @@ int main() {
     auto dp = tsp_dp(d, 0);
     assert(tsp_cycle(d, dp, 0) == 4 && tsp_path(d, dp) == 3);  // 一周は 0-1-2-3-0、道は 0-1-2-3
     auto ord = tsp_restore(d, dp, 0, 3);
-    assert((ord == vector<int>{0, 1, 2, 3}));
+    assert((ord == vector<long long>{0, 1, 2, 3}));
 
     // ランダムテスト: 順列を全部試したものと比較（非対称、行けない辺あり）
     mt19937 rr(139);
