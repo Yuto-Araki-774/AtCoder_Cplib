@@ -73,7 +73,8 @@ void yes_no(bool cond) {
 }
 
 // ---------- デバッグ出力 ----------
-// debug(x, v, ...) で変数名と値を標準エラーに出す。pair / tuple / vector / set / multiset / map とその入れ子も表示できる
+// debug(x, v, ...) で変数名と値を標準エラーに出す。pair / tuple / vector / deque / set / multiset / map とその入れ子も表示できる
+// queue は先頭から、stack は top から、priority_queue は top から（取り出す順に）表示する。中身は変わらない
 // mint は debug(x.val()) と書く
 #ifdef LOCAL
 template <class A, class B> ostream& operator<<(ostream& os, const pair<A, B>& p);
@@ -82,6 +83,10 @@ template <class T> ostream& operator<<(ostream& os, const vector<T>& v);
 template <class T> ostream& operator<<(ostream& os, const set<T>& s);
 template <class T> ostream& operator<<(ostream& os, const multiset<T>& s);
 template <class K, class V> ostream& operator<<(ostream& os, const map<K, V>& m);
+template <class T> ostream& operator<<(ostream& os, const deque<T>& d);
+template <class T, class C> ostream& operator<<(ostream& os, queue<T, C> q);
+template <class T, class C> ostream& operator<<(ostream& os, stack<T, C> st);
+template <class T, class C, class Cmp> ostream& operator<<(ostream& os, priority_queue<T, C, Cmp> pq);
 template <class It> ostream& print_range(ostream& os, It first, It last) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
     os << '[';
@@ -99,6 +104,26 @@ template <class T> ostream& operator<<(ostream& os, const vector<T>& v) { return
 template <class T> ostream& operator<<(ostream& os, const set<T>& s) { return print_range(os, s.begin(), s.end()); }
 template <class T> ostream& operator<<(ostream& os, const multiset<T>& s) { return print_range(os, s.begin(), s.end()); }
 template <class K, class V> ostream& operator<<(ostream& os, const map<K, V>& m) { return print_range(os, m.begin(), m.end()); }
+template <class T> ostream& operator<<(ostream& os, const deque<T>& d) { return print_range(os, d.begin(), d.end()); }
+// queue / stack / priority_queue は中を順に見る方法がないので、コピーを取り出しながら並べる（元の中身は変わらない）
+template <class T, class C> ostream& operator<<(ostream& os, queue<T, C> q) {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
+    vector<T> v;
+    while (!q.empty()) v.push_back(q.front()), q.pop();
+    return print_range(os, v.begin(), v.end());
+}
+template <class T, class C> ostream& operator<<(ostream& os, stack<T, C> st) {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
+    vector<T> v;
+    while (!st.empty()) v.push_back(st.top()), st.pop();
+    return print_range(os, v.begin(), v.end());
+}
+template <class T, class C, class Cmp> ostream& operator<<(ostream& os, priority_queue<T, C, Cmp> pq) {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
+    vector<T> v;
+    while (!pq.empty()) v.push_back(pq.top()), pq.pop();
+    return print_range(os, v.begin(), v.end());
+}
 void debug_out(const char*) { cerr << endl; }
 template <class H, class... T> void debug_out(const char* names, const H& h, const T&... t) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/template.cpp
