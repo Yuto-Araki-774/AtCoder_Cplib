@@ -853,7 +853,7 @@ F2 版は「スイッチ j を押すとランプ i が反転」型の問題（`A
 | `chmin(a, b)`, `chmax(a, b)` | a を b で更新し、更新したら true |
 | `DI`, `DJ`, `in_grid(i, j, h, w)` | グリッドの 4 / 8 方向と範囲判定 |
 | `print_vec(v)`, `yes_no(cond)` | 配列を空白区切りで出力、Yes / No |
-| `debug(x, v, ...)` | 変数名と値を標準エラーに出す。pair・tuple・vector・deque・set・multiset・map・queue・stack・priority_queue と、その入れ子（`vector<tuple<...>>` など）も表示（queue は先頭から、stack・priority_queue は top から）。mint は `debug(x.val())`。手元で `g++ -DLOCAL` のときだけ動き、提出時は何もしない |
+| `debug(x, v, ...)` | 変数名と値を標準エラーに出す。数値・文字列・mint・pair・tuple・vector・deque・list・array・set・multiset・map・multimap・unordered_set・unordered_map・queue・stack・priority_queue・atcoder::dsu と、その入れ子も表示（queue は先頭から、stack・priority_queue は top から、dsu は連結成分ごと）。手元で `g++ -DLOCAL` のときだけ動き、提出時は何もしない |
 | `solve()` / `main()` | 高速入出力の設定済み。`solve()` の中に解答を書く |
 
 ### [r](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/util/r) — コンパイル・テスト実行用のスクリプト
