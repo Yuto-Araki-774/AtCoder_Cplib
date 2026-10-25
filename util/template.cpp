@@ -30,6 +30,7 @@
 #include <cassert>
 #include <optional>       // optional（wavelet_matrix の prev_value / next_value）
 using namespace std;
+using namespace atcoder;
 using mint = atcoder::modint998244353;  // 問題の mod に合わせる（1e9+7 なら atcoder::modint1000000007）
 using ll = long long;
 const ll INF = 1LL << 60;  // ≈ 1.15e18。2 つ足してもあふれない
