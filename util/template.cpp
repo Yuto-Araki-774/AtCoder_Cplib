@@ -31,8 +31,14 @@
 #include <optional>       // optional（wavelet_matrix の prev_value / next_value）
 using namespace std;
 using namespace atcoder;
-using mint = atcoder::modint998244353;  // 問題の mod に合わせる（1e9+7 なら atcoder::modint1000000007）
+using mint1 = atcoder::modint1000000007;
+using mint9 = atcoder::modint998244353;  // 問題の mod に合わせる（1e9+7 なら atcoder::modint1000000007）
 using ll = long long;
+using ull = unsigned long long;
+template <class T>
+using vec = vector<T>
+template <class T>
+using vv = vector<vector<T>>;
 const ll INF = 1LL << 60;  // ≈ 1.15e18。2 つ足してもあふれない
 const int IINF = 1 << 30;  // ≈ 1.07e9
 
