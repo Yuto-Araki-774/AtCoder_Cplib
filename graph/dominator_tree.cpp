@@ -5,28 +5,30 @@
 //   → u が v の支配点 ⇔ 支配木で u が v の祖先。「頂点 u を壊すと root から v に行けなくなるか」がわかる
 //   ★ DFS 木の上で「半支配点」（DFS 番号が大きい頂点だけを通って v に来られる、一番番号の小さい頂点）を
 //      DFS の逆順に求め、それを使って直接支配点を決める
-// 依存: なし
+// 依存: graph/graph.cpp の Graph（先に貼る）
 // 貼る場所: コピー範囲を main 関数の外（using namespace std; の後、main より上）に貼る
 // =====================================================================
 #include <bits/stdc++.h>
 using namespace std;
+// テスト用: graph.cpp の Graph を読み込む（提出するときは、graph.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define GRAPH_NO_MAIN
+#include "graph.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
-// g : 有向グラフの隣接リスト（g[v] = v から出る辺の行き先）
-// auto idom = dominator_tree(g, root);
-//   idom[v] = v の直接支配点（root は root 自身、root から行けない頂点は -1）
+// ---------- 本体（graph.cpp の Graph が必要） ----------
+// 例: auto idom = dominator_tree(g, root);
 //   支配木で u が v の祖先 ⇔ root から v へのどの道も u を通る
 // ◆ dominator_tree(g, root) : 支配木（root から v へのどの道も通る頂点のうち、v に一番近いもの）。O(M log N)
-//   g    : 有向グラフの隣接リスト（g[v] = v から出る辺の行き先）
+//   g    : Graph（ふつうは add_arc で有向辺を張る。add_edge の辺は両方向に通れる）
 //   root : 始点
 //   返り値 : idom[v] = v の直接支配点（root は root、root から行けない頂点は −1）
-vector<long long> dominator_tree(const vector<vector<int>>& g, int root) {
+template <class T>
+vector<long long> dominator_tree(const Graph<T>& g, int root) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dominator_tree.cpp
-    int n = g.size();
+    int n = g.n;
     vector<vector<int>> rg(n), bucket(n);
-    for (int v = 0; v < n; v++) for (int to : g[v]) rg[to].push_back(v);
+    for (int v = 0; v < n; v++) for (auto& e : g.adj[v]) rg[e.to].push_back(v);
     vector<int> ord(n, -1), par(n, -1), vs;  // ord[v] = DFS で訪れた順番、vs[i] = i 番目に訪れた頂点
     {
         vector<pair<int, int>> st = {{root, -1}};  // 再帰なしの DFS（行きがけ順）
@@ -35,8 +37,8 @@ vector<long long> dominator_tree(const vector<vector<int>>& g, int root) {
             st.pop_back();
             if (ord[v] != -1) continue;
             ord[v] = vs.size(), par[v] = p, vs.push_back(v);
-            for (int i = (int)g[v].size() - 1; i >= 0; i--)
-                if (ord[g[v][i]] == -1) st.push_back({g[v][i], v});
+            for (int i = (int)g.adj[v].size() - 1; i >= 0; i--)
+                if (ord[g.adj[v][i].to] == -1) st.push_back({g.adj[v][i].to, v});
         }
     }
     int k = vs.size();
@@ -86,8 +88,14 @@ int main() {
     //   3 へは 1 経由と 2 経由があるので idom[3] = 0。4 は必ず 3 を通るので idom[4] = 3。5 は 0 から行けない
     {
         vector<vector<int>> g = {{1, 2}, {3}, {3}, {4}, {1}, {4}};
-        auto idom = dominator_tree(g, 0);
+        auto idom = dominator_tree(Graph<>(g), 0);
         assert((idom == vector<long long>{0, 0, 0, 0, 3, -1}));
+        Graph<> h(6);  // 同じグラフを add_arc で
+        for (int v = 0; v < 6; v++) for (int to : g[v]) h.add_arc(v, to);
+        assert(dominator_tree(h, 0) == idom);
+        Graph<> u(4);  // 無向: 0-1, 1-2, 2-0, 2-3 → 3 は必ず 2 を通る
+        u.add_edge(0, 1), u.add_edge(1, 2), u.add_edge(2, 0), u.add_edge(2, 3);
+        assert((dominator_tree(u, 0) == vector<long long>{0, 0, 0, 2}));
     }
     // ランダムテスト: 「頂点 d を取り除くと root から v に行けなくなる ⇔ d は v の支配点」で求めた答えと比較
     {
@@ -110,7 +118,7 @@ int main() {
                 auto r = reach(d);
                 for (int v = 0; v < n; v++) if (v != d && base[v] && !r[v]) doms[v].push_back(d);
             }
-            auto idom = dominator_tree(g, root);
+            auto idom = dominator_tree(Graph<>(g), root);
             for (int v = 0; v < n; v++) {
                 if (!base[v]) { assert(idom[v] == -1); continue; }
                 if (v == root) { assert(idom[v] == root); continue; }

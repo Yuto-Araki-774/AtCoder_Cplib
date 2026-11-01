@@ -3,7 +3,7 @@
 //   本体: クラスカル法。辺を重みの小さい順に見て、閉路ができない辺だけ採用する。O(M log M)。ふつうはこちら
 //   削除可: プリム法。頂点 i, j の間の重みを関数で渡す。全頂点の間に辺がある「密な」グラフ用（O(N^2)、辺のリストを作らない）
 //   削除可: ブルーフカ法。「各頂点から、別の成分への一番安い辺」を自分で速く求められる、辺が多すぎるグラフ用（O(log N) 回の呼び出し）
-// 依存: ACL の dsu（AtCoder では #include <atcoder/dsu> が使える）
+// 依存: graph/graph.cpp の Graph（クラスカル法で使う。先に貼る）、ACL の dsu（AtCoder では #include <atcoder/dsu> が使える）
 // ABC / ARC での使用例:
 //   ABC065 D - Built?  https://atcoder.jp/contests/abc065/tasks/arc076_b
 //     → x 順・y 順で隣り合う町だけを辺にしてクラスカル
@@ -16,53 +16,49 @@
 #include <bits/stdc++.h>
 #include <atcoder/dsu>
 using namespace std;
+// テスト用: graph.cpp の Graph を読み込む（提出するときは、graph.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define GRAPH_NO_MAIN
+#include "graph.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
-// T : 重みの型（long long など）
-// vector<KEdge<long long>> es;  es.push_back({a, b, w});   // 無向辺 a-b 重み w
-// auto r = kruskal(n, es);
+// ---------- 本体: クラスカル法（graph.cpp の Graph が必要。ACL の dsu を使う） ----------
+// Graph<> g(n); g.add_edge(a, b, w); ...（無向グラフ）
+// auto r = kruskal(g);
 //   r.cost       採用した辺の重みの合計
-//   r.used       採用した辺の番号（es の添字）
+//   r.used       採用した辺の番号（足した順の番号 = g.edges の添字）
 //   r.connected  全頂点がつながったか（false なら最小全域「森」の結果）
-// kruskal(n, es, true) で最大全域木
-// ◆ KEdge<T> : 無向辺 {u, v, w: 重み}
-template <class T> struct KEdge {
-    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
-    int u, v;
-    T w;
-};
+// kruskal(g, true) で最大全域木
 // ◆ KruskalResult<T> : kruskal の結果
-//   cost : 採用した辺の重みの合計、used : 採用した辺の番号（es の添字）、connected : 全部つながったか
+//   cost : 採用した辺の重みの合計、used : 採用した辺の番号（g.edges の添字）、connected : 全部つながったか
 template <class T> struct KruskalResult {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
     T cost;
-    vector<int> used;
+    vector<long long> used;
     bool connected;
 };
-// ◆ kruskal(n, es, maximize) : 最小全域木（maximize = true なら最大全域木）。O(M log M)
-//   n        : 頂点数
-//   es       : 辺の一覧（vector<KEdge<T>>）
+// ◆ kruskal(g, maximize) : 最小全域木（maximize = true なら最大全域木）。O(M log M)
+//   g        : Graph<T>（辺は g.edges を使う。add_arc の有向辺も向きを無視して使う）
 //   maximize : true なら重みの大きい順に採用（既定 false）
 //   注意 : つながらないグラフでは connected = false で、最小全域森の結果になる
 template <class T>
-KruskalResult<T> kruskal(int n, const vector<KEdge<T>>& es, bool maximize = false) {
+KruskalResult<T> kruskal(const Graph<T>& g, bool maximize = false) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp
+    const auto& es = g.edges;
     vector<int> idx(es.size());
     iota(idx.begin(), idx.end(), 0);
     sort(idx.begin(), idx.end(), [&](int a, int b) {  // ★ 重みの小さい順（最大全域木なら大きい順）
-        return maximize ? es[a].w > es[b].w : es[a].w < es[b].w;
+        return maximize ? es[a].cost > es[b].cost : es[a].cost < es[b].cost;
     });
-    atcoder::dsu uf(n);
+    atcoder::dsu uf(g.n);
     KruskalResult<T> r{T(0), {}, false};
     for (int i : idx) {
-        if (uf.same(es[i].u, es[i].v)) continue;  // ★ すでにつながっている = 入れると閉路になるので捨てる
-        uf.merge(es[i].u, es[i].v);
-        r.cost += es[i].w;
+        if (uf.same(es[i].from, es[i].to)) continue;  // ★ すでにつながっている = 入れると閉路になるので捨てる
+        uf.merge(es[i].from, es[i].to);
+        r.cost += es[i].cost;
         r.used.push_back(i);
     }
-    r.connected = (int)r.used.size() == n - 1;  // ★ 木なら辺は n-1 本
+    r.connected = (int)r.used.size() == g.n - 1;  // ★ 木なら辺は n-1 本
     return r;
 }
 
@@ -162,20 +158,26 @@ BoruvkaResult<T> boruvka(int n, F cheapest) {
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 // ===================== 使用例・動作確認（コピー不要） =====================
+struct KE { int u, v; long long w; };  // テスト用の辺
+Graph<long long> mk(int n, const vector<KE>& es) {
+    Graph<long long> g(n);
+    for (auto& e : es) g.add_edge(e.u, e.v, e.w);
+    return g;
+}
 int main() {
     //  0 --1-- 1
     //  |  \    |
     //  4   3   2
     //  |     \ |
     //  3 --5-- 2
-    vector<KEdge<long long>> es = {{0, 1, 1}, {1, 2, 2}, {0, 2, 3}, {0, 3, 4}, {3, 2, 5}};
-    auto r = kruskal(4, es);
-    assert(r.cost == 7 && r.connected && (r.used == vector<int>{0, 1, 3}));
+    vector<KE> es = {{0, 1, 1}, {1, 2, 2}, {0, 2, 3}, {0, 3, 4}, {3, 2, 5}};
+    auto r = kruskal(mk(4, es));
+    assert(r.cost == 7 && r.connected && (r.used == vector<long long>{0, 1, 3}));
 
-    auto mx = kruskal(4, es, true);  // 最大全域木
+    auto mx = kruskal(mk(4, es), true);  // 最大全域木
     assert(mx.cost == 11);  // 5 (3-2), 4 (0-3), 0-2 は閉路になるので飛ばす, 2 (1-2)
 
-    auto f = kruskal(5, es);  // 頂点 4 は孤立 → 森
+    auto f = kruskal(mk(5, es));  // 頂点 4 は孤立 → 森
     assert(!f.connected && f.cost == 7);
 
     // 採用した辺だけで木（隣接リスト）を作る
@@ -187,7 +189,7 @@ int main() {
         mt19937 rr(112);
         for (int it = 0; it < 2000; it++) {
             int n = rr() % 5 + 1, m = rr() % 8;
-            vector<KEdge<long long>> e2;
+            vector<KE> e2;
             for (int i = 0; i < m; i++) e2.push_back({(int)(rr() % n), (int)(rr() % n), (long long)(rr() % 21) - 10});
             auto comps = [&](int mask) {
                 atcoder::dsu d(n);
@@ -209,7 +211,7 @@ int main() {
                 for (int i = 0; i < m; i++) if (mask >> i & 1) s += e2[i].w;
                 mn = min(mn, s), mx = max(mx, s);
             }
-            auto r1 = kruskal(n, e2), r2 = kruskal(n, e2, true);
+            auto r1 = kruskal(mk(n, e2)), r2 = kruskal(mk(n, e2), true);
             assert(r1.cost == mn && r2.cost == mx && r1.connected == (best_c == 1) && (int)r1.used.size() == n - best_c);
         }
     }
@@ -225,12 +227,12 @@ int main() {
         for (int it = 0; it < 2000; it++) {
             int n = r2() % 8 + 1;
             vector<vector<long long>> w(n, vector<long long>(n, PRIM_INF<long long>));
-            vector<KEdge<long long>> e;
+            vector<KE> e;
             for (int i = 0; i < n; i++)
                 for (int j = i + 1; j < n; j++)
                     if (r2() % 4) { long long c = (long long)(r2() % 21) - 5; w[i][j] = w[j][i] = c, e.push_back({i, j, c}); }
             auto pr = prim_dense<long long>(n, [&](int i, int j) { return w[i][j]; });
-            auto kr = kruskal(n, e);
+            auto kr = kruskal(mk(n, e));
             assert(pr.connected == kr.connected);
             if (kr.connected) {
                 assert(pr.cost == kr.cost);
@@ -262,7 +264,7 @@ int main() {
             int n = rb() % 9 + 1;
             int W = (it % 2) ? 3 : 100;  // 半分は重みの種類を少なくして、同じ重みを多くする
             vector<vector<long long>> w(n, vector<long long>(n, -1));  // -1 は辺なし
-            vector<KEdge<long long>> es;
+            vector<KE> es;
             for (int i = 0; i < n; i++)
                 for (int j = i + 1; j < n; j++)
                     if (rb() % 3) w[i][j] = w[j][i] = rb() % W, es.push_back({i, j, w[i][j]});
@@ -274,7 +276,7 @@ int main() {
                 return res;
             };
             auto r = boruvka<long long>(n, cheapest);
-            auto k = kruskal(n, es);
+            auto k = kruskal(mk(n, es));
             assert(r.connected == k.connected);
             if (k.connected) {
                 assert(r.cost == k.cost && (int)r.edges.size() == n - 1);

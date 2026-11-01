@@ -34,7 +34,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 basic/   探索・数列        binary_search, prefix_sum, imos, compress, sparse_table,
                            two_pointers, brute_force, run_length, ternary_search,
                            inversion, sliding_window, meet_in_the_middle
-graph/   グラフ            graph_input, bfs, dfs, dijkstra, shortest_path, topological_sort,
+graph/   グラフ            graph（Graph）, bfs, dfs, dijkstra, shortest_path, topological_sort,
                            kruskal, bipartite, bipartite_matching, functional_graph,
                            weighted_union_find, rollback_union_find, lowlink, scc_dag,
                            euler_path, persistent_union_find, chromatic_number, steiner_tree,
@@ -70,8 +70,9 @@ Sparse Table は `basic/` に置いている（データ構造だが、累積和
 using namespace std;
 
 // ↓ ライブラリのコピー範囲をここ（main の外）に貼る
-template <class T> struct WEdge {
-    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp
+template <class T = long long>
+struct Graph {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph.cpp
     ...
 };
 ...
@@ -271,11 +272,27 @@ f は下に凸（谷が 1 つ）であること。最大値を探すときは `-
 
 ## graph/ — グラフ
 
+**グラフのアルゴリズムはすべて `graph.cpp` の `Graph` を受け取る。** Tree と同じく「作る → 辺を足す」で使う。
+
+```cpp
+Graph<> g(n);               // <> は辺の重みの型（省略で long long）。頂点は 0..n−1
+g.add_edge(a, b);           // 無向辺（重み付きなら g.add_edge(a, b, w)）
+g.add_arc(a, b);            // 有向辺 a → b
+g.read_edges(m);            // 「a b」が m 行（1 始まり）を無向辺で読む。重み付きは g.read_edges(m, true)、有向は g.read_arcs(m)
+auto r = dijkstra(g, 0);    // bfs(g, s), find_cycle(g), topological_sort(g), kruskal(g), SCCDag sd(g) なども同じ g を渡す
+for (auto& e : g.adj[v]) { e.to; e.cost; e.id; }   // v から出る辺（無向辺は両端から見える。同じ id）
+```
+
+- 使うときは `graph.cpp` のコピー範囲も貼る（`Graph` を先に）。dijkstra.cpp の本体B（`dijkstra_func`）・bfs.cpp の `grid_bfs` / `bfs01_func`・shortest_path.cpp の `warshall_floyd` / `wf_add_edge`・kruskal.cpp の `prim_dense` / `boruvka` は Graph を使わないので単体で貼れる
+- 有向辺と無向辺は混ぜてよい（`find_cycle` は混ざったグラフでも閉路を探せる）。ただし `euler_path` は全部が同じ種類であること
+- 隣接リスト `vector<vector<int>> h` がもうあるなら `Graph<> g(h);`（`h[v]` の各要素を有向辺 v → to として入れる。両方向が入った無向グラフの隣接リストならそのまま同じグラフ）
+- `bipartite_matching.cpp`, `lowlink.cpp`, `general_matching.cpp`, `hungarian.cpp`, `functional_graph.cpp` と UnionFind 系はそれぞれ専用の作り方（下の表）
+
 | ファイル | 何をするか | 自分で定義するもの |
 |---|---|---|
-| [`graph_input.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph_input.cpp) | よくある入力形式（辺のリスト、木、親の列、重み付き、グリッド）を読んで隣接リストにする | なし |
-| [`bfs.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp) | BFS（多始点・経路復元）、グリッド BFS、01-BFS | 隣接リスト（グリッドなら壁の文字） |
-| [`dfs.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp) | DFS（行きがけ・帰りがけ順）、連結成分、有向・無向グラフの閉路検出と復元 | 汎用 DFS のみ `on_enter`, `on_exit`（ラムダ） |
+| [`graph.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph.cpp) | グラフ `Graph<T>`（無向辺 `add_edge`・有向辺 `add_arc`・入力 `read_edges` / `read_arcs`）、グリッドの入力 | なし |
+| [`bfs.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp) | BFS（多始点・経路復元）、グリッド BFS、01-BFS | なし（グリッドなら壁の文字） |
+| [`dfs.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp) | DFS（行きがけ・帰りがけ順）、連結成分、閉路検出と復元（有向・無向・混在） | 汎用 DFS のみ `on_enter`, `on_exit`（ラムダ） |
 | [`dijkstra.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp) | ダイクストラ（経路復元）、拡張ダイクストラ、最短路の本数・最短路 DAG、k 番目最短路 | 拡張時のみ「状態 → 整数 id」と隣接の列挙ラムダ |
 | [`topological_sort.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp) | トポロジカルソート、閉路検出、DAG 上の最短路・最長路（重み付きも） | なし |
 | [`kruskal.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp) | 最小全域木（クラスカル法・プリム法・ブルーフカ法）、最大全域木 | プリム法は `cost(i, j)`、ブルーフカ法は `cheapest(comp)`（ラムダ） |
@@ -296,13 +313,16 @@ f は下に凸（谷が 1 つ）であること。最大値を探すときは `-
 | [`dominator_tree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dominator_tree.cpp) | 支配木（根から v へのどの道も通る頂点） | なし |
 | [`scc_dag.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/scc_dag.cpp) | 強連結成分分解（SCC）と縮約 DAG（成分はトポロジカル順） | なし（ACL の scc_graph を使う） |
 
-### [graph_input.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph_input.cpp)
-| 区分 | 関数 | 何をするか |
+### [graph.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph.cpp) — グラフ（ほかのファイルの土台）
+| 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体A | `read_graph(n, m, directed, one_indexed)` | 「a b」が m 行 → 隣接リスト（既定は無向・1-indexed 入力） |
-| 削除可 | `read_tree(n)`, `read_parents(n)` | 辺 n−1 本の木 / 「p_2 … p_n」形式の木 |
-| 本体B | `read_wgraph<T, E>(n, m, ...)` | 「a b c」が m 行 → 重み付き隣接リスト。`E = WEdge<T>` で dijkstra にそのまま渡せる |
-| 本体C | `read_grid(h)` | h 行の文字列 |
+| 本体 | `Graph<T> g(n)`, `Graph<> g(h)` | 頂点 0..n−1 のグラフ（`T` は重みの型、省略で long long）/ 隣接リスト `h` から |
+| 本体 | `add_edge(a, b, w)`, `add_arc(a, b, w)` | 無向辺 / 有向辺 a → b を足す（w 省略で 1）。返り値は辺の番号 |
+| 本体 | `read_edges(m, weighted, one_indexed)`, `read_arcs(...)` | 「a b」（weighted なら「a b c」）が m 行の入力を読む。既定は重みなし・1 始まり |
+| 本体 | `n`, `adj[v]`, `edges[id]`, `is_arc[id]` | 頂点数、v から出る辺 `{from, to, cost, id}`、足した順の辺の一覧、有向辺か |
+| 削除可 | `read_grid(h)` | h 行の文字列 |
+
+木の入力（辺 n−1 本、親の列 p_2 … p_n）は tree.cpp の `t.read()` / `t.read_parents()`。
 
 ### [bfs.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp)
 | 区分 | 関数 | 何をするか |
@@ -310,15 +330,14 @@ f は下に凸（谷が 1 つ）であること。最大値を探すときは `-
 | 本体A | `bfs(g, s)` / `bfs(g, {s1, s2})` | 単一始点・多始点。`dist[v]`（到達不能 -1） |
 | 削除可 | `path(t)` | 経路復元 |
 | 本体B | `grid_bfs(S, {{r, c}}, wall, diag)` | グリッド上の BFS。壁の文字と 8 方向移動を指定可 |
-| 本体C | `bfs01(g, s)` / `bfs01_func(状態数, 始点, adj)` | 01-BFS（辺の重みが 0 か 1）。`g[a]` に `{b, c}`。状態を自分で定義する版は拡張ダイクストラと同じ書き方 |
+| 本体C | `bfs01(g, s)` / `bfs01_func(状態数, 始点, adj)` | 01-BFS（辺の重みが 0 か 1）。返り値は距離の配列。`bfs01_func` は Graph なしで状態を自分で定義する（拡張ダイクストラと同じ書き方） |
 
 ### [dfs.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp)
 | 区分 | 関数 | 何をするか |
 |---|---|---|
 | 本体A | `dfs_walk(g, s, seen, on_enter, on_exit)` | 汎用 DFS（再帰なし）。入るとき・出るときに好きな処理を挟む |
-| 削除可 | `connected_components(g)` | 連結成分の番号（本体A が必要） |
-| 本体B | `find_cycle_directed(g)` | 有向グラフの閉路の頂点列（なければ空） |
-| 本体C | `find_cycle_undirected(g)` | 無向グラフの閉路の頂点列（多重辺も可、なければ空） |
+| 本体B | `connected_components(g)` | 連結成分の番号（無向グラフ用） |
+| 本体C | `find_cycle(g)` | 閉路の頂点列（なければ空）。有向辺は向きどおり、無向辺は来た辺をそのまま戻らない。自己ループ・多重辺も可 |
 
 **定義**（本体A）: `on_enter(v, p)` は v に初めて入ったとき（行きがけ、p は直前の頂点、始点は −1）、`on_exit(v, p)` は v から先をすべて調べ終わったとき（帰りがけ）。何もしないなら `[](int, int) {}`。
 `seen` を使い回して全頂点から順に呼ぶと、連結成分ごとの処理になる。使用例に「行きがけ順・帰りがけ順・親・部分木サイズを一度に求める」例あり。
@@ -326,11 +345,11 @@ f は下に凸（谷が 1 つ）であること。最大値を探すときは `-
 ### [dijkstra.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp)
 | 区分 | 関数 | 何をするか |
 |---|---|---|
-| 本体 | `WGraph<T>`, `dijkstra(g, s)` | 重み付き最短路（重みは非負）。`dist[v]`（到達不能は INF）, `reachable(v)` |
-| 本体 | `dijkstra_func<T>(状態数, 始点, adj)` | 拡張ダイクストラ。頂点を「(頂点, 状態)」に拡張したグラフで最短路 |
+| 本体A | `dijkstra(g, s)` / `dijkstra(g, {s1, s2})` | 重み付き最短路（重みは非負）。`dist[v]`（到達不能は INF）, `reachable(v)` |
+| 本体B | `dijkstra_func<T>(状態数, 始点, adj)` | 拡張ダイクストラ。頂点を「(頂点, 状態)」に拡張したグラフで最短路（Graph は要らない。`DijkstraResult` は要る） |
 | 削除可 | `path(t)` | 経路復元 |
 | 削除可 | `count_shortest_paths<C>(g, s)` | 最短路の本数（`C` は mint など）。`{dijkstra の結果, cnt}` を返す。重みは正 |
-| 削除可 | `shortest_path_dag(g, dist)` | 最短路 DAG（`dist[u] + w == dist[v]` の辺 u → v だけの隣接リスト） |
+| 削除可 | `shortest_path_dag(g, dist)` | 最短路 DAG（`dist[u] + w == dist[v]` の辺 u → v だけの有向 `Graph`）。`topological_sort` などにそのまま渡せる |
 | 削除可 | `kth_shortest(g, s, K)` | `res[v]` = s から v への道の長さを短い順に K 個。同じ頂点・辺を何度通ってもよい（辺の並びが違えば別の道）。重みは正 |
 
 拡張時は「状態 → 整数 id」（例: `id = v * (K + 1) + k`）と、`adj(id, relax)` の中で行き先ごとに `relax(行き先id, コスト)` を呼ぶラムダを書く。使用例に「クーポン K 枚」の例あり。
@@ -341,19 +360,19 @@ f は下に凸（谷が 1 つ）であること。最大値を探すときは `-
 | 本体 | `topological_sort(g)` / `(g, true)` | 辺の向きに矛盾しない並び（true で辞書順最小）。閉路があれば空 |
 | 削除可 | `dag_longest_path(g)` | 各頂点で終わる最長パスの辺数 |
 | 削除可 | `dag_longest_path_vertices(g)` | 一番長い道（辺の本数が最大）の頂点の並びを 1 つ。閉路があれば空。※ `topological_sort` の結果は全頂点の並びで、最長の道ではない |
-| 削除可 | `dag_path<T>(g, s, maximize)` | 重み付き DAG の最短路（true で最長路）。負の重み OK。`ok`（閉路なし）, `dist`, `reachable(v)`, `path(t)`。`s = -1` で始点自由 |
+| 削除可 | `dag_path(g, s, maximize)` | 重み付き DAG の最短路（true で最長路）。負の重み OK。`ok`（閉路なし）, `dist`, `reachable(v)`, `path(t)`。`s = -1` で始点自由 |
 
-`dag_path` の `g` は `vector<vector<pair<int, T>>>`（`g[v] = {{行き先, 重み}, ...}`）。ふつうのグラフの最長路は難しいが、DAG ならトポロジカル順に 1 回ずつ緩和するだけで求まる。
+辺は `g.add_arc(a, b, w)` で張る。ふつうのグラフの最長路は難しいが、DAG ならトポロジカル順に 1 回ずつ緩和するだけで求まる。
 
 ### [shortest_path.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/shortest_path.cpp)
 | 区分 | 関数 | 何をするか |
 |---|---|---|
-| 本体A | `bellman_ford(n, es, s)` | 負の辺がある最短路 O(NM)。`dist[v]` は到達不能で `INF`、負閉路でいくらでも小さくなるなら `NEG_INF`。`neg_cycle` |
-| 本体B | `wf_matrix<T>(n)` → `warshall_floyd(d)` | 全点対の最短路 O(N^3)。負閉路があれば true を返す |
+| 本体A | `bellman_ford(g, s)` | 負の辺がある最短路 O(NM)。`dist[v]` は到達不能で `INF`、負閉路でいくらでも小さくなるなら `NEG_INF`。`neg_cycle` |
+| 本体B | `wf_matrix(g)` → `warshall_floyd(d)` | 全点対の最短路 O(N^3)。負閉路があれば true を返す。`d` は自分で作った n × n の行列でもよい（辺がない組は `WF_INF<T>`） |
 | 削除可 | `wf_add_edge(d, a, b, c)` | 計算済みの d に辺を 1 本追加して O(N^2) で更新 |
-| 本体C | `johnson(n, es)` | 全点対の最短路 O(NM log N)。負の辺 OK、負閉路があれば空。到達不能は `WF_INF` と同じ値 |
+| 本体C | `johnson(g)` | 全点対の最短路 O(NM log N)。負の辺 OK、負閉路があれば空。到達不能は `WF_INF` と同じ値 |
 
-辺は `vector<BEdge<long long>> es; es.push_back({a, b, c});`（有向）。負の辺がないならダイクストラの方が速い。
+辺は `g.add_arc(a, b, c)`（無向なら `add_edge`。負の重みの無向辺はそれだけで負閉路になるので注意）。負の辺がないならダイクストラの方が速い。
 
 Johnson 法の考え方（ポテンシャル）: 各頂点に値 h を決めて辺の重みを `w + h[u] − h[v]` に変えても、最短路そのものは変わらず、長さが `h[s] − h[t]` ずれるだけ。h をうまく選ぶと全部の重みが 0 以上になり、ダイクストラが使える。h が問題から最初にわかる（高さなど）なら、ベルマンフォードなしでダイクストラ 1 回で済む。
 
@@ -383,20 +402,20 @@ Johnson 法の考え方（ポテンシャル）: 各頂点に値 h を決めて�
 ### [kruskal.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp)
 | 区分 | 関数 | 何をするか |
 |---|---|---|
-| 本体 | `kruskal(n, es)` / `kruskal(n, es, true)` | 最小全域木 / 最大全域木。`cost`, `used`（採用した辺の番号）, `connected` |
+| 本体 | `kruskal(g)` / `kruskal(g, true)` | 最小全域木 / 最大全域木。`cost`, `used`（採用した辺の番号）, `connected` |
 | 削除可 | `prim_dense<T>(n, cost)` | プリム法 O(N^2)。全頂点の組に辺がある密なグラフ用。`cost`, `par[v]`（木での親、根は 0）, `connected` |
 | 削除可 | `boruvka<T>(n, cheapest)` | ブルーフカ法。`cheapest(comp)` が「各頂点から別の成分への一番安い辺」を返せればよい。`cost`, `connected`, `edges` |
 
-辺は `vector<KEdge<long long>> es; es.push_back({a, b, w});`。`#include <atcoder/dsu>` が必要。全頂点がつながらないときは `connected == false`（最小全域森の結果）。
+辺は `g.add_edge(a, b, w)`（`used` の番号は add_edge の返り値 = `g.edges` の添字）。`#include <atcoder/dsu>` が必要。全頂点がつながらないときは `connected == false`（最小全域森の結果）。
 
 使い分け: 辺のリストがあるならクラスカル。「全部の点の組をつなげる（コスト = 距離など）」で辺が N^2 本になるときは、辺を作らずに `prim_dense` に `cost(i, j)` を渡す（辺がない組は `PRIM_INF<T>`）。N ≤ 5000 くらいまで。N がもっと大きく、重みが式で決まっていて「自分と違う成分の中で一番安い相手」をソートやセグ木で速く探せるならブルーフカ法（cheapest を呼ぶのは O(log N) 回）。
 
 ### [scc_dag.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/scc_dag.cpp) — 強連結成分と縮約 DAG
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `SCCDag sd(n, edges)` | `k`（成分数）, `comp[v]`, `groups[c]`, `dag[c]`（重複なし）, `self_loop[c]`（成分の中をぐるぐる回れるか） |
+| 本体 | `SCCDag sd(g)` | `k`（成分数）, `comp[v]`, `groups[c]`, `dag[c]`（重複なし）, `self_loop[c]`（成分の中をぐるぐる回れるか） |
 
-成分番号はトポロジカル順（辺 a → b があれば `comp[a] <= comp[b]`）なので、縮約 DAG の DP は `for (c = k − 1; c >= 0; c--)` で「後ろから」書ける。閉路のある有向グラフで「到達できる頂点の数」「無限に歩けるか」などを求めるときに使う。`#include <atcoder/scc>` が必要。
+成分番号はトポロジカル順（辺 a → b があれば `comp[a] <= comp[b]`）なので、縮約 DAG の DP は `for (c = k − 1; c >= 0; c--)` で「後ろから」書ける。閉路のある有向グラフで「到達できる頂点の数」「無限に歩けるか」などを求めるときに使う。辺は `g.add_arc(a, b)`（無向辺は両向きとして扱う）。`#include <atcoder/scc>` が必要。
 
 ### [weighted_union_find.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/weighted_union_find.cpp)
 | 区分 | 機能 | 何をするか |
@@ -428,14 +447,14 @@ Johnson 法の考え方（ポテンシャル）: 各頂点に値 h を決めて�
 ### [chromatic_number.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/chromatic_number.cpp) — 彩色数
 | 区分 | 関数 | 何をするか |
 |---|---|---|
-| 本体 | `chromatic_number(g)` | 彩色数。O(2^N N)、N ≤ 20 程度（自己ループがあれば −1） |
+| 本体 | `chromatic_number(g)` | 辺の向きは無視。彩色数。O(2^N N)、N ≤ 20 程度（自己ループがあれば −1） |
 
 包除原理で「独立集合を k 個選んで全頂点を覆う選び方」を数え、0 でない最小の k を答える。数が大きいので 2 つの素数で mod を取って判定している。
 
 ### [steiner_tree.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/steiner_tree.cpp) — 最小シュタイナー木
 | 区分 | 関数 | 何をするか |
 |---|---|---|
-| 本体 | `steiner_tree<T>(n, edges, terms)` → `steiner_min(dp)` | ターミナル（K 個）を全部つなぐ最小の重み。O(3^K N + 2^K M log N)。つなげなければ `STEINER_INF<T>` |
+| 本体 | `steiner_tree(g, terms)` → `steiner_min(dp)` | ターミナル（K 個）を全部つなぐ最小の重み。O(3^K N + 2^K M log N)。つなげなければ `STEINER_INF<T>` |
 
 `dp[S][v]` = 「ターミナルの集合 S と頂点 v をつなぐ最小」もそのまま使える（使用例の ABC364 G）。
 
@@ -456,14 +475,14 @@ Johnson 法の考え方（ポテンシャル）: 各頂点に値 h を決めて�
 ### [min_arborescence.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/min_arborescence.cpp) — 最小全域有向木
 | 区分 | 関数 | 何をするか |
 |---|---|---|
-| 本体 | `min_arborescence<T>(n, edges, root)` | `{ok, cost}`。root から全頂点へ行ける有向の木の最小の重み（Chu-Liu/Edmonds、O(NM)）。負の重み OK |
+| 本体 | `min_arborescence(g, root)` | `{ok, cost}`。root から全頂点へ行ける有向の木の最小の重み（Chu-Liu/Edmonds、O(NM)）。負の重み OK |
 
-どの辺を使うか（各頂点の親）までは求めない。無向なら普通の最小全域木（クラスカル）でよい。
+辺は `g.add_arc(a, b, w)`。どの辺を使うか（各頂点の親）までは求めない。無向なら普通の最小全域木（クラスカル）でよい。
 
 ### [dominator_tree.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dominator_tree.cpp) — 支配木
 | 区分 | 関数 | 何をするか |
 |---|---|---|
-| 本体 | `dominator_tree(g, root)` | `idom[v]` = v の直接支配点（root は root、行けない頂点は −1）。O(M log N) |
+| 本体 | `dominator_tree(g, root)` | 辺は `g.add_arc`。`idom[v]` = v の直接支配点（root は root、行けない頂点は −1）。O(M log N) |
 
 支配木で u が v の祖先 ⇔ root から v へのどの道も u を通る（u を壊すと v に行けなくなる）。
 
@@ -480,7 +499,7 @@ Johnson 法の考え方（ポテンシャル）: 各頂点に値 h を決めて�
 ### [euler_path.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/euler_path.cpp) — オイラー路（一筆書き）
 | 区分 | 関数 | 何をするか |
 |---|---|---|
-| 本体 | `euler_path(n, edges, directed, s = -1)` | `ok`（一筆書きできるか）、`vs`（通る頂点、長さ M + 1）、`es`（通る辺の番号、長さ M）。`s` で始点を指定 |
+| 本体 | `euler_path(g, s = -1)` | 辺が全部 `add_arc` なら有向、全部 `add_edge` なら無向として解く。`ok`（一筆書きできるか）、`vs`（通る頂点、長さ M + 1）、`es`（通る辺の番号、長さ M）。`s` で始点を指定 |
 
 できる条件: 辺のある頂点が全部つながっていて、無向なら次数が奇数の頂点が 0 個か 2 個、有向なら全頂点で入次数 = 出次数か、出 − 入 = 1 と 入 − 出 = 1 の頂点が 1 つずつ。閉路なら `vs.front() == vs.back()`。多重辺・自己ループ OK。O(N + M)。
 
@@ -505,6 +524,7 @@ h.lca(u, v); h.dist(u, v);  // Tree の関数はどれでも使える
 | 区分 | 機能 | 何をするか |
 |---|---|---|
 | 本体 | `Tree<> t(n)`, `add_edge(a, b, w)` → `build(root)` | 木を作って根から前計算。O(N)（`Tree<> t(g)` で隣接リストから辺をまとめて入れられる） |
+| 本体 | `read(weighted, one_indexed)`, `read_parents(one_indexed)` | 入力から辺を足す: 「a b」（weighted なら「a b c」）が n − 1 行 / 「p_2 … p_n」（頂点 i の親が p_i）。既定は 1 始まり |
 | 本体 | `par, dep, wdep, sz, height, children, order` | 親・深さ・重み付き深さ・部分木の頂点数・部分木の高さ（一番深い子孫までの辺の本数）・子・BFS 順 |
 | 本体 | `lca(a, b)`, `dist`, `wdist`, `kth_ancestor(v, k)` | 最小共通祖先、距離、k 個上の祖先。O(log N)。LCA の表（O(N log N)）は初めて呼んだときに作る |
 | 削除可 | `jump(a, b, k)`, `path(a, b)`, `is_on_path(a, b, c)` | パス上で k 歩進んだ頂点、パスの頂点列、c がパス上か |
@@ -1103,11 +1123,10 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 
 | ファイル | 問題 | 使い方 |
 |---|---|---|
-| [`graph_input.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph_input.cpp) | [ABC168 D - .. (Double Dots)](https://atcoder.jp/contests/abc168/tasks/abc168_d) | N M と辺のリストを read_graph で読む |
 | [`bfs.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bfs.cpp) | [ABC007 C - 幅優先探索](https://atcoder.jp/contests/abc007/tasks/abc007_3) | グリッド BFS（grid_bfs） |
 |  | [ABC168 D - .. (Double Dots)](https://atcoder.jp/contests/abc168/tasks/abc168_d) | BFS の prev がそのまま答え |
 |  | [ABC213 E - Stronger Takahashi](https://atcoder.jp/contests/abc213/tasks/abc213_e) | 歩く = 0、パンチ = 1 の 01-BFS（bfs01_func） |
-| [`dfs.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp) | [ABC285 D - Change Usernames](https://atcoder.jp/contests/abc285/tasks/abc285_d) | 名前の変更を有向辺にして閉路があるか（find_cycle_directed） |
+| [`dfs.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dfs.cpp) | [ABC285 D - Change Usernames](https://atcoder.jp/contests/abc285/tasks/abc285_d) | 名前の変更を有向辺（add_arc）にして閉路があるか（find_cycle） |
 |  | [ABC288 C - Don't be cycle](https://atcoder.jp/contests/abc288/tasks/abc288_c) | 答え = M − (N − 連結成分数)（connected_components） |
 | [`dijkstra.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/dijkstra.cpp) | [ABC035 D - トレジャーハント](https://atcoder.jp/contests/abc035/tasks/abc035_d) | 行きと帰り（辺を逆向きにしたグラフ）でダイクストラ |
 |  | [ABC395 E - Flip Edge](https://atcoder.jp/contests/abc395/tasks/abc395_e) | 状態 (頂点, 反転しているか) の拡張ダイクストラ（dijkstra_func） |
@@ -1116,7 +1135,7 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 |  | [ABC012 D - バスと避けられない運命](https://atcoder.jp/contests/abc012/tasks/abc012_4) | ワーシャルフロイドで全点対 |
 |  | [ABC375 F - Road Blocked](https://atcoder.jp/contests/abc375/tasks/abc375_f) | クエリを逆順にして「道路の追加」にし、wf_add_edge で O(N^2) 更新 |
 |  | [ABC237 E - Skiing](https://atcoder.jp/contests/abc237/tasks/abc237_e) | 幸福度を −1 倍すると負の辺がある最短路。ポテンシャルを高さ H にすると重みが 0 以上になるので、johnson の中身と同じくダイクストラ 1 回（全点対の johnson は N が大きいので使わない） |
-| [`topological_sort.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp) | [ABC223 D - Restricted Permutation](https://atcoder.jp/contests/abc223/tasks/abc223_d) | 辞書順最小のトポロジカルソート（lex_min = true） |
+| [`topological_sort.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/topological_sort.cpp) | [ABC223 D - Restricted Permutation](https://atcoder.jp/contests/abc223/tasks/abc223_d) | 辞書順最小のトポロジカルソート（add_arc で入れて topological_sort(g, true)） |
 |  | [ABC139 E - League](https://atcoder.jp/contests/abc139/tasks/abc139_e) | 試合を頂点にした DAG の最長路（dag_longest_path）。閉路なら -1 |
 | [`kruskal.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/kruskal.cpp) | [ABC065 D - Built?](https://atcoder.jp/contests/abc065/tasks/arc076_b) | x 順・y 順で隣り合う町だけを辺にしてクラスカル |
 |  | [ABC218 E - Destruction](https://atcoder.jp/contests/abc218/tasks/abc218_e) | 重みを max(c, 0) にして（負の辺は残すほど得）、重みの合計 − 最小全域木の重み |
@@ -1133,9 +1152,10 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 | [`bipartite_matching.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/bipartite_matching.cpp) | [ABC091 C - 2D Plane 2N Points](https://atcoder.jp/contests/abc091/tasks/arc092_a) | 赤（左）と青（右）を、条件を満たす組で辺にして最大マッチング（貪欲でも解ける） |
 | [`rollback_union_find.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/rollback_union_find.cpp) | [ABC302 Ex - Ball Collector](https://atcoder.jp/contests/abc302/tasks/abc302_h) | ボールの番号を頂点、各頂点の 2 個のボールを辺にする。木を DFS しながら行きで merge、帰りで undo。答え = 成分ごとの min(size, edges) の和 |
 | [`scc_dag.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/scc_dag.cpp) | [ABC245 F - Endless Walk](https://atcoder.jp/contests/abc245/tasks/abc245_f) | 使用例と同じ。後ろの成分から「ぐるぐる回れる成分にたどり着けるか」を伝える |
-| [`euler_path.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/euler_path.cpp) | [ABC286 G - Unique Walk](https://atcoder.jp/contests/abc286/tasks/abc286_g) | S 以外の辺で連結成分をまとめ（dsu）、成分を頂点・S の辺を辺にした多重グラフで euler_path(...).ok を見る（次数の奇数の個数が 0 か 2 か、でも判定できる） |
+| [`euler_path.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/euler_path.cpp) | [ABC286 G - Unique Walk](https://atcoder.jp/contests/abc286/tasks/abc286_g) | S 以外の辺で連結成分をまとめ（dsu）、成分を頂点・S の辺を辺にした多重グラフ（Graph に add_edge）で euler_path(g).ok を見る（次数の奇数の個数が 0 か 2 か、でも判定できる） |
 | [`persistent_union_find.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/persistent_union_find.cpp) | [AGC002 D - Stamp Rally](https://atcoder.jp/contests/agc002/tasks/agc002_d) | 辺を番号順に unite。クエリごとに「x と y の成分の大きさの合計（同じ成分なら 1 つ分）が z 以上になる最小の時刻 t」を二分探索（AGC だが部分永続 UnionFind の定番） |
 | [`steiner_tree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/steiner_tree.cpp) | [ABC364 G - Last Major City](https://atcoder.jp/contests/abc364/tasks/abc364_g) | ターミナルを都市 1..K−1 にして steiner_tree。都市 i の答えは dp[full][i]（「全ターミナルと頂点 i をつなぐ最小」がそのまま答え） |
+| [`graph.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/graph.cpp) | [ABC168 D - .. (Double Dots)](https://atcoder.jp/contests/abc168/tasks/abc168_d) | Graph<> g(N); g.read_edges(M); で読み、bfs.cpp の bfs(g, 0) の prev が答え |
 
 ### tree/ — 木
 

@@ -4,28 +4,31 @@
 //   （無向グラフの最小全域木はクラスカル・プリムでよいが、有向だと貪欲では解けない）
 //   ★ 各頂点（根以外）について「入ってくる一番安い辺」を選ぶ。閉路ができなければそれで最小。
 //      閉路ができたら、その閉路を 1 頂点に縮め、入ってくる辺の重みを「閉路の中の辺と取り替えたときの差」にして繰り返す
-// 依存: なし
+// 依存: graph/graph.cpp の Graph（先に貼る）
 // 貼る場所: コピー範囲を main 関数の外（using namespace std; の後、main より上）に貼る
 // =====================================================================
 #include <bits/stdc++.h>
 using namespace std;
+// テスト用: graph.cpp の Graph を読み込む（提出するときは、graph.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define GRAPH_NO_MAIN
+#include "graph.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
-// edges = 有向辺 {a, b, 重み}（a → b。負の重みも OK）
-// auto [ok, cost] = min_arborescence<long long>(n, edges, root);
+// ---------- 本体（graph.cpp の Graph が必要） ----------
+// Graph<long long> g(n); g.read_arcs(m, true);  auto [ok, cost] = min_arborescence(g, root);
 //   ok = root から全頂点へ行けるか（行けない頂点があれば false）、cost = 最小の重みの合計
 // 各頂点の親（どの辺を使ったか）までは求めない
-// ◆ min_arborescence<T>(n, edges, root) : 最小全域有向木（root から全頂点へ行ける有向の木の最小の重み）。O(NM)
-//   T     : 重みの型（必ず書く）
-//   n     : 頂点数
-//   edges : 有向辺 {a, b, 重み}（a → b）の一覧。負の重み・多重辺もよい（自己ループは無視）
+// ◆ min_arborescence(g, root) : 最小全域有向木（root から全頂点へ行ける有向の木の最小の重み）。O(NM)
+//   g     : Graph<T>（add_arc で有向辺を張る。add_edge の辺は両向きの有向辺として扱う）。負の重み・多重辺もよい（自己ループは無視）
 //   root  : 根
 //   返り値 : {root から全頂点へ行けるか, 最小の重みの合計}
 template <class T>
-pair<bool, T> min_arborescence(int n, vector<tuple<int, int, T>> edges, int root) {
+pair<bool, T> min_arborescence(const Graph<T>& g, int root) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/min_arborescence.cpp
+    int n = g.n;
+    vector<tuple<int, int, T>> edges;  // 縮めながら作り直す辺 {a, b, 重み}
+    for (int v = 0; v < n; v++) for (auto& e : g.adj[v]) edges.push_back({v, e.to, e.cost});
     const T INF = numeric_limits<T>::max() / 4;
     T res = 0;
     while (true) {
@@ -61,15 +64,24 @@ pair<bool, T> min_arborescence(int n, vector<tuple<int, int, T>> edges, int root
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 // ===================== 使用例・動作確認（コピー不要） =====================
+// テスト用: 有向辺 {a, b, w} の一覧から
+pair<bool, long long> min_arborescence(int n, const vector<tuple<int, int, long long>>& es, int root) {
+    Graph<long long> g(n);
+    for (auto [a, b, w] : es) g.add_arc(a, b, w);
+    return min_arborescence(g, root);
+}
 int main() {
     // root = 0。0 → 1 (10), 0 → 2 (10), 1 → 2 (1), 2 → 1 (1)
     //   入ってくる一番安い辺は 2 → 1 と 1 → 2 で閉路 → どちらか 1 本を 0 からの辺に替える: 10 + 1 = 11
     {
-        auto [ok, c] = min_arborescence<long long>(3, {{0, 1, 10}, {0, 2, 10}, {1, 2, 1}, {2, 1, 1}}, 0);
+        auto [ok, c] = min_arborescence(3, {{0, 1, 10}, {0, 2, 10}, {1, 2, 1}, {2, 1, 1}}, 0);
         assert(ok && c == 11);
-        auto [ok2, c2] = min_arborescence<long long>(3, {{0, 1, 1}, {2, 1, 1}}, 0);  // 2 には入れない
+        auto [ok2, c2] = min_arborescence(3, {{0, 1, 1}, {2, 1, 1}}, 0);  // 2 には入れない
         assert(!ok2);
-        assert(min_arborescence<long long>(1, {}, 0).second == 0);
+        assert(min_arborescence(1, {}, 0).second == 0);
+        Graph<long long> u(3);  // 無向辺は両向き: 0 — 1 (5), 1 — 2 (3) → 5 + 3
+        u.add_edge(0, 1, 5), u.add_edge(1, 2, 3);
+        assert(min_arborescence(u, 2) == make_pair(true, 8LL) && min_arborescence(u, 0).second == 8);
     }
     // ランダムテスト: 各頂点の「入ってくる辺」を全部の組合せで選び、根から全部に行けるものの最小と比較
     {
@@ -98,7 +110,7 @@ int main() {
                 for (int i : inE[v]) pick[v] = i, rec(v + 1);
             };
             rec(0);
-            auto [ok, c] = min_arborescence<long long>(n, es, root);
+            auto [ok, c] = min_arborescence(n, es, root);
             assert(ok == (best != LLONG_MAX));
             if (ok) assert(c == best);
         }

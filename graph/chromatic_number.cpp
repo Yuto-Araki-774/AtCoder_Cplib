@@ -4,31 +4,32 @@
 //   ★ 包除原理: 「独立集合（どの 2 頂点も隣り合わない集合）を k 個選んで全頂点を覆う選び方の数」
 //      = Σ_{S ⊆ V} (−1)^{N − |S|} × (S の中の独立集合の個数)^k。これが 0 でない最小の k が答え
 //      数が大きくなるので mod で計算する（2 つの素数で計算して、どちらかが 0 でなければ 0 でないと判断）
-// 依存: なし
+// 依存: graph/graph.cpp の Graph（先に貼る）
 // 貼る場所: コピー範囲を main 関数の外（using namespace std; の後、main より上）に貼る
 // =====================================================================
 #include <bits/stdc++.h>
 using namespace std;
+// テスト用: graph.cpp の Graph を読み込む（提出するときは、graph.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define GRAPH_NO_MAIN
+#include "graph.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
-// g : 無向グラフの隣接リスト（頂点 0..n-1、n <= 25 程度まで。メモリ 2^n × 8 バイト × 2）
-// ll k = chromatic_number(g);    彩色数（頂点が 0 個なら 0、辺がなければ 1）
-//   自己ループがあると彩色できないので -1
+// ---------- 本体（graph.cpp の Graph が必要） ----------
+// 例: ll k = chromatic_number(g);    彩色数（頂点が 0 個なら 0、辺がなければ 1）
 // ◆ chromatic_number(g) : 彩色数（隣り合う頂点を違う色にするのに必要な最小の色数）。O(2^N N)
-//   g : 無向グラフの隣接リスト（片方向だけ入れてもよい。中で両方向として扱う）
+//   g : Graph（add_edge でも add_arc でもよい。辺の向きは無視して両方向として扱う）
 //   注意 : N <= 25 程度まで（メモリ 2^N × 20 バイトくらい）。自己ループがあれば −1
-long long chromatic_number(const vector<vector<int>>& g) {
+template <class T>
+long long chromatic_number(const Graph<T>& g) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/chromatic_number.cpp
-    int n = g.size();
+    int n = g.n;
     if (n == 0) return 0;
     vector<unsigned> adj(n, 0);
-    for (int v = 0; v < n; v++)
-        for (int to : g[v]) {
-            if (to == v) return -1;
-            adj[v] |= 1u << to, adj[to] |= 1u << v;
-        }
+    for (auto& e : g.edges) {
+        if (e.from == e.to) return -1;
+        adj[e.from] |= 1u << e.to, adj[e.to] |= 1u << e.from;
+    }
     int full = 1 << n;
     vector<int> I(full);  // I[S] = S の中の独立集合の個数（空集合も含む）。n <= 25 なら 2^25 以下で int に収まる
     I[0] = 1;
@@ -60,8 +61,8 @@ long long chromatic_number(const vector<vector<int>>& g) {
 // ===================== 使用例・動作確認（コピー不要） =====================
 int main() {
     auto make = [](int n, vector<pair<int, int>> es) {
-        vector<vector<int>> g(n);
-        for (auto [a, b] : es) g[a].push_back(b), g[b].push_back(a);
+        Graph<> g(n);
+        for (auto [a, b] : es) g.add_edge(a, b);
         return g;
     };
     // 奇数長の閉路（5 角形）は 3 色、偶数長（4 角形）は 2 色、完全グラフ K4 は 4 色、辺なしは 1 色
@@ -70,6 +71,11 @@ int main() {
     assert(chromatic_number(make(4, {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}})) == 4);
     assert(chromatic_number(make(3, {})) == 1 && chromatic_number(make(0, {})) == 0);
     assert(chromatic_number(make(2, {{1, 1}})) == -1);
+    {  // 有向辺で張っても向きは無視される（0→1→2→0 は 3 色）
+        Graph<> d(3);
+        d.add_arc(0, 1), d.add_arc(1, 2), d.add_arc(2, 0);
+        assert(chromatic_number(d) == 3);
+    }
     // ピーターセングラフ（10 頂点）は 3 色
     {
         vector<pair<int, int>> es;

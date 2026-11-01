@@ -5,7 +5,7 @@
 //   ★ dp[S][v] = ターミナルの集合 S と頂点 v をつなぐ木の最小の重み
 //      (1) 頂点 v で 2 つの木をくっつける: dp[S][v] = min_{T ⊂ S} dp[T][v] + dp[S − T][v]
 //      (2) 木を辺に沿って伸ばす: dp[S][*] でダイクストラ
-// 依存: なし
+// 依存: graph/graph.cpp の Graph（先に貼る）
 // ABC / ARC での使用例:
 //   ABC364 G - Last Major City  https://atcoder.jp/contests/abc364/tasks/abc364_g
 //     → ターミナルを都市 1..K−1 にして steiner_tree。都市 i の答えは dp[full][i]（「全ターミナルと頂点 i をつなぐ最小」がそのまま答え）
@@ -13,28 +13,26 @@
 // =====================================================================
 #include <bits/stdc++.h>
 using namespace std;
+// テスト用: graph.cpp の Graph を読み込む（提出するときは、graph.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define GRAPH_NO_MAIN
+#include "graph.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
-// edges = 無向辺 {a, b, 重み}（重みは 0 以上）、terms = つなぐべき頂点の一覧（重複 OK）
-// auto dp = steiner_tree<long long>(n, edges, terms);
+// ---------- 本体（graph.cpp の Graph が必要） ----------
+// 例: Graph<long long> g(n); g.read_edges(m, true);  auto dp = steiner_tree(g, terms);
 //   dp[full][v] の最小（full = (1 << K) − 1）が答え: steiner_min(dp)
 //   つなげないなら STEINER_INF<T>
 //   dp[S][v] も使える（例: 「ターミナルの一部 S と v をつなぐ最小」）
 template <class T> constexpr T STEINER_INF = numeric_limits<T>::max() / 4;
-// ◆ steiner_tree<T>(n, edges, terms) : 指定した頂点（ターミナル）をつなぐ最小の重みの木。O(3^K N + 2^K M log N)
-//   T     : 重みの型（必ず書く）
-//   n     : 頂点数
-//   edges : 無向辺 {a, b, 重み} の一覧（重みは 0 以上）
+// ◆ steiner_tree(g, terms) : 指定した頂点（ターミナル）をつなぐ最小の重みの木。O(3^K N + 2^K M log N)
+//   g     : Graph<T>（add_edge で無向辺を張る。重みは 0 以上）
 //   terms : ターミナルの一覧（K 個。K <= 10 くらいまで。重複してもよい）
 //   返り値 : dp[S][v] = ターミナルの集合 S（bit）と頂点 v をつなぐ木の最小の重み（つなげなければ STEINER_INF<T>）
 template <class T>
-vector<vector<T>> steiner_tree(int n, const vector<tuple<int, int, T>>& edges, const vector<int>& terms) {
+vector<vector<T>> steiner_tree(const Graph<T>& g, const vector<int>& terms) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/steiner_tree.cpp
-    int K = terms.size();
-    vector<vector<pair<int, T>>> g(n);
-    for (auto [a, b, w] : edges) g[a].push_back({b, w}), g[b].push_back({a, w});
+    int n = g.n, K = terms.size();
     vector<vector<T>> dp(1 << K, vector<T>(n, STEINER_INF<T>));
     for (int i = 0; i < K; i++) dp[1 << i][terms[i]] = 0;
     for (int v = 0; v < n; v++) dp[0][v] = 0;
@@ -52,8 +50,8 @@ vector<vector<T>> steiner_tree(int n, const vector<tuple<int, int, T>>& edges, c
             auto [d, v] = pq.top();
             pq.pop();
             if (d != dp[S][v]) continue;
-            for (auto [to, w] : g[v])
-                if (d + w < dp[S][to]) dp[S][to] = d + w, pq.push({dp[S][to], to});
+            for (auto& e : g.adj[v])
+                if (d + e.cost < dp[S][e.to]) dp[S][e.to] = d + e.cost, pq.push({dp[S][e.to], e.to});
         }
     }
     return dp;
@@ -69,16 +67,22 @@ T steiner_min(const vector<vector<T>>& dp) {
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 // ===================== 使用例・動作確認（コピー不要） =====================
+using ES = vector<tuple<int, int, long long>>;
+Graph<long long> mk(int n, const ES& es) {
+    Graph<long long> g(n);
+    for (auto [a, b, w] : es) g.add_edge(a, b, w);
+    return g;
+}
 int main() {
     // 星形: 中心 0 から 1, 2, 3 へ重み 1。1-2, 2-3, 1-3 は重み 3。ターミナル {1, 2, 3}
     //   中心を使うと 1 + 1 + 1 = 3、使わないと 3 + 3 = 6 → 3
     {
         vector<tuple<int, int, long long>> es = {{0, 1, 1}, {0, 2, 1}, {0, 3, 1}, {1, 2, 3}, {2, 3, 3}, {1, 3, 3}};
-        auto dp = steiner_tree<long long>(4, es, {1, 2, 3});
+        auto dp = steiner_tree(mk(4, es), {1, 2, 3});
         assert(steiner_min(dp) == 3);
         assert(dp[0b011][0] == 2 && dp[0b011][1] == 2);  // {1, 2} と頂点 0 をつなぐ: 0-1, 0-2 で 2
-        assert(steiner_min(steiner_tree<long long>(4, es, {2})) == 0);
-        assert(steiner_min(steiner_tree<long long>(5, es, {1, 4})) == STEINER_INF<long long>);  // 4 は孤立
+        assert(steiner_min(steiner_tree(mk(4, es), {2})) == 0);
+        assert(steiner_min(steiner_tree(mk(5, es), {1, 4})) == STEINER_INF<long long>);  // 4 は孤立
     }
     // ランダムテスト: 辺の部分集合を全部試して、ターミナルが全部つながる最小の重みと比較
     {
@@ -100,7 +104,7 @@ int main() {
                 for (int t : terms) if (f(t) != f(terms[0])) ok = false;
                 if (ok) want = min(want, w);
             }
-            assert(steiner_min(steiner_tree<long long>(n, es, terms)) == want);
+            assert(steiner_min(steiner_tree(mk(n, es), terms)) == want);
         }
     }
     puts("OK");

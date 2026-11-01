@@ -4,24 +4,26 @@
 //   ★ できる条件（辺のある頂点が全部つながっていることが前提）
 //     無向: 次数が奇数の頂点が 0 個（閉路）か 2 個（その 2 つが始点と終点）
 //     有向: 全頂点で 入次数 = 出次数（閉路）か、出 − 入 = 1 の頂点（始点）と 入 − 出 = 1 の頂点（終点）が 1 つずつ
-// 依存: なし
+// 依存: graph/graph.cpp の Graph（先に貼る）
 // ABC / ARC での使用例:
 //   ABC286 G - Unique Walk  https://atcoder.jp/contests/abc286/tasks/abc286_g
-//     → S 以外の辺で連結成分をまとめ（dsu）、成分を頂点・S の辺を辺にした多重グラフで euler_path(...).ok を見る（次数の奇数の個数が 0 か 2 か、でも判定できる）
+//     → S 以外の辺で連結成分をまとめ（dsu）、成分を頂点・S の辺を辺にした多重グラフ（Graph に add_edge）で euler_path(g).ok を見る（次数の奇数の個数が 0 か 2 か、でも判定できる）
 // 貼る場所: コピー範囲を main 関数の外（using namespace std; の後、main より上）に貼る
 // =====================================================================
 #include <bits/stdc++.h>
 using namespace std;
+// テスト用: graph.cpp の Graph を読み込む（提出するときは、graph.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define GRAPH_NO_MAIN
+#include "graph.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
-// edges = 辺 {a, b} の一覧（有向なら a → b）。頂点は 0..n-1
-// auto r = euler_path(n, edges, directed);          始点はおまかせ（奇数次数の頂点があればそこ）
-// auto r = euler_path(n, edges, directed, s);       始点を s に決める（s から始められないなら ok = false）
+// ---------- 本体（graph.cpp の Graph が必要） ----------
+// auto r = euler_path(g);          始点はおまかせ（奇数次数の頂点があればそこ）。add_edge なら無向、add_arc なら有向として解く
+// auto r = euler_path(g, s);       始点を s に決める（s から始められないなら ok = false）
 //   r.ok    一筆書きできるか
 //   r.vs    通る頂点の順番（長さ M + 1）。閉路なら vs.front() == vs.back()
-//   r.es    通る辺の番号の順番（長さ M）
+//   r.es    通る辺の番号（add_edge / add_arc の返り値 = g.edges の添字）の順番（長さ M）
 // 辺が 0 本なら ok = true、vs = {始点}（s 未指定なら 0）
 // ◆ EulerResult : euler_path の結果。ok : 一筆書きできるか、vs : 通る頂点の順（M + 1 個）、es : 通る辺の番号の順（M 個）
 struct EulerResult {
@@ -29,22 +31,21 @@ struct EulerResult {
     bool ok;
     vector<int> vs, es;
 };
-// ◆ euler_path(n, edges, directed, s) : すべての辺をちょうど 1 回ずつ通る道（一筆書き）を求める。O(N + M)
-//   n        : 頂点数（辺のない頂点があってもよい）
-//   edges    : 辺 {a, b} の一覧（辺の番号 = この配列の添字）。多重辺・自己ループもよい
-//   directed : true なら有向（a → b だけ）、false なら無向
+// ◆ euler_path(g, s) : すべての辺をちょうど 1 回ずつ通る道（一筆書き）を求める。O(N + M)
+//   g        : Graph。辺が全部 add_arc なら有向、全部 add_edge なら無向として解く（混ぜるのは非対応で assert で止まる）
+//              多重辺・自己ループ・辺のない頂点があってもよい
 //   s        : 始点を決めたいとき（既定 −1 = おまかせ）。その頂点から始められなければ ok = false
 //   注意 : 辺のある頂点が全部つながっていないと ok = false
-EulerResult euler_path(int n, const vector<pair<int, int>>& edges, bool directed, int s = -1) {
+template <class T>
+EulerResult euler_path(const Graph<T>& g, int s = -1) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/graph/euler_path.cpp
-    int m = edges.size();
-    vector<vector<pair<int, int>>> g(n);  // g[v] = {{行き先, 辺番号}, ...}
-    vector<int> deg(n, 0);                // 無向: 次数、有向: 出次数 − 入次数
-    for (int i = 0; i < m; i++) {
-        auto [a, b] = edges[i];
-        g[a].push_back({b, i});
-        if (directed) deg[a]++, deg[b]--;
-        else g[b].push_back({a, i}), deg[a]++, deg[b]++;
+    int n = g.n, m = g.edges.size();
+    bool directed = m > 0 && g.is_arc[0];
+    vector<int> deg(n, 0);  // 無向: 次数、有向: 出次数 − 入次数
+    for (auto& e : g.edges) {
+        assert(g.is_arc[e.id] == directed);  // 有向辺と無向辺が混ざっている
+        if (directed) deg[e.from]++, deg[e.to]--;
+        else deg[e.from]++, deg[e.to]++;
     }
     if (m == 0) return {true, {s == -1 ? 0 : s}, {}};
     // ★ 始点を決める: 無向なら奇数次数の頂点、有向なら 出 − 入 = 1 の頂点
@@ -69,25 +70,25 @@ EulerResult euler_path(int n, const vector<pair<int, int>>& edges, bool directed
     int start = -1;
     if (s != -1) {
         if (path_type && find(sp.begin(), sp.end(), s) == sp.end()) return {false, {}, {}};  // 道なら端からしか始められない
-        if (!path_type && g[s].empty()) return {false, {}, {}};                                  // 閉路なら辺のある頂点から
+        if (!path_type && g.adj[s].empty()) return {false, {}, {}};                                  // 閉路なら辺のある頂点から
         start = s;
     } else if (path_type) start = sp[0];
-    else for (int v = 0; v < n && start == -1; v++) if (!g[v].empty()) start = v;
+    else for (int v = 0; v < n && start == -1; v++) if (!g.adj[v].empty()) start = v;
     // ★ Hierholzer 法: 進めるだけ進み、行き止まったら戻りながら記録する（記録は逆順になる）
     vector<int> ptr(n, 0), vs, es;
     vector<bool> used(m, false);
     vector<pair<int, int>> st = {{start, -1}};  // {頂点, そこへ来た辺}
     while (!st.empty()) {
         int v = st.back().first;
-        while (ptr[v] < (int)g[v].size() && used[g[v][ptr[v]].second]) ptr[v]++;  // 使った辺を飛ばす
-        if (ptr[v] == (int)g[v].size()) {  // ★ v から出る辺がもうない → 確定させて戻る
+        while (ptr[v] < (int)g.adj[v].size() && used[g.adj[v][ptr[v]].id]) ptr[v]++;  // 使った辺を飛ばす
+        if (ptr[v] == (int)g.adj[v].size()) {  // ★ v から出る辺がもうない → 確定させて戻る
             vs.push_back(v);
             if (st.back().second != -1) es.push_back(st.back().second);
             st.pop_back();
         } else {
-            auto [to, id] = g[v][ptr[v]++];
-            used[id] = true;
-            st.push_back({to, id});
+            auto& e = g.adj[v][ptr[v]++];
+            used[e.id] = true;
+            st.push_back({e.to, e.id});
         }
     }
     if ((int)es.size() != m) return {false, {}, {}};  // ★ 使い切れなかった辺がある = 辺のある頂点がつながっていない
@@ -98,6 +99,12 @@ EulerResult euler_path(int n, const vector<pair<int, int>>& edges, bool directed
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 // ===================== 使用例・動作確認（コピー不要） =====================
+// テスト用: 辺 {a, b} の一覧から Graph を作る
+EulerResult euler_path(int n, const vector<pair<int, int>>& es, bool directed, int s = -1) {
+    Graph<> g(n);
+    for (auto [a, b] : es) directed ? g.add_arc(a, b) : g.add_edge(a, b);
+    return euler_path(g, s);
+}
 int main() {
     // 無向: 0-1, 1-2, 2-0, 2-3 → 奇数次数は 2 と 3 → 2 か 3 から始まる一筆書き
     {

@@ -25,6 +25,8 @@ using namespace std;
 //   Tree(n)              : 頂点 0..n−1 の木を作る準備（辺はまだない）
 //   Tree(g)              : 隣接リスト g（両方向）から辺をまとめて入れる（build は自分で呼ぶ）
 //   add_edge(a, b, w)    : 無向辺を足す（w 省略で 1）
+//   read(weighted, one)  : 「a b」（weighted なら「a b c」）が n − 1 行の入力を読む（one = true（既定）なら 1 始まり）
+//   read_parents(one)    : 「p_2 … p_n」（頂点 i の親が p_i）の入力を読む
 //   build(root)          : 根を決めて前計算する。O(N)。辺を全部足してから呼ぶ
 //   kth_ancestor(v, k)   : v の k 個上の祖先（なければ −1）。O(log N)
 //     ※ kth_ancestor・lca と、それを使う dist・wdist・jump・path・is_on_path は、初めて呼んだときに
@@ -72,6 +74,28 @@ struct Tree {
     }
     // add_edge(a, b, w) : a, b : 端点（0 始まり）、w : 重み（省略で 1。wdep / wdist / diameter で使う）
     void add_edge(int a, int b, T w = T(1)) { adj[a].push_back({b, w}), adj[b].push_back({a, w}); }
+    // --- 削除可: 入力 ---
+    // read(weighted, one_indexed) : 「a b」（weighted なら「a b c」）が n − 1 行の入力を読んで辺を足す。one_indexed : 1 始まりか（既定 true）
+    void read(bool weighted = false, bool one_indexed = true) {
+        for (int i = 0; i < n - 1; i++) {
+            int a, b;
+            T w = T(1);
+            cin >> a >> b;
+            if (weighted) cin >> w;
+            if (one_indexed) a--, b--;
+            add_edge(a, b, w);
+        }
+    }
+    // read_parents(one_indexed) : 「p_2 p_3 … p_n」（頂点 i の親が p_i）の形の入力を読んで辺を足す（頂点 1 が根）
+    void read_parents(bool one_indexed = true) {
+        for (int v = 1; v < n; v++) {
+            int p;
+            cin >> p;
+            if (one_indexed) p--;
+            add_edge(p, v);
+        }
+    }
+    // --- 削除可ここまで ---
 
     // build(root) : root : 根（省略で 0）。木がつながっていないと、つながっていない頂点の情報は壊れる
     void build(int root = 0) {
@@ -221,7 +245,16 @@ int main() {
     t.build(5);  // 根を変えて build し直すと表も作り直される
     assert(t.up.empty() && t.lca(3, 4) == 1 && t.lca(0, 3) == 0 && t.lca(3, 2) == 2 && t.kth_ancestor(3, 4) == 5);
     t.build(0);
-    assert((t.centroids() == vector<long long>{0, 1}));  // 0 か 1 を取ると残りは 3 個以下
+    assert((t.centroids() == vector<long long>{0, 1}));
+    {   // 入力を読む
+        istringstream in("1 2\n1 3\n3 4\n1 1 3\n");
+        auto* old = cin.rdbuf(in.rdbuf());
+        Tree<> r(4), q(4);
+        r.read(), q.read_parents();
+        cin.rdbuf(old);
+        r.build(0), q.build(0);
+        assert(r.par[3] == 2 && r.dist(1, 3) == 3 && q.par[1] == 0 && q.par[2] == 0 && q.par[3] == 2);
+    }  // 0 か 1 を取ると残りは 3 個以下
     {   // ランダムな木で、重心を「取り除いて最大の成分が N/2 以下」の愚直と比べる
         mt19937 rc(777);
         for (int it = 0; it < 500; it++) {
