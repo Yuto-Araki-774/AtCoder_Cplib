@@ -505,7 +505,7 @@ h.lca(u, v); h.dist(u, v);  // Tree の関数はどれでも使える
 | 区分 | 機能 | 何をするか |
 |---|---|---|
 | 本体 | `Tree<> t(n)`, `add_edge(a, b, w)` → `build(root)` | 木を作って根から前計算（`Tree<> t(g)` で隣接リストから辺をまとめて入れられる） |
-| 本体 | `par, dep, wdep, sz, children, order` | 親・深さ・重み付き深さ・部分木サイズ・子・BFS 順 |
+| 本体 | `par, dep, wdep, sz, height, children, order` | 親・深さ・重み付き深さ・部分木の頂点数・部分木の高さ（一番深い子孫までの辺の本数）・子・BFS 順 |
 | 本体 | `lca(a, b)`, `dist`, `wdist`, `kth_ancestor(v, k)` | 最小共通祖先、距離、k 個上の祖先 |
 | 削除可 | `jump(a, b, k)`, `path(a, b)`, `is_on_path(a, b, c)` | パス上で k 歩進んだ頂点、パスの頂点列、c がパス上か |
 | 削除可 | `diameter()` | 直径の長さと端点間の頂点列（build 不要） |

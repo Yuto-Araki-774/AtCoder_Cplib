@@ -46,6 +46,7 @@ using namespace std;
 //   dep[v]         : 根からの辺の本数                                               例: dep[3] = 2
 //   wdep[v]        : 根からの重みの和                                               （重みがすべて 1 なら dep と同じ）
 //   sz[v]          : v の部分木の頂点数（v 自身を含む）                             例: sz[1] = 2, sz[0] = 4
+//   height[v]      : v の部分木の高さ（v から一番深い子孫までの辺の本数。葉は 0）     例: height[0] = 2, height[1] = 1
 //   children[v]    : 子の一覧                                                       例: children[0] = {1, 2}
 //   order          : 根から近い順（BFS 順）の頂点の並び。order[0] が根               例: {0, 1, 2, 3}
 //                    前から回すと「親が先」、後ろから回すと「子が先」（木 DP はこれ）
@@ -56,6 +57,7 @@ struct Tree {
     int n, LOG = 1;                     // n = 頂点数、LOG = up の段数（内部用）
     vector<vector<pair<int, T>>> adj;   // adj[v] = v の隣の {頂点, 重み}
     vector<int> par, dep, sz, order;    // 親（根は −1）、根からの辺の本数、部分木の頂点数、根から近い順の並び
+    vector<int> height;                 // 部分木の高さ（v から一番深い子孫までの辺の本数）
     vector<T> wdep;                     // 根からの重みの和
     vector<vector<int>> children, up;   // 子の一覧、up[k][v] = v の 2^k 個上（内部用）
 
@@ -70,7 +72,7 @@ struct Tree {
 
     // build(root) : root : 根（省略で 0）。木がつながっていないと、つながっていない頂点の情報は壊れる
     void build(int root = 0) {
-        par.assign(n, -1), dep.assign(n, 0), sz.assign(n, 1), wdep.assign(n, T(0)), children.assign(n, {});
+        par.assign(n, -1), dep.assign(n, 0), sz.assign(n, 1), height.assign(n, 0), wdep.assign(n, T(0)), children.assign(n, {});
         order = {root};
         for (int i = 0; i < (int)order.size(); i++) {  // ★ 根から BFS（再帰を使わないので深い木でも安全）
             int v = order[i];
@@ -81,7 +83,11 @@ struct Tree {
                 order.push_back(to);
             }
         }
-        for (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];  // ★ 葉の方から親に足す
+        for (int i = n - 1; i > 0; i--) {  // ★ 葉の方から親に集める
+            int v = order[i];
+            sz[par[v]] += sz[v];
+            height[par[v]] = max(height[par[v]], height[v] + 1);
+        }
         while ((1 << LOG) <= n) LOG++;
         up.assign(LOG, vector<int>(n));
         for (int v = 0; v < n; v++) up[0][v] = par[v] == -1 ? v : par[v];  // 根の親は根自身にしておく
@@ -238,6 +244,7 @@ int main() {
     t.build(0);
     assert(t.lca(3, 4) == 1 && t.lca(3, 5) == 0 && t.dist(3, 5) == 4 && t.wdist(3, 5) == 19);
     assert(t.kth_ancestor(3, 2) == 0 && t.kth_ancestor(3, 3) == -1 && t.sz[1] == 3);
+    assert(t.height[0] == 2 && t.height[1] == 1 && t.height[5] == 0 && t.height[2] == 1);
     assert(t.jump(3, 5, 3) == 2 && t.jump(3, 5, 5) == -1);
     assert((t.path(4, 5) == vector<long long>{4, 1, 0, 2, 5}) && t.is_on_path(4, 5, 0));
     assert(t.diameter().first == 19);
@@ -264,6 +271,17 @@ int main() {
                 if (mx * 2 <= n) want.push_back(c);
             }
             assert(u.centroids() == want);
+            int r = rc() % n;
+            u.build(r);
+            for (int v = 0; v < n; v++) {  // 高さ: v の子孫のうち一番深いもの（愚直）
+                int best = 0;
+                for (int x = 0; x < n; x++) {
+                    int y = x;
+                    while (y != -1 && y != v) y = u.par[y];
+                    if (y == v) best = max(best, u.dep[x] - u.dep[v]);
+                }
+                assert(u.height[v] == best);
+            }
         }
     }
 
