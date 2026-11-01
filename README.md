@@ -24,7 +24,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 | [string/](#string--文字列) | 文字列: ローリングハッシュ、KMP、回文（Manacher など）、括弧列、部分列、接尾辞配列、Trie、Aho-Corasick | 9 |
 | [dp/](#dp--dp) | DP: ナップサック、LCS、LIS、桁 DP、区間 DP、巡回セールスマン、期待値 DP、Alien DP など | 9 |
 | [util/](#util--提出テンプレート) | 提出テンプレート: ヘッダ・mint・chmin/chmax・INF・デバッグ出力。コンパイル・テスト実行用のスクリプト `r`（Windows は `r.bat`） | 3 |
-| [ds/](#ds--データ構造) | データ構造: 2 次元 BIT、平方分割、Mo、区間の集合、削除できるヒープ、Li Chao Tree、動的・永続セグ木、Wavelet Matrix | 9 |
+| [ds/](#ds--データ構造) | データ構造: 2 次元 BIT、平方分割、Mo、区間の集合、削除できるヒープ、Li Chao Tree、動的・永続セグ木、Wavelet Matrix、順序付き set | 10 |
 | [geometry/](#geometry--幾何) | 幾何: 外積・内積、線分の交差、凸包、面積、内外判定、偏角ソート（整数で誤差なし） | 1 |
 | [techniques/](#techniques--解法パターン) | 解法パターン: イベントソート、オフラインクエリ、区間スケジューリング、包除原理、平面走査 | 5 |
 
@@ -46,7 +46,7 @@ dp/      DP                knapsack, lcs, lis, digit_dp, interval_dp, tsp, expec
 math/    数学              integer, matrix, combination, prime, xor_basis, divisor_transform,
                            gauss
 ds/      データ構造        bit2d, sqrt_decomposition, mo, interval_set, erasable_pq, li_chao_tree,
-                           dynamic_segtree, wavelet_matrix, persistent_segtree
+                           dynamic_segtree, wavelet_matrix, persistent_segtree, ordered_set
 geometry/ 幾何            geometry（外積・内積・向き・線分の交差・凸包・面積・内外判定・偏角ソート）
 techniques/ 解法パターン  event_sort, offline_query, interval_scheduling, inclusion_exclusion,
                            plane_sweep_2d、patterns.md（使いどころと考え方の解説）
@@ -946,6 +946,7 @@ ACL（`atcoder/`）は g++ の include パスに入れておく前提（`-I` は
 | [`mo.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/mo.cpp) | Mo's algorithm（更新のない区間クエリをまとめて処理） | `add`, `erase`, `out`（ラムダ） |
 | [`interval_set.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/interval_set.cpp) | 区間を set（map）で管理（塗る・消す・含むか・mex） | なし |
 | [`erasable_pq.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/erasable_pq.cpp) | 削除できる優先度付きキュー、上位 K 個の和、中央値 | なし |
+| [`ordered_set.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/ordered_set.cpp) | 順序付き set / multiset（k 番目の値、x より小さい値の個数を O(log N)。追加・削除しながら） | なし |
 | [`li_chao_tree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/li_chao_tree.cpp) | Li Chao Tree（直線・線分を追加して、ある x での最小値）。DP の高速化（CHT の代わり） | なし（クエリで使う x 座標を先に渡す） |
 | [`dynamic_segtree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/dynamic_segtree.cpp) | 動的セグ木（添字が 1e18 などでも、使う場所だけノードを作る） | `S`, `op`, `e`（ACL の segtree と同じ） |
 | [`wavelet_matrix.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/wavelet_matrix.cpp) | Wavelet Matrix（区間の k 番目に小さい値、値が範囲に入る個数、前後の値） | なし |
@@ -979,6 +980,16 @@ ACL（`atcoder/`）は g++ の include パスに入れておく前提（`-I` は
 | 本体 | `contains(x)`, `get(x)`, `mex(x)`, `total`, `mp` | x が塗られているか、x を含む区間、x 以上で塗られていない最小の値、塗られた長さ、区間の一覧 |
 
 座標は long long のまま使える（座標圧縮いらない）。整数の点 x は [x, x + 1) として入れる。
+
+### [ordered_set.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/ordered_set.cpp) — 順序付き set
+| 区分 | 機能 | 何をするか |
+|---|---|---|
+| 本体 | `OrderedSet<T> s` / `OrderedMultiset<T> s` | 重複なし / 重複あり。`insert(x)`, `erase(x)`（1 個だけ）, `contains`, `count`, `size` |
+| 本体 | `kth(k)`, `kth_largest(k)` | 小さい方 / 大きい方から k 番目（0 始まり）。O(log N) |
+| 本体 | `count_less(x)`, `count_leq(x)`, `count_range(l, r)` | x より小さい / x 以下 / l 以上 r 未満の個数。O(log N) |
+| 本体 | `min_ge(x, def)`, `max_le(x, def)` | x 以上の最小 / x 以下の最大（なければ def） |
+
+中身は GCC の拡張（pb_ds）なので、コピー範囲の `#include <ext/pb_ds/...>` 2 行も一緒に貼る（AtCoder の GCC なら使える。Clang では使えない）。値を先に全部知っているなら座標圧縮 + BIT でもできるが、こちらは途中で何が来てもよい。
 
 ### [erasable_pq.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/erasable_pq.cpp)
 | 区分 | 機能 | 何をするか |
@@ -1256,6 +1267,8 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 | [`li_chao_tree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/li_chao_tree.cpp) | [EDPC Z - Frog 3](https://atcoder.jp/contests/dp/tasks/dp_z) | 使用例と同じ。直線 (−2 h_i, dp[i] + h_i^2) を入れて x = h_j の最小値（ABC ではないが Li Chao / CHT の定番） |
 | [`dynamic_segtree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/dynamic_segtree.cpp) | [ABC403 G - Odd Position Sum Query](https://atcoder.jp/contests/abc403/tasks/abc403_g) | 前の答えで次の値が決まる（オンライン）ので座標圧縮できない。値 x を添字に、{個数, 奇数番目の和, 偶数番目の和} を持つ動的セグ木（左の個数の偶奇で右の奇偶を入れ替えてつなぐ） |
 | [`persistent_segtree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/persistent_segtree.cpp) | [ABC339 G - Smaller Sum](https://atcoder.jp/contests/abc339/tasks/abc339_g) | 前の答えで次のクエリが決まる（オンライン）。値を座標圧縮し、版 i = A[0..i) の値の位置に A を足したもの。答え = 版 R の [0, X 以下) の和 − 版 L−1 の同じ和 |
+| [`ordered_set.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/ordered_set.cpp) | [ABC234 D - Prefix K-th Max](https://atcoder.jp/contests/abc234/tasks/abc234_d) | P_i を順に insert し、i >= K なら kth_largest(K − 1) |
+|  | [ABC241 D - Sequence Query](https://atcoder.jp/contests/abc241/tasks/abc241_d) | OrderedMultiset。「x 以下で大きい方から k 番目」は c = count_leq(x) として c >= k なら kth(c − k)、「x 以上で小さい方から k 番目」は c = count_less(x) として c + k <= size() なら kth(c + k − 1) |
 
 ### geometry/ — 幾何
 
