@@ -36,7 +36,7 @@ using mint9 = atcoder::modint998244353;  // 問題の mod に合わせる（1e9+
 using ll = long long;
 using ull = unsigned long long;
 template <class T>
-using vec = vector<T>
+using vec = vector<T>;
 template <class T>
 using vv = vector<vector<T>>;
 const ll INF = 1LL << 60;  // ≈ 1.15e18。2 つ足してもあふれない
