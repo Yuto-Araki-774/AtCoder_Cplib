@@ -55,6 +55,7 @@ struct DijkstraResult {
 // 汎用版: 頂点数 n と「隣接を列挙する関数」を渡す
 // adj(v, relax) の中で、v から行ける先ごとに relax(行き先, コスト) を呼ぶ
 // ◆ dijkstra_func<T>(n, starts, adj) : 頂点を自分で定義するダイクストラ（拡張ダイクストラ）。O((N + M) log N)
+//   ※ 下の dijkstra（普通のグラフ用）もこれを使っているので、消さないこと
 //   T      : 距離の型（long long など。必ず書く）
 //   n      : 状態の数。状態は 0..n−1 の番号にしておく（例: (頂点, 使ったクーポンの数) → v * (K + 1) + k）
 //   starts : 始点の一覧（多始点）
@@ -86,6 +87,7 @@ DijkstraResult<T> dijkstra_func(int n, const vector<int>& starts, F adj) {
 
 // 普通のグラフ用
 // ◆ dijkstra(g, starts) / dijkstra(g, s) : ダイクストラ法。O((N + M) log N)
+//   ※ 中で上の dijkstra_func を使っている。dijkstra だけ使うときも、本体（WEdge 〜 ここまで）は全部貼ること
 //   g      : WGraph<T>（g[a].push_back({b, c}) で a → b 重み c。無向なら逆向きも入れる）
 //   starts : 始点の一覧（多始点）、s : 始点が 1 つのとき
 //   注意 : 重みは 0 以上。距離の合計が T の最大値の半分を超えないこと
