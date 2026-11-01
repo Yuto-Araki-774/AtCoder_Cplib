@@ -516,10 +516,11 @@ Johnson 法の考え方（ポテンシャル）: 各頂点に値 h を決めて�
 
 区間は ACL の segtree / lazy_segtree / fenwick_tree で処理する（使用例はパスの最大値を segtree で）。
 
-### [centroid.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp) — 重心分解
+### [centroid.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp) — 重心分解・木の重心
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `CentroidDecomposition cd(g)` | 重心木を作る。`cpar[v]`（重心木の親）、`level[v]`（深さ、log N 以下）、`root` |
+| 本体 | `CentroidDecomposition cd(n)`, `add_edge(a, b)`, `build()` | `Tree` と同じ使い方。build で重心木を作る。`cpar[v]`（重心木の親）、`level[v]`（深さ、log N 以下）、`root`。隣接リストがあるなら `cd(g)` でもよい（すぐ build する） |
+| 本体 | `centroids()` | 木の重心（取り除くと残りがどれも N/2 以下になる頂点）の一覧。1 個か 2 個。build 不要 |
 | 本体 | `dist[v][k]` | v から、重心木で深さ k の祖先の重心までの距離 |
 | 削除可 | `CentroidCount cc(cd, w)`, `cc.count(v, k)` | v から距離 k 以内の頂点の数（重み w を渡せば重みの和）。前計算 O(N log N)、1 回 O(log N) |
 
