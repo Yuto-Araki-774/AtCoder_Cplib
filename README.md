@@ -19,7 +19,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 |---|---|---|
 | [basic/](#basic--探索数列) | 探索・数列: 二分探索、累積和、いもす法、座標圧縮、尺取り法、全探索、転倒数、スライド最小値 など | 12 |
 | [graph/](#graph--グラフ) | グラフ: BFS・DFS、ダイクストラ、最短路、トポロジカルソート、最小全域木、二部グラフ、SCC、橋・関節点、マッチング など | 22 |
-| [tree/](#tree--木) | 木: LCA・直径・重心、木 DP、全方位木 DP、オイラーツアー、HLD、重心分解、虚樹 など（全部 `Tree` と同じ使い方） | 8 |
+| [tree/](#tree--木) | 木: LCA・直径・重心、木 DP、全方位木 DP、オイラーツアー、HLD、重心分解、虚樹 など（全部 `Tree` と同じ使い方） | 10 |
 | [math/](#math--数学) | 数学: 累乗・拡張ユークリッド、行列累乗、二項係数、素数・素因数分解、メビウス変換、ガウスの消去法 など | 7 |
 | [string/](#string--文字列) | 文字列: ローリングハッシュ、KMP、回文（Manacher など）、括弧列、部分列、接尾辞配列、Trie、Aho-Corasick | 9 |
 | [dp/](#dp--dp) | DP: ナップサック、LCS、LIS、桁 DP、区間 DP、巡回セールスマン、期待値 DP、Alien DP など | 9 |
@@ -40,7 +40,7 @@ graph/   グラフ            graph_input, bfs, dfs, dijkstra, shortest_path, to
                            euler_path, persistent_union_find, chromatic_number, steiner_tree,
                            hungarian, general_matching, min_arborescence, dominator_tree
 tree/    木                tree（LCA・直径・木上のいもす法）, tree_dp, rerooting, euler_tour, hld,
-                           centroid, tree_hash, auxiliary_tree
+                           centroid, tree_hash, auxiliary_tree, farthest, path_query
 dp/      DP                knapsack, lcs, lis, digit_dp, interval_dp, tsp, expected_value,
                            monotone_minima, alien_dp
 math/    数学              integer, matrix, combination, prime, xor_basis, divisor_transform,
@@ -561,6 +561,23 @@ u-v パスは重心木での共通の祖先を必ず通る。祖先を `for (int
 | 本体 | `auto [vs, par] = at.compress(S)` | S と、その LCA だけを残した木（2 × (S の個数) − 1 頂点以下）。`vs` は行きがけ順で `vs[0]` が根、`par[i]` は vs の中での親の位置 |
 
 色ごと・クエリごとに指定された頂点の集合で木 DP をしたいときに使う。ΣK が N 程度なら全体で O(N log N)。DP は `i = vs.size() − 1` から 0 へ回すと子が先になる。辺の長さ（元の木での辺の本数）は `dep[vs[i]] − dep[vs[par[i]]]`。
+
+### [farthest.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/farthest.cpp) — 各頂点から一番遠い頂点
+| 区分 | 機能 | 何をするか |
+|---|---|---|
+| 本体 | `TreeFarthest f(t)` | t は辺を入れた `Tree`（build 不要）。`f.d[v]` = v から一番遠い頂点までの距離、`f.far[v]` = その頂点。O(N)、重み付きでもよい |
+| 本体 | `f.a`, `f.b`, `f.da[v]`, `f.db[v]` | 直径の両端と、それぞれからの距離（直径の長さは `f.da[f.b]`） |
+
+一番遠い頂点は必ず直径の両端のどちらかになる、を使う。全方位木 DP でも求まるが、定義するものがない。
+
+### [path_query.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/path_query.cpp) — パス上の最大・最小・和（ダブリング）
+| 区分 | 機能 | 何をするか |
+|---|---|---|
+| 本体 | `TreePathQuery<S, op, e> pq(t)` | t は build 済みの `Tree`。辺の重みを使う。前計算 O(N log N) |
+| 本体 | `TreePathQuery<S, op, e> pv(t, a)` | 頂点の値 `a[v]` を使う |
+| 本体 | `pq.prod(u, v)` | u-v パス上の値を op でまとめたもの。1 回 O(log N) |
+
+`op` / `e` は ACL の segtree と同じ書き方（グローバルに関数を書く）。`op` は順番によらない演算（max, min, +, gcd, xor など）。値の更新があるなら hld.cpp と segtree。
 
 ### [rerooting.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/rerooting.cpp) — 全方位木 DP
 すべての頂点 v について「v を根にしたときの木 DP の値」を O(N) でまとめて求める。build は呼ばなくてよい（solve の中で頂点 0 を根にする）。
@@ -1133,6 +1150,8 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 | [`centroid.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp) | [ABC291 Ex - Balanced Tree](https://atcoder.jp/contests/abc291/tasks/abc291_h) | 求める木がそのまま重心木。cpar を 1-indexed で出力（根は -1） |
 | [`auxiliary_tree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/auxiliary_tree.cpp) | [ABC340 G - Leaf Color](https://atcoder.jp/contests/abc340/tasks/abc340_g) | 色ごとにその色の頂点で compress し、虚樹の上で木 DP（Σ 頂点数 = O(N)） |
 |  | [ABC359 G - Sum of Tree Distance](https://atcoder.jp/contests/abc359/tasks/abc359_g) | ラベルごとに compress し、虚樹の各辺について「辺の長さ × 片側の個数 × 反対側の個数」を足す |
+| [`farthest.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/farthest.cpp) | [ABC222 F - Expensive Expense](https://atcoder.jp/contests/abc222/tasks/abc222_f) | 各町 j に重み D_j の辺で葉 N + j を足した木で TreeFarthest。一番遠い端が i 自身の葉なら、もう一方の端までの距離を使う |
+| [`path_query.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/path_query.cpp) | [ABC235 E - MST + 1](https://atcoder.jp/contests/abc235/tasks/abc235_e) | 最小全域木を Tree にして、パス上の辺の重みの最大を TreePathQuery で。w がその最大より小さければ Yes（u == v なら No） |
 
 ### dp/ — DP
 
