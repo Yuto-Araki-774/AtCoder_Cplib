@@ -29,6 +29,8 @@
 #include <sstream>
 #include <cassert>
 #include <optional>       // optional（wavelet_matrix の prev_value / next_value）
+#include <ext/pb_ds/assoc_container.hpp>  // 順序付き set（ordered_set）
+#include <ext/pb_ds/tree_policy.hpp>
 using namespace std;
 using namespace atcoder;
 using mint1 = atcoder::modint1000000007;

@@ -989,7 +989,7 @@ ACL（`atcoder/`）は g++ の include パスに入れておく前提（`-I` は
 | 本体 | `count_less(x)`, `count_leq(x)`, `count_range(l, r)` | x より小さい / x 以下 / l 以上 r 未満の個数。O(log N) |
 | 本体 | `min_ge(x, def)`, `max_le(x, def)` | x 以上の最小 / x 以下の最大（なければ def） |
 
-中身は GCC の拡張（pb_ds）なので、コピー範囲の `#include <ext/pb_ds/...>` 2 行も一緒に貼る（AtCoder の GCC なら使える。Clang では使えない）。値を先に全部知っているなら座標圧縮 + BIT でもできるが、こちらは途中で何が来てもよい。
+中身は GCC の拡張（pb_ds）。必要な `#include <ext/pb_ds/...>` 2 行は `util/template.cpp` に入っている（別のテンプレートならコピー範囲の 2 行も貼る。AtCoder の GCC なら使える。Clang では使えない）。値を先に全部知っているなら座標圧縮 + BIT でもできるが、こちらは途中で何が来てもよい。
 
 ### [erasable_pq.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/ds/erasable_pq.cpp)
 | 区分 | 機能 | 何をするか |

@@ -3,7 +3,7 @@
 //   std::set にできないこと「k 番目に小さい値」「x より小さい値はいくつあるか」を、値の追加・削除をしながら O(log N) で答える
 //   中身は GCC の拡張（pb_ds の tree）。AtCoder（GCC）で使える。座標圧縮 + BIT と違って、値を先に全部知らなくてよい
 //   ※ Clang（AtCoder の C++ (Clang)）では使えない。速さは std::set の 2〜3 倍遅いくらい（N = 2×10^5 なら問題ない）
-// 依存: なし（#include <ext/pb_ds/...> をコピー範囲の中に入れてある）
+// 依存: なし（#include <ext/pb_ds/...> は util/template.cpp に入っている。コピー範囲の中にもあるので、2 回入っても問題ない）
 // ABC / ARC での使用例:
 //   ABC234 D - Prefix K-th Max  https://atcoder.jp/contests/abc234/tasks/abc234_d
 //     → P_i を順に insert し、i >= K なら kth_largest(K − 1)
@@ -18,7 +18,7 @@ using namespace std;
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
 // ---------- 本体 ----------
-#include <ext/pb_ds/assoc_container.hpp>  // ★ この 2 行も一緒に貼る（bits/stdc++.h には入っていない）
+#include <ext/pb_ds/assoc_container.hpp>  // ★ util/template.cpp には入っている。他のテンプレートならこの 2 行も一緒に貼る（bits/stdc++.h には入っていない）
 #include <ext/pb_ds/tree_policy.hpp>
 // OrderedSet<long long> s;          重複なし（std::set と同じ）
 // OrderedMultiset<long long> s;     重複あり（std::multiset と同じ）
