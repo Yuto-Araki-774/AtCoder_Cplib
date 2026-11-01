@@ -4,10 +4,10 @@
 //   分かれた部分でまた重心を取る…を繰り返して「重心木」を作る。重心木の深さは log N 以下
 //   → u-v パスは必ず、重心木での u と v の共通の祖先（重心）c を通る。
 //     「各頂点から祖先の重心までの距離」を前計算しておけば、パスに関するクエリが O(log N)
-//   前計算 O(N log N)。再帰なし。使い方は tree.cpp の Tree と同じ（CentroidDecomposition cd(n); cd.add_edge(a, b); cd.build();）
-//   木の重心（1 個か 2 個）だけ欲しいときは centroids()
+//   前計算 O(N log N)。再帰なし。tree.cpp の Tree を継承していて、使い方は Tree と同じ（cd(n) → add_edge → build）
+//   木の重心（1 個か 2 個）だけ欲しいときは Tree の centroids()（このファイルは要らない）
 //   削除可: 距離 k 以内の頂点の数（重み付きなら重みの和）を 1 回 O(log N) で答える（前計算 O(N log N)）
-// 依存: なし
+// 依存: tree/tree.cpp の Tree（先に貼る）
 // ABC / ARC での使用例:
 //   ABC291 Ex - Balanced Tree  https://atcoder.jp/contests/abc291/tasks/abc291_h
 //     → 求める木がそのまま重心木。cpar を 1-indexed で出力（根は -1）
@@ -15,48 +15,50 @@
 // =====================================================================
 #include <bits/stdc++.h>
 using namespace std;
+// テスト用: tree.cpp の Tree を読み込む（提出するときは、tree.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define TREE_NO_MAIN
+#include "tree.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
-// CentroidDecomposition cd(n);     頂点 0..n−1（Tree と同じ使い方）
-//   cd.add_edge(a, b);             無向辺を足す
-//   cd.build();                    辺を全部足してから 1 回呼ぶ → 重心木ができる
+// ---------- 本体（tree.cpp の Tree が必要） ----------
+// CentroidDecomposition<> cd(n);  cd.add_edge(a, b);  cd.build();    Tree と同じ使い方（Tree の関数 lca・dist なども使える）
 //   cd.root          重心木の根
 //   cd.cpar[v]       重心木での親（根は -1）
 //   cd.level[v]      重心木での深さ（根が 0）
-//   cd.dist[v][k]    v から「重心木で v の祖先のうち深さ k のもの」までの元の木での距離（k = 0..level[v]）
-//   cd.centroids()   木の重心（取り除くと残りがどれも N/2 以下になる頂点）。1 個か 2 個。build 不要
+//   cd.cdist[v][k]   v から「重心木で v の祖先のうち深さ k のもの」までの元の木での距離（辺の本数。k = 0..level[v]）
+//   cd.centroids()   木の重心（1 個か 2 個）。Tree の関数なので build 不要
 // 祖先をたどる書き方:
-//   for (int c = v; c != -1; c = cd.cpar[c]) { int d = cd.dist[v][cd.level[c]]; ... }   // c は v の祖先の重心、d = dist(v, c)
+//   for (int c = v; c != -1; c = cd.cpar[c]) { int d = cd.cdist[v][cd.level[c]]; ... }   // c は v の祖先の重心、d = dist(v, c)
 // 典型（使用例にあり）: 「頂点を赤く塗る」「v から一番近い赤い頂点までの距離」が交互に来る → 1 回 O(log N)
-// 隣接リスト g がもうあるなら CentroidDecomposition cd(g); でもよい（add_edge と build をまとめてやる）
-// ◆ struct CentroidDecomposition : 重心分解（重心木を作る）。O(N log N)、再帰なし
+// 隣接リスト g がもうあるなら CentroidDecomposition<> cd(g); でもよい（add_edge と build をまとめてやる）
+// ◆ struct CentroidDecomposition<T> : 重心分解（重心木を作る）。O(N log N)、再帰なし。Tree<T> を継承
 //   CentroidDecomposition(n) : 頂点 0..n−1 の木を作る準備（辺はまだない。n >= 1）
 //   CentroidDecomposition(g) : 隣接リスト g（両方向）から作って、すぐ build する
-//   add_edge(a, b)           : 無向辺を足す
-//   build()                  : 重心木を作る。辺を全部足してから呼ぶ。O(N log N)
-//   centroids()              : 木全体の重心の一覧（1 個か 2 個、小さい順）。O(N)。build しなくてよい
+//   add_edge(a, b, w)        : Tree と同じ（重みは重心分解では見ない）
+//   build(r)                 : Tree の前計算（r は Tree の lca などで使う根。省略で 0）＋重心木。O(N log N)
 //   root                     : 重心木の根
 //   cpar[v], level[v]        : 重心木での親（根は −1）、深さ（根が 0）
-//   dist[v][k]               : v から「重心木での v の祖先のうち深さ k のもの」までの元の木での距離
-struct CentroidDecomposition {
+//   cdist[v][k]              : v から「重心木での v の祖先のうち深さ k のもの」までの元の木での距離
+template <class T = long long>
+struct CentroidDecomposition : Tree<T> {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp
-    int n, root = -1;
-    vector<vector<int>> g;
+    using B = Tree<T>;
+    int root = -1;
     vector<int> cpar, level;
-    vector<vector<int>> dist;
+    vector<vector<int>> cdist;
     // n_ : 頂点数
-    CentroidDecomposition(int n_) : n(n_), g(n_) {}
-    // g_ : 木の隣接リスト（両方向）。作ったらすぐ build する
-    CentroidDecomposition(const vector<vector<int>>& g_) : n(g_.size()), g(g_) { build(); }
-    // add_edge(a, b) : a, b : 端点（0 始まり）
-    void add_edge(int a, int b) { g[a].push_back(b), g[b].push_back(a); }
-    // build() : 木がつながっていること（辺が N − 1 本）
-    void build() {
+    CentroidDecomposition(int n_) : B(n_) {}
+    // g : 木の隣接リスト（両方向）。作ったらすぐ build する
+    CentroidDecomposition(const vector<vector<int>>& g) : B(g) { build(); }
+    // build(r) : 木がつながっていること（辺が N − 1 本）。辺を全部足してから呼ぶ
+    void build(int r = 0) {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp
+        B::build(r);
+        int n = this->n;
+        auto g = [&](int v) -> const vector<pair<int, T>>& { return this->adj[v]; };
         root = -1;
-        cpar.assign(n, -1), level.assign(n, 0), dist.assign(n, {});
+        cpar.assign(n, -1), level.assign(n, 0), cdist.assign(n, {});
         vector<bool> removed(n, false);
         vector<int> sz(n), par(n);
         vector<pair<int, int>> st = {{0, -1}};  // {成分の中の頂点 1 つ, その成分の親になる重心}
@@ -66,47 +68,32 @@ struct CentroidDecomposition {
             vector<int> order = {s};  // 成分の頂点を BFS で集める
             par[s] = -1;
             for (size_t i = 0; i < order.size(); i++)
-                for (int to : g[order[i]])
+                for (auto [to, w] : g(order[i]))
                     if (!removed[to] && to != par[order[i]]) par[to] = order[i], order.push_back(to);
             int tot = order.size(), c = s;
             for (int i = tot - 1; i >= 0; i--) {
                 int v = order[i];
                 sz[v] = 1;
-                for (int to : g[v]) if (!removed[to] && to != par[v]) sz[v] += sz[to];
+                for (auto [to, w] : g(v)) if (!removed[to] && to != par[v]) sz[v] += sz[to];
             }
             for (int v : order) {  // ★ 重心: 子の部分木も、親の側（tot - sz[v]）も tot/2 以下
                 int mx = tot - sz[v];
-                for (int to : g[v]) if (!removed[to] && to != par[v]) mx = max(mx, sz[to]);
+                for (auto [to, w] : g(v)) if (!removed[to] && to != par[v]) mx = max(mx, sz[to]);
                 if (mx * 2 <= tot) { c = v; break; }
             }
             cpar[c] = pc, level[c] = (pc == -1 ? 0 : level[pc] + 1);
             if (pc == -1) root = c;
-            vector<int> q = {c};  // ★ 重心 c から成分内の各頂点までの距離を記録（dist[v] の level[c] 番目に入る）
+            vector<int> q = {c};  // ★ 重心 c から成分内の各頂点までの距離を記録（cdist[v] の level[c] 番目に入る）
             par[c] = -1;
-            dist[c].push_back(0);
+            cdist[c].push_back(0);
             for (size_t i = 0; i < q.size(); i++) {
                 int v = q[i];
-                for (int to : g[v])
-                    if (!removed[to] && to != par[v]) par[to] = v, dist[to].push_back(dist[v].back() + 1), q.push_back(to);
+                for (auto [to, w] : g(v))
+                    if (!removed[to] && to != par[v]) par[to] = v, cdist[to].push_back(cdist[v].back() + 1), q.push_back(to);
             }
             removed[c] = true;  // ★ c を取り除くと、成分は c の隣ごとに分かれる
-            for (int to : g[c]) if (!removed[to]) st.push_back({to, c});
+            for (auto [to, w] : g(c)) if (!removed[to]) st.push_back({to, c});
         }
-    }
-    // centroids() : 2 個のときは隣どうし（その間の辺で木がちょうど半分に分かれる）
-    vector<long long> centroids() const {
-    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp
-        vector<int> par(n, -1), order = {0}, sz(n, 1);
-        for (size_t i = 0; i < order.size(); i++)
-            for (int to : g[order[i]]) if (to != par[order[i]]) par[to] = order[i], order.push_back(to);
-        for (int i = n - 1; i > 0; i--) sz[par[order[i]]] += sz[order[i]];  // 部分木の大きさ
-        vector<long long> res;
-        for (int v = 0; v < n; v++) {
-            int mx = n - sz[v];  // ★ v を取り除いたときの、親の側の大きさ
-            for (int to : g[v]) if (to != par[v]) mx = max(mx, sz[to]);
-            if (mx * 2 <= n) res.push_back(v);
-        }
-        return res;
     }
 };
 
@@ -118,19 +105,20 @@ struct CentroidDecomposition {
 // ◆ struct CentroidCount : 距離 k 以内の頂点の数（重みの和）
 //   CentroidCount(cd, w) : 前計算 O(N log N)
 //   count(v, k)          : dist(v, u) <= k となる u の重みの和（u = v を含む）。O(log N)
+template <class T>
 struct CentroidCount {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp
-    const CentroidDecomposition& cd;
+    const CentroidDecomposition<T>& cd;
     vector<vector<long long>> A, Bm;  // A[c][d] = c の成分で c から距離 d 以下の重みの和、Bm[ch][d] = ch の成分で「親の重心」から距離 d 以下の和
     // cd_ : 作ってある CentroidDecomposition（参照で持つので、cd_ を先に作って残しておく）
     // w   : 各頂点の重み（省略すると全部 1 = 頂点の個数）。作った後に重みは変えられない
-    CentroidCount(const CentroidDecomposition& cd_, vector<long long> w = {}) : cd(cd_), A(cd_.n), Bm(cd_.n) {
+    CentroidCount(const CentroidDecomposition<T>& cd_, vector<long long> w = {}) : cd(cd_), A(cd_.n), Bm(cd_.n) {
         int n = cd.n;
         if (w.empty()) w.assign(n, 1);
         for (int v = 0; v < n; v++) {
             int prev = -1;
             for (int c = v; c != -1; prev = c, c = cd.cpar[c]) {
-                int d = cd.dist[v][cd.level[c]];
+                int d = cd.cdist[v][cd.level[c]];
                 if ((int)A[c].size() <= d) A[c].resize(d + 1, 0);
                 A[c][d] += w[v];
                 if (prev != -1) {
@@ -152,7 +140,7 @@ struct CentroidCount {
         long long res = 0;
         int prev = -1;
         for (int c = v; c != -1; prev = c, c = cd.cpar[c]) {
-            long long rest = k - cd.dist[v][cd.level[c]];
+            long long rest = k - cd.cdist[v][cd.level[c]];
             res += upto(A[c], rest);
             if (prev != -1) res -= upto(Bm[prev], rest);  // ★ v と同じ子の成分にいる頂点は、もっと深い重心で数え済み
         }
@@ -165,25 +153,25 @@ struct CentroidCount {
 // ===================== 使用例・動作確認（コピー不要） =====================
 int main() {
     // 一直線の木 0-1-2-3-4-5-6: 重心は 3、次は 1 と 5（Tree と同じく add_edge → build）
-    CentroidDecomposition cd(7);
+    CentroidDecomposition<> cd(7);
     for (int v = 0; v + 1 < 7; v++) cd.add_edge(v, v + 1);
     cd.build();
     assert((cd.centroids() == vector<long long>{3}));
     {
-        CentroidDecomposition c2(4);  // 0-1-2-3 は真ん中の辺で半分に分かれるので重心は 1 と 2
+        CentroidDecomposition<> c2(4);  // 0-1-2-3 は真ん中の辺で半分に分かれるので重心は 1 と 2
         c2.add_edge(0, 1), c2.add_edge(1, 2), c2.add_edge(2, 3);
         assert((c2.centroids() == vector<long long>{1, 2}));
-        assert((CentroidDecomposition(1).centroids() == vector<long long>{0}));
+        assert((CentroidDecomposition<>(1).centroids() == vector<long long>{0}));
     }
     assert(cd.root == 3 && cd.cpar[1] == 3 && cd.cpar[5] == 3 && cd.cpar[0] == 1 && cd.level[6] == 2);
-    assert(cd.dist[0][0] == 3 && cd.dist[0][1] == 1 && cd.dist[0][2] == 0);  // 0 から 3, 1, 0 までの距離
+    assert(cd.cdist[0][0] == 3 && cd.cdist[0][1] == 1 && cd.cdist[0][2] == 0);  // 0 から 3, 1, 0 までの距離
 
     // 使用例: 赤く塗る / 一番近い赤い頂点までの距離
     vector<int> best(7, INT_MAX);  // best[c] = 重心 c から、c の成分の中で一番近い赤い頂点までの距離
-    auto paint = [&](int v) { for (int c = v; c != -1; c = cd.cpar[c]) best[c] = min(best[c], cd.dist[v][cd.level[c]]); };
+    auto paint = [&](int v) { for (int c = v; c != -1; c = cd.cpar[c]) best[c] = min(best[c], cd.cdist[v][cd.level[c]]); };
     auto nearest = [&](int v) {
         int r = INT_MAX;
-        for (int c = v; c != -1; c = cd.cpar[c]) if (best[c] != INT_MAX) r = min(r, best[c] + cd.dist[v][cd.level[c]]);
+        for (int c = v; c != -1; c = cd.cpar[c]) if (best[c] != INT_MAX) r = min(r, best[c] + cd.cdist[v][cd.level[c]]);
         return r;
     };
     paint(0);
@@ -197,13 +185,13 @@ int main() {
         int n = rr() % 40 + 1;
         vector<vector<int>> h(n);
         for (int v = 1; v < n; v++) { int p = rr() % v; h[p].push_back(v), h[v].push_back(p); }
-        CentroidDecomposition C(h);
+        CentroidDecomposition<> C(h);
         {   // add_edge → build で作っても、隣接リストから作ったものと同じになる
-            CentroidDecomposition C2(n);
+            CentroidDecomposition<> C2(n);
             for (int v = 0; v < n; v++) for (int to : h[v]) if (v < to) C2.add_edge(v, to);
             C2.build();
             // 辺を入れる順は違ってよいので、重心木の性質（下のテスト）を C2 でも確かめる
-            for (int v = 0; v < n; v++) assert((int)C2.dist[v].size() == C2.level[v] + 1);
+            for (int v = 0; v < n; v++) assert((int)C2.cdist[v].size() == C2.level[v] + 1);
             // 重心: 全頂点を試して「取り除いた後の最大の成分が n/2 以下」
             vector<long long> want;
             for (int c = 0; c < n; c++) {
@@ -232,8 +220,8 @@ int main() {
         int maxlv = 0;
         for (int v = 0; v < n; v++) {
             maxlv = max(maxlv, C.level[v]);
-            assert((int)C.dist[v].size() == C.level[v] + 1);
-            for (int c = v; c != -1; c = C.cpar[c]) assert(C.dist[v][C.level[c]] == D[v][c]);
+            assert((int)C.cdist[v].size() == C.level[v] + 1);
+            for (int c = v; c != -1; c = C.cpar[c]) assert(C.cdist[v][C.level[c]] == D[v][c]);
         }
         assert((1 << maxlv) <= n);  // 深さは log2 N 以下
         for (int u = 0; u < n; u++)
@@ -250,10 +238,10 @@ int main() {
             int v = rr() % n;
             if (rr() % 2) {
                 red[v] = true;
-                for (int c = v; c != -1; c = C.cpar[c]) bst[c] = min(bst[c], C.dist[v][C.level[c]]);
+                for (int c = v; c != -1; c = C.cpar[c]) bst[c] = min(bst[c], C.cdist[v][C.level[c]]);
             } else {
                 int r = INT_MAX, ref = INT_MAX;
-                for (int c = v; c != -1; c = C.cpar[c]) if (bst[c] != INT_MAX) r = min(r, bst[c] + C.dist[v][C.level[c]]);
+                for (int c = v; c != -1; c = C.cpar[c]) if (bst[c] != INT_MAX) r = min(r, bst[c] + C.cdist[v][C.level[c]]);
                 for (int u = 0; u < n; u++) if (red[u]) ref = min(ref, D[v][u]);
                 assert(r == ref);
             }
@@ -273,7 +261,7 @@ int main() {
             int n = r7() % 40 + 1;
             vector<vector<int>> h(n);
             for (int v = 1; v < n; v++) { int p = r7() % v; h[p].push_back(v), h[v].push_back(p); }
-            CentroidDecomposition C(h);
+            CentroidDecomposition<> C(h);
             vector<long long> w(n);
             for (auto& x : w) x = r7() % 10;
             CentroidCount cc(C, w);

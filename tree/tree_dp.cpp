@@ -1,9 +1,10 @@
 // =====================================================================
 // tree/tree_dp.cpp  木 DP のテンプレート
 //   根を 1 つ決めて、「子の値を集めて自分の値を作る」DP を葉から根へ計算する。O(N)。再帰なし
+//   tree.cpp の Tree を継承していて、使い方は Tree と同じ（add_edge → build → solve）
 //   自分で決める 4 つ（e, merge, put_edge, put_vertex）は rerooting.cpp（全方位木 DP）と同じ
 //   → 根を 1 つに決める問題はこれ、すべての頂点を根にした答えが欲しいなら rerooting.cpp
-// 依存: なし
+// 依存: tree/tree.cpp の Tree（先に貼る）
 // ABC / ARC での使用例:
 //   ABC036 D - 塗り絵  https://atcoder.jp/contests/abc036/tasks/abc036_d
 //     → 隣り合う 2 つを両方黒にしない塗り方の数（使用例の「例3」を mint で）
@@ -13,13 +14,18 @@
 // =====================================================================
 #include <bits/stdc++.h>
 using namespace std;
+// テスト用: tree.cpp の Tree を読み込む（提出するときは、tree.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define TREE_NO_MAIN
+#include "tree.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
+// ---------- 本体（tree.cpp の Tree が必要） ----------
 // S : DP の値の型（作るときに決まる。値の型が違う DP には別の TreeDP を作る）
-// TreeDP<S> td(n);  td.add_edge(a, b, w);  （重みなしなら w 省略 → 0）
-// auto dp = td.solve(root, e, merge, put_edge, put_vertex);   dp[v] = v を根とする部分木の DP 値
+// TreeDP<S> td(n);  td.add_edge(a, b, w);  td.build(root);     Tree と同じ使い方（重みなしなら w 省略 → 1）
+// auto dp = td.solve(e, merge, put_edge, put_vertex);         dp[v] = v を根とする部分木の DP 値
+//   td.solve(root, e, merge, put_edge, put_vertex) と書けば build(root) もまとめてやる
+//   Tree を継承しているので td.lca(a, b), td.dist(a, b), td.par[v], td.children[v], td.order なども使える
 //
 // 【自分で定義するもの】（main の中にラムダで書いてよい）
 //   dp[v] = put_vertex( merge_{子 c}( put_edge(dp[c], c, v, w) ), v ) の形に分解する
@@ -31,47 +37,42 @@ using namespace std;
 // 例1: 部分木のサイズ      e = 0, merge = +, put_edge = x, put_vertex = x + 1
 // 例2: 部分木の高さ        e = 0, merge = max, put_edge = x + 1, put_vertex = x
 // 例3: 独立集合の数え上げ（隣り合う 2 頂点を両方黒にしない塗り方）  使用例を参照
-// 処理順（td.order）と親（td.par）も solve の後に使える
-// ◆ struct TreeDP : 木 DP のテンプレート（再帰なし）
+// ◆ struct TreeDP<S, W> : 木 DP のテンプレート（再帰なし）。Tree<W> を継承
 //   TreeDP(n)                                       : 頂点 0..n−1
-//   add_edge(a, b, w)                               : 無向辺を足す（w 省略で 0）
-//   solve(root, e, merge, put_edge, put_vertex)     : dp[v] = v を根とする部分木の値 を全頂点について返す。O(N)
-//   order, par                                      : solve の後に使える（BFS 順、親）
+//   add_edge(a, b, w)                               : 無向辺を足す（w 省略で 1。Tree と同じ）
+//   build(root)                                     : 根を決める（Tree の前計算。O(N log N)）
+//   solve(e, merge, put_edge, put_vertex)           : dp[v] = v を根とする部分木の値 を全頂点について返す。O(N)。build の後に呼ぶ
+//   solve(root, e, merge, put_edge, put_vertex)     : build(root) をしてから solve
 //   S : DP の値の型、W : 辺の重みの型（既定 long long）
 template <class S, class W = long long>
-struct TreeDP {
+struct TreeDP : Tree<W> {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_dp.cpp
-    int n;
-    vector<vector<pair<int, W>>> g;
-    vector<int> order, par;  // order: 根からの BFS 順、par: 親（根は -1）
+    using B = Tree<W>;
     // n_ : 頂点数
-    TreeDP(int n_) : n(n_), g(n_) {}
-    // add_edge(a, b, w) : a, b : 端点、w : 重み（put_edge に渡される）
-    void add_edge(int a, int b, W w = W(0)) { g[a].push_back({b, w}), g[b].push_back({a, w}); }
-
-    // solve(root, e, merge, put_edge, put_vertex) :
-    //   root       : 根
-    //   e          : merge の単位元（子がいないときの「集めた結果」）
-    //   merge      : S merge(S a, S b)。子からの値を集める（順番によらない演算）
-    //   put_edge   : S put_edge(S x, int c, int p, W w)。子 c の値 x を、辺 c-p（重み w）を通して親 p へ渡すときの変換
-    //   put_vertex : S put_vertex(S x, int v)。集めた値 x から頂点 v の値を作る
+    TreeDP(int n_) : B(n_) {}
+    // solve(e, merge, put_edge, put_vertex) : 引数の意味は上の【自分で定義するもの】。build 済みであること
     template <class Merge, class PutEdge, class PutVertex>
-    vector<S> solve(int root, S e, Merge merge, PutEdge put_edge, PutVertex put_vertex) {
-        order = {root}, par.assign(n, -1);
-        for (int i = 0; i < (int)order.size(); i++) {  // ★ 根から BFS して親子関係を決める
-            int v = order[i];
-            for (auto [to, w] : g[v])
-                if (to != par[v]) par[to] = v, order.push_back(to);
-        }
+    vector<S> solve(S e, Merge merge, PutEdge put_edge, PutVertex put_vertex) const {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_dp.cpp
+        int n = this->n;
+        const auto &order = this->order, &par = this->par;
+        assert((int)order.size() == n);  // build していないと止まる
         vector<S> dp(n, e);
         for (int i = n - 1; i >= 0; i--) {  // ★ BFS 順の逆 = 子が必ず先に計算済み
             int v = order[i];
             S acc = e;
-            for (auto [to, w] : g[v])
+            for (auto [to, w] : this->adj[v])
                 if (to != par[v]) acc = merge(acc, put_edge(dp[to], to, v, w));  // ★ 子の値を集める
             dp[v] = put_vertex(acc, v);                                           // ★ 自分の値にする
         }
         return dp;
+    }
+    // solve(root, e, merge, put_edge, put_vertex) : root : 根。build(root) をしてから上の solve
+    template <class Merge, class PutEdge, class PutVertex>
+    vector<S> solve(int root, S e, Merge merge, PutEdge put_edge, PutVertex put_vertex) {
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_dp.cpp
+        B::build(root);
+        return solve(e, merge, put_edge, put_vertex);
     }
 };
 
@@ -87,8 +88,10 @@ int main() {
     TreeDP<long long> td(5);
     td.add_edge(0, 1, 5), td.add_edge(0, 2, 1), td.add_edge(0, 3, 2), td.add_edge(1, 4, 7);
 
+    td.build(0);  // Tree と同じく build してから solve
+    assert(td.lca(4, 3) == 0 && td.wdist(4, 3) == 14);  // Tree の関数も使える
     // 例1: 部分木のサイズ
-    auto sz = td.solve(0, 0LL, [](long long a, long long b) { return a + b; },
+    auto sz = td.solve(0LL, [](long long a, long long b) { return a + b; },
                        [](long long x, int, int, long long) { return x; }, [](long long x, int) { return x + 1; });
     assert((sz == vector<long long>{5, 2, 1, 1, 1}));
 

@@ -24,6 +24,7 @@ using namespace std;
 // 木 DP : order を逆順に回すと「子 → 親」の順になる
 // ◆ struct Tree : 木の基本情報（親・深さ・部分木サイズ・BFS 順）と LCA（ダブリング）
 //   Tree(n)              : 頂点 0..n−1 の木を作る準備（辺はまだない）
+//   Tree(g)              : 隣接リスト g（両方向）から辺をまとめて入れる（build は自分で呼ぶ）
 //   add_edge(a, b, w)    : 無向辺を足す（w 省略で 1）
 //   build(root)          : 根を決めて前計算する。O(N log N)。辺を全部足してから呼ぶ
 //   kth_ancestor(v, k)   : v の k 個上の祖先（なければ −1）。O(log N)
@@ -33,6 +34,10 @@ using namespace std;
 //   path(a, b)           : a から b への頂点の並び。O(パスの長さ)
 //   is_on_path(a, b, c)  : c が a-b パス上にあるか
 //   diameter()           : 直径 {長さ, 端から端への頂点の並び}（build 不要）
+//   centroids()          : 木の重心（取り除くと残りがどれも N/2 以下になる頂点）。1 個か 2 個、小さい順（build 不要）
+//   ※ 他の木のライブラリ（tree_dp, rerooting, euler_tour, hld, centroid, tree_hash, auxiliary_tree）は
+//      この Tree を継承している。使い方は全部同じ: X x(n); x.add_edge(a, b); x.build(root);
+//      lca・dist・path なども全部そのまま使える。使うときはこの Tree も一緒に貼る（Tree を先に）
 //   T : 辺の重みの型（既定 long long）
 template <class T = long long>
 struct Tree {
@@ -45,6 +50,10 @@ struct Tree {
 
     // n_ : 頂点数
     Tree(int n_) : n(n_), adj(n_) {}
+    // g : 隣接リスト（両方向。重みはすべて 1）。add_edge をまとめてやる（build はしない）
+    Tree(const vector<vector<int>>& g) : n(g.size()), adj(g.size()) {
+        for (int v = 0; v < n; v++) for (int to : g[v]) if (v < to) add_edge(v, to);
+    }
     // add_edge(a, b, w) : a, b : 端点（0 始まり）、w : 重み（省略で 1。wdep / wdist / diameter で使う）
     void add_edge(int a, int b, T w = T(1)) { adj[a].push_back({b, w}), adj[b].push_back({a, w}); }
 
@@ -112,7 +121,7 @@ struct Tree {
     bool is_on_path(int a, int b, int c) const { return dist(a, c) + dist(c, b) == dist(a, b); }
     // --- 削除可ここまで ---
 
-    // --- 削除可: 木の直径（build 不要）。{長さ, 端点から端点への頂点列} ---
+    // --- 削除可: 木の直径・木の重心（どちらも build 不要）。tree_hash.cpp を使うなら centroids は消さない ---
     // diameter() : build しなくても呼べる。重みは add_edge の w（負の重みがあると正しくない）
     pair<T, vector<long long>> diameter() const {
         auto far = [&](int s, vector<int>& pre) {  // s から一番遠い頂点
@@ -137,6 +146,22 @@ struct Tree {
         vector<long long> p;
         for (int x = v; x != -1; x = pre[x]) p.push_back(x);
         return {len, p};
+    }
+
+    // centroids() : 2 個のときは隣どうし（その間の辺で木がちょうど半分に分かれる）
+    vector<long long> centroids() const {
+        // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp
+        vector<int> p(n, -1), ord = {0}, s(n, 1);
+        for (size_t i = 0; i < ord.size(); i++)
+            for (auto [to, w] : adj[ord[i]]) if (to != p[ord[i]]) p[to] = ord[i], ord.push_back(to);
+        for (int i = n - 1; i > 0; i--) s[p[ord[i]]] += s[ord[i]];  // 頂点 0 を根にした部分木の大きさ
+        vector<long long> res;
+        for (int v = 0; v < n; v++) {
+            int mx = n - s[v];  // ★ v を取り除いたときの、親の側の大きさ
+            for (auto [to, w] : adj[v]) if (to != p[v]) mx = max(mx, s[to]);
+            if (mx * 2 <= n) res.push_back(v);
+        }
+        return res;
     }
     // --- 削除可ここまで ---
 };
@@ -188,6 +213,8 @@ struct TreeImos {
 
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
+// 他の木のファイルのテストは、ここより上を #include して使う（TREE_NO_MAIN を定義してから）
+#ifndef TREE_NO_MAIN
 // ===================== 使用例・動作確認（コピー不要） =====================
 int main() {
     //       0
@@ -203,6 +230,31 @@ int main() {
     assert(t.jump(3, 5, 3) == 2 && t.jump(3, 5, 5) == -1);
     assert((t.path(4, 5) == vector<long long>{4, 1, 0, 2, 5}) && t.is_on_path(4, 5, 0));
     assert(t.diameter().first == 19);
+    assert((t.centroids() == vector<long long>{0, 1}));  // 0 か 1 を取ると残りは 3 個以下
+    {   // ランダムな木で、重心を「取り除いて最大の成分が N/2 以下」の愚直と比べる
+        mt19937 rc(777);
+        for (int it = 0; it < 500; it++) {
+            int n = rc() % 30 + 1;
+            Tree<> u(n);
+            vector<vector<int>> h(n);
+            for (int v = 1; v < n; v++) { int p = rc() % v; u.add_edge(p, v), h[p].push_back(v), h[v].push_back(p); }
+            vector<long long> want;
+            for (int c = 0; c < n; c++) {
+                vector<int> seen(n, 0);
+                seen[c] = 1;
+                int mx = 0;
+                for (int s0 = 0; s0 < n; s0++) {
+                    if (seen[s0]) continue;
+                    vector<int> q = {s0};
+                    seen[s0] = 1;
+                    for (size_t i = 0; i < q.size(); i++) for (int to : h[q[i]]) if (!seen[to]) seen[to] = 1, q.push_back(to);
+                    mx = max(mx, (int)q.size());
+                }
+                if (mx * 2 <= n) want.push_back(c);
+            }
+            assert(u.centroids() == want);
+        }
+    }
 
     // 木 DP の例: 部分木に含まれる重みの合計（葉から順に処理）
     vector<long long> sub(6, 0);
@@ -290,3 +342,4 @@ int main() {
     }
     puts("OK");
 }
+#endif

@@ -3,7 +3,8 @@
 //   「すべての頂点 v について、v を根にしたときの木 DP の値」をまとめて O(N) で求める
 //   例: 各頂点から一番遠い頂点までの距離、各頂点から全頂点への距離の和
 //   普通にやると根ごとに O(N) で全体 O(N^2) かかるものを O(N) にする
-// 依存: なし（tree/tree.cpp とは独立）
+//   tree.cpp の Tree を継承していて、使い方は Tree と同じ（add_edge → solve）
+// 依存: tree/tree.cpp の Tree（先に貼る）
 // ABC / ARC での使用例:
 //   ABC220 F - Distance Sums 2  https://atcoder.jp/contests/abc220/tasks/abc220_f
 //     → 各頂点からの距離の和（使用例の「例2」そのもの）
@@ -13,13 +14,18 @@
 // =====================================================================
 #include <bits/stdc++.h>
 using namespace std;
+// テスト用: tree.cpp の Tree を読み込む（提出するときは、tree.cpp のコピー範囲をこのファイルのコピー範囲より先に貼る）
+#define TREE_NO_MAIN
+#include "tree.cpp"
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ ここからコピー ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-// ---------- 本体 ----------
+// ---------- 本体（tree.cpp の Tree が必要） ----------
 // S : DP の値の型
-// Rerooting<S> rr(n);  rr.add_edge(a, b, w);  （重みなしなら w 省略 → 0）
+// Rerooting<S> rr(n);  rr.add_edge(a, b, w);      Tree と同じ使い方（重みなしなら w 省略 → 1）
 // auto ans = rr.solve(e, merge, put_edge, put_vertex);   ans[v] = v を根にしたときの DP 値
+//   build は呼ばなくてよい（呼んでいなければ solve の中で build(0) する。どこを根にしても答えは同じ）
+//   Tree を継承しているので rr.lca(a, b), rr.dist(a, b) なども使える（build 後）
 //
 // 【自分で定義するもの】（どれも main の中にラムダで書いてよい）
 //   木 DP を「子の値を集めて自分の値を作る」形で考え、次の 4 つに分ける:
@@ -35,33 +41,26 @@ using namespace std;
 // 例2: 各頂点から全頂点への距離の和   S = pair<long long, long long>（{距離の和, 頂点数}）
 //   e = {0, 0}, merge = 成分ごとの和, put_edge = {x.first + x.second * w, x.second},
 //   put_vertex = {x.first, x.second + 1}
-// ◆ struct Rerooting : 全方位木 DP（すべての頂点 v について「v を根にしたときの木 DP の値」を O(N) で）
+// ◆ struct Rerooting<S, W> : 全方位木 DP（すべての頂点 v について「v を根にしたときの木 DP の値」を O(N) で）。Tree<W> を継承
 //   Rerooting(n)                                 : 頂点 0..n−1
-//   add_edge(a, b, w)                            : 無向辺を足す（w 省略で 0）
+//   add_edge(a, b, w)                            : 無向辺を足す（w 省略で 1。Tree と同じ）
 //   solve(e, merge, put_edge, put_vertex)        : ans[v] を全頂点について返す
 //   S : DP の値の型、W : 辺の重みの型（既定 long long）
 template <class S, class W = long long>
-struct Rerooting {
+struct Rerooting : Tree<W> {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/rerooting.cpp
-    int n;
-    vector<vector<pair<int, W>>> g;
+    using B = Tree<W>;
     // n_ : 頂点数（1 以上。木がつながっていること）
-    Rerooting(int n_) : n(n_), g(n_) {}
-    // add_edge(a, b, w) : a, b : 端点、w : 重み（put_edge に渡される）
-    void add_edge(int a, int b, W w = W(0)) { g[a].push_back({b, w}), g[b].push_back({a, w}); }
-
+    Rerooting(int n_) : B(n_) {}
     // solve(e, merge, put_edge, put_vertex) : 引数の意味は TreeDP::solve と同じ（根はいらない）
     //   注意 : merge は結合的で順番によらないこと（左右からの累積で「1 方向を除いた値」を作るため）
     template <class Merge, class PutEdge, class PutVertex>
     vector<S> solve(S e, Merge merge, PutEdge put_edge, PutVertex put_vertex) {
-        vector<int> order = {0}, par(n, -1);
-        vector<W> pw(n, W(0));  // pw[v] = v と親をつなぐ辺の重み
-        for (int i = 0; i < (int)order.size(); i++) {  // 頂点 0 を根に BFS 順を作る
-            int v = order[i];
-            for (auto [to, w] : g[v])
-                if (to != par[v]) par[to] = v, pw[to] = w, order.push_back(to);
-        }
-        // ★ 1 回目（葉 → 根）: down[v] = v を根とする部分木の DP 値（普通の木 DP）
+    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/rerooting.cpp
+        int n = this->n;
+        if ((int)this->order.size() != n) B::build(0);  // まだ build していなければ頂点 0 を根にする
+        const auto &order = this->order, &par = this->par;
+        const auto& g = this->adj;
         vector<S> down(n, e);
         for (int i = n - 1; i >= 0; i--) {
             int v = order[i];
@@ -70,7 +69,6 @@ struct Rerooting {
                 if (to != par[v]) acc = merge(acc, put_edge(down[to], to, v, w));
             down[v] = put_vertex(acc, v);
         }
-        // ★ 2 回目（根 → 葉）: up[v] = 「親の側」の部分木から v に渡ってくる値
         vector<S> up(n, e), ans(n);
         for (int v : order) {
             int k = g[v].size();
@@ -79,7 +77,6 @@ struct Rerooting {
                 auto [to, w] = g[v][i];
                 val[i] = (to == par[v]) ? up[v] : put_edge(down[to], to, v, w);  // ★ 隣接する全方向からの値
             }
-            // ★ 「i 番目の方向以外」を O(1) で取るために左右から累積
             vector<S> pre(k + 1, e), suf(k + 1, e);
             for (int i = 0; i < k; i++) pre[i + 1] = merge(pre[i], val[i]);
             for (int i = k - 1; i >= 0; i--) suf[i] = merge(val[i], suf[i + 1]);
@@ -87,8 +84,7 @@ struct Rerooting {
             for (int i = 0; i < k; i++) {
                 auto [to, w] = g[v][i];
                 if (to == par[v]) continue;
-                // ★ 子 to から見た「v 側」の部分木 = v から to の方向を除いたもの
-                up[to] = put_edge(put_vertex(merge(pre[i], suf[i + 1]), v), v, to, w);
+                up[to] = put_edge(put_vertex(merge(pre[i], suf[i + 1]), v), v, to, w);  // ★ to から見た「親の方向」の値
             }
         }
         return ans;
@@ -111,9 +107,10 @@ int main() {
     auto far = rr.solve(
         0LL,
         [](long long a, long long b) { return max(a, b); },
-        [](long long x, int c, int p, long long w) { return x + w; },
-        [](long long x, int v) { return x; });
+        [](long long x, int, int, long long w) { return x + w; },
+        [](long long x, int) { return x; });
     assert((far == vector<long long>{6, 5, 7, 7}));
+    assert(rr.wdist(0, 3) == 6);  // solve の中で build されたので Tree の関数も使える
 
     // 例2: 各頂点から全頂点への距離の和
     using P = pair<long long, long long>;  // {距離の和, 頂点数}
@@ -122,8 +119,8 @@ int main() {
     auto sum = r2.solve(
         P{0, 0},
         [](P a, P b) { return P{a.first + b.first, a.second + b.second}; },
-        [](P x, int c, int p, long long w) { return P{x.first + x.second * w, x.second}; },
-        [](P x, int v) { return P{x.first, x.second + 1}; });
+        [](P x, int, int, long long w) { return P{x.first + x.second * w, x.second}; },
+        [](P x, int) { return P{x.first, x.second + 1}; });
     assert(sum[0].first == 1 + 3 + 6 && sum[1].first == 1 + 2 + 5 && sum[3].first == 6 + 5 + 7);
     // ランダムテスト: ワーシャルフロイドで全点対の距離を求めて、最遠距離・距離の和と比較
     {

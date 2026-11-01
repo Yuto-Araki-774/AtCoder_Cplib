@@ -19,7 +19,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 |---|---|---|
 | [basic/](#basic--探索数列) | 探索・数列: 二分探索、累積和、いもす法、座標圧縮、尺取り法、全探索、転倒数、スライド最小値 など | 12 |
 | [graph/](#graph--グラフ) | グラフ: BFS・DFS、ダイクストラ、最短路、トポロジカルソート、最小全域木、二部グラフ、SCC、橋・関節点、マッチング など | 22 |
-| [tree/](#tree--木) | 木: LCA・直径、木 DP、全方位木 DP、オイラーツアー、HLD、重心分解、虚樹 など | 8 |
+| [tree/](#tree--木) | 木: LCA・直径・重心、木 DP、全方位木 DP、オイラーツアー、HLD、重心分解、虚樹 など（全部 `Tree` と同じ使い方） | 8 |
 | [math/](#math--数学) | 数学: 累乗・拡張ユークリッド、行列累乗、二項係数、素数・素因数分解、メビウス変換、ガウスの消去法 など | 7 |
 | [string/](#string--文字列) | 文字列: ローリングハッシュ、KMP、回文（Manacher など）、括弧列、部分列、接尾辞配列、Trie、Aho-Corasick | 9 |
 | [dp/](#dp--dp) | DP: ナップサック、LCS、LIS、桁 DP、区間 DP、巡回セールスマン、期待値 DP、Alien DP など | 9 |
@@ -488,14 +488,28 @@ Johnson 法の考え方（ポテンシャル）: 各頂点に値 h を決めて�
 
 ## tree/ — 木
 
+**木のファイルはすべて `tree.cpp` の `Tree` を継承していて、使い方が同じ。**
+
+```cpp
+HLD<> h(n);                 // EulerTour<>, AuxiliaryTree<>, TreeHash<>, CentroidDecomposition<>, TreeDP<S>, Rerooting<S> も同じ
+h.add_edge(a, b);           // 重み付きなら h.add_edge(a, b, w)
+h.build(root);              // 辺を全部足してから
+h.lca(u, v); h.dist(u, v);  // Tree の関数はどれでも使える
+```
+
+- 使うときは `tree.cpp` のコピー範囲も貼る（`Tree` を先に）
+- 隣接リスト `g` がもうあるなら `HLD<> h(g, root);` のように 1 行で作れる（`TreeHash<>` だけは `th(g)` の後に自分で build）
+- `<>` は辺の重みの型（省略で long long）。`TreeDP<S>` と `Rerooting<S>` は DP の値の型 `S` を書く
+
 ### [tree.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp)
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `add_edge(a, b, w)` → `build(root)` | 木を作って根から前計算 |
+| 本体 | `Tree<> t(n)`, `add_edge(a, b, w)` → `build(root)` | 木を作って根から前計算（`Tree<> t(g)` で隣接リストから辺をまとめて入れられる） |
 | 本体 | `par, dep, wdep, sz, children, order` | 親・深さ・重み付き深さ・部分木サイズ・子・BFS 順 |
 | 本体 | `lca(a, b)`, `dist`, `wdist`, `kth_ancestor(v, k)` | 最小共通祖先、距離、k 個上の祖先 |
 | 削除可 | `jump(a, b, k)`, `path(a, b)`, `is_on_path(a, b, c)` | パス上で k 歩進んだ頂点、パスの頂点列、c がパス上か |
 | 削除可 | `diameter()` | 直径の長さと端点間の頂点列（build 不要） |
+| 削除可 | `centroids()` | 木の重心（取り除くと残りがどれも N/2 以下になる頂点）。1 個か 2 個（build 不要） |
 | 削除可 | `TreeImos<U, T>(t)` | 木上のいもす法。`add_subtree(v, x)` 部分木加算、`add_path(u, v, x)` パス加算、`build()` |
 
 木 DP は `order` を逆順に回すと「子 → 親」の順になる（使用例あり）。
@@ -503,58 +517,57 @@ Johnson 法の考え方（ポテンシャル）: 各頂点に値 h を決めて�
 ### [tree_dp.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_dp.cpp) — 木 DP のテンプレート
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `TreeDP<S> td(n)`, `add_edge(a, b, w)`, `td.solve(root, e, merge, put_edge, put_vertex)` | `dp[v]` = v を根とする部分木の DP 値。再帰なし |
+| 本体 | `TreeDP<S> td(n)`, `add_edge(a, b, w)`, `build(root)` → `td.solve(e, merge, put_edge, put_vertex)` | `dp[v]` = v を根とする部分木の DP 値。再帰なし。`td.solve(root, e, ...)` なら build もまとめてやる |
 
-自分で決める 4 つは全方位木 DP（rerooting.cpp）と同じ。根が決まっている問題はこちら、全頂点を根にした答えが要るなら rerooting。使用例に「部分木のサイズ」「高さ」「独立集合の数え上げ」。
+自分で決める 4 つは全方位木 DP（rerooting.cpp）と同じ。根が決まっている問題はこちら、全頂点を根にした答えが要るなら rerooting。使用例に「部分木のサイズ」「高さ」「独立集合の数え上げ」。重みを省略すると 1（`Tree` と同じ）。
 
 ### [hld.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/hld.cpp)
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `HLD hld(g, root)` | 頂点に番号 `pos[v]` を振り直す |
-| 本体 | `path(u, v, edge)` | u-v パスを O(log N) 個の区間 `[l, r)` に。`edge = true` で LCA を除く（辺の値は子の `pos` に置く） |
-| 本体 | `subtree(v)`, `lca(u, v)`, `dist(u, v)` | 部分木の区間、LCA、距離 |
+| 本体 | `HLD<> hld(n)`, `add_edge`, `build(root)` | 頂点に番号 `pos[v]` を振り直す |
+| 本体 | `path_ranges(u, v, edge)` | u-v パスを O(log N) 個の区間 `[l, r)` に。`edge = true` で LCA を除く（辺の値は子の `pos` に置く） |
+| 本体 | `subtree(v)` | 部分木の区間。`lca`・`dist`・`path`（頂点の並び）は `Tree` のもの |
 
 区間は ACL の segtree / lazy_segtree / fenwick_tree で処理する（使用例はパスの最大値を segtree で）。
 
-### [centroid.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp) — 重心分解・木の重心
+### [centroid.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp) — 重心分解
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `CentroidDecomposition cd(n)`, `add_edge(a, b)`, `build()` | `Tree` と同じ使い方。build で重心木を作る。`cpar[v]`（重心木の親）、`level[v]`（深さ、log N 以下）、`root`。隣接リストがあるなら `cd(g)` でもよい（すぐ build する） |
-| 本体 | `centroids()` | 木の重心（取り除くと残りがどれも N/2 以下になる頂点）の一覧。1 個か 2 個。build 不要 |
-| 本体 | `dist[v][k]` | v から、重心木で深さ k の祖先の重心までの距離 |
+| 本体 | `CentroidDecomposition<> cd(n)`, `add_edge`, `build()` | 重心木を作る。`cpar[v]`（重心木の親）、`level[v]`（深さ、log N 以下）、`root`（重心木の根） |
+| 本体 | `cdist[v][k]` | v から、重心木で深さ k の祖先の重心までの距離 |
 | 削除可 | `CentroidCount cc(cd, w)`, `cc.count(v, k)` | v から距離 k 以内の頂点の数（重み w を渡せば重みの和）。前計算 O(N log N)、1 回 O(log N) |
 
-u-v パスは重心木での共通の祖先を必ず通る。祖先を `for (int c = v; c != -1; c = cd.cpar[c])` でたどり、`dist[v][level[c]]` を使う。使用例に「赤く塗る / 一番近い赤い頂点までの距離」（1 回 O(log N)）。
+u-v パスは重心木での共通の祖先を必ず通る。祖先を `for (int c = v; c != -1; c = cd.cpar[c])` でたどり、`cdist[v][level[c]]` を使う。使用例に「赤く塗る / 一番近い赤い頂点までの距離」（1 回 O(log N)）。木の重心だけなら `Tree` の `centroids()`。
 
 ### [euler_tour.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/euler_tour.cpp)
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `EulerTour et(g, root)` | `in[v]`, `out[v]`（v の部分木 = 時刻 `[in[v], out[v])`）、`order`、`par`、`dep`、`is_ancestor(u, v)` |
+| 本体 | `EulerTour<> et(n)`, `add_edge`, `build(root)` | `in[v]`, `out[v]`（v の部分木 = 時刻 `[in[v], out[v])`）、`tour[t]`（時刻 t の頂点）、`is_ancestor(u, v)` |
 
-部分木を列の区間にするので、ACL の fenwick_tree / segtree と組み合わせて「部分木の和」「根からのパスの和」を値の更新ありで求められる（使用例あり）。`tree.cpp` とは独立。
+部分木を列の区間にするので、ACL の fenwick_tree / segtree と組み合わせて「部分木の和」「根からのパスの和」を値の更新ありで求められる（使用例あり）。
 
 ### [tree_hash.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_hash.cpp) — 木の同型判定
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `TreeCanon tc;` `tc.rooted(g, r)` | 根を r にしたときの各頂点の部分木の形の番号。`id[u] == id[v]` ⇔ 部分木が同じ形 |
-| 本体 | `tc.unrooted(g)` | 根なし木としての形の番号（中心を根にする） |
+| 本体 | `TreeHash<> th(n)`, `add_edge`, `build(root)` | `th.id[v]` = 根を root にしたときの v の部分木の形の番号。`id[u] == id[v]` ⇔ 部分木が同じ形 |
+| 本体 | `th.unrooted()` | 根なし木としての形の番号（重心を根にする。build 不要） |
 
-比べたい木はすべて同じ `tc` で番号を振ること。乱数ハッシュではなく「子の番号の列 → 番号」の表で番号を振るので、衝突はない（O(N log N)）。
+番号の表は全部の `TreeHash` で共有しているので、別の木どうしでも番号を比べてよい。乱数ハッシュではなく「子の番号の列 → 番号」の表で番号を振るので、衝突はない（O(N log N)）。
 
 ### [auxiliary_tree.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/auxiliary_tree.cpp) — Auxiliary Tree（虚樹）
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `AuxiliaryTree at(g, root)` | 前計算 O(N log N)。`lca(u, v)`, `dist(u, v)`, `dep[v]` も使える |
-| 本体 | `auto [vs, par] = at.build(S)` | S と、その LCA だけを残した木（2 × (S の個数) − 1 頂点以下）。`vs` は行きがけ順で `vs[0]` が根、`par[i]` は vs の中での親の位置 |
+| 本体 | `AuxiliaryTree<> at(n)`, `add_edge`, `build(root)` | 前計算 O(N log N)。`lca(u, v)`, `dist(u, v)`, `dep[v]` も使える |
+| 本体 | `auto [vs, par] = at.compress(S)` | S と、その LCA だけを残した木（2 × (S の個数) − 1 頂点以下）。`vs` は行きがけ順で `vs[0]` が根、`par[i]` は vs の中での親の位置 |
 
 色ごと・クエリごとに指定された頂点の集合で木 DP をしたいときに使う。ΣK が N 程度なら全体で O(N log N)。DP は `i = vs.size() − 1` から 0 へ回すと子が先になる。辺の長さ（元の木での辺の本数）は `dep[vs[i]] − dep[vs[par[i]]]`。
 
 ### [rerooting.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/rerooting.cpp) — 全方位木 DP
-すべての頂点 v について「v を根にしたときの木 DP の値」を O(N) でまとめて求める。`tree.cpp` とは独立。
+すべての頂点 v について「v を根にしたときの木 DP の値」を O(N) でまとめて求める。build は呼ばなくてよい（solve の中で頂点 0 を根にする）。
 
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `Rerooting<S> rr(n)`, `add_edge(a, b, w)` | 木を作る（重みなしなら w 省略） |
+| 本体 | `Rerooting<S> rr(n)`, `add_edge(a, b, w)` | 木を作る（重みなしなら w 省略 → 1） |
 | 本体 | `rr.solve(e, merge, put_edge, put_vertex)` | `ans[v]` = v を根にしたときの DP 値 |
 
 **定義**（すべて main の中のラムダでよい）。普通の木 DP `dp[v] = put_vertex(merge_{子 c}(put_edge(dp[c], c, v, w)), v)` の形に分解する。
@@ -1115,11 +1128,11 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 |  | [ABC294 G - Distance Queries on a Tree](https://atcoder.jp/contests/abc294/tasks/abc294_g) | 辺の重みを子の頂点に乗せ、根からのパスの和を BIT で（+ LCA） |
 | [`tree_dp.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_dp.cpp) | [ABC036 D - 塗り絵](https://atcoder.jp/contests/abc036/tasks/abc036_d) | 隣り合う 2 つを両方黒にしない塗り方の数（使用例の「例3」を mint で） |
 |  | [EDPC P - Independent Set](https://atcoder.jp/contests/dp/tasks/dp_p) | ABC036 D と同じ問題（ABC ではないが典型） |
-| [`hld.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/hld.cpp) | [ABC294 G - Distance Queries on a Tree](https://atcoder.jp/contests/abc294/tasks/abc294_g) | 辺の重みを子の位置に置き、path(u, v, true) の区間の和を BIT で |
+| [`hld.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/hld.cpp) | [ABC294 G - Distance Queries on a Tree](https://atcoder.jp/contests/abc294/tasks/abc294_g) | 辺の重みを子の位置に置き、path_ranges(u, v, true) の区間の和を BIT で |
 |  | [ABC014 D - 閉路](https://atcoder.jp/contests/abc014/tasks/abc014_4) | 答え = dist(a, b) + 1（HLD の lca でも求まる） |
 | [`centroid.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp) | [ABC291 Ex - Balanced Tree](https://atcoder.jp/contests/abc291/tasks/abc291_h) | 求める木がそのまま重心木。cpar を 1-indexed で出力（根は -1） |
-| [`auxiliary_tree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/auxiliary_tree.cpp) | [ABC340 G - Leaf Color](https://atcoder.jp/contests/abc340/tasks/abc340_g) | 色ごとにその色の頂点で build し、虚樹の上で木 DP（Σ 頂点数 = O(N)） |
-|  | [ABC359 G - Sum of Tree Distance](https://atcoder.jp/contests/abc359/tasks/abc359_g) | ラベルごとに build し、虚樹の各辺について「辺の長さ × 片側の個数 × 反対側の個数」を足す |
+| [`auxiliary_tree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/auxiliary_tree.cpp) | [ABC340 G - Leaf Color](https://atcoder.jp/contests/abc340/tasks/abc340_g) | 色ごとにその色の頂点で compress し、虚樹の上で木 DP（Σ 頂点数 = O(N)） |
+|  | [ABC359 G - Sum of Tree Distance](https://atcoder.jp/contests/abc359/tasks/abc359_g) | ラベルごとに compress し、虚樹の各辺について「辺の長さ × 片側の個数 × 反対側の個数」を足す |
 
 ### dp/ — DP
 
