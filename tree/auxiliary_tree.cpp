@@ -39,7 +39,7 @@ template <class T = long long>
 struct AuxiliaryTree : Tree<T> {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/auxiliary_tree.cpp
     using B = Tree<T>;
-    vector<int> tin, pos;
+    vector<int> tin, pos;  // tin[v] = 行きがけ順（DFS で入った順）の番号、pos = compress の中で使う作業用（内部用）
     // n_ : 頂点数
     AuxiliaryTree(int n_) : B(n_) {}
     // g : 木の隣接リスト（両方向）、root : 根（省略で 0）

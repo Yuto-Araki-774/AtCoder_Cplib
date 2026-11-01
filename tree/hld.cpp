@@ -50,7 +50,7 @@ template <class T = long long>
 struct HLD : Tree<T> {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/hld.cpp
     using B = Tree<T>;
-    vector<int> heavy, head, pos;
+    vector<int> heavy, head, pos;  // heavy[v] = 一番大きい子（葉は −1）、head[v] = v を含む鎖の一番上、pos[v] = 振り直した番号（segtree の添字）
     // n_ : 頂点数
     HLD(int n_) : B(n_) {}
     // g : 木の隣接リスト（両方向）、root : 根（省略で 0）

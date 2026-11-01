@@ -47,7 +47,7 @@ template <class T = long long>
 struct EulerTour : Tree<T> {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/euler_tour.cpp
     using B = Tree<T>;
-    vector<int> in, out, tour;
+    vector<int> in, out, tour;  // in[v] = v に入った時刻、out[v] = v の部分木を回り終えた時刻、tour[t] = 時刻 t に入った頂点
     // n_ : 頂点数
     EulerTour(int n_) : B(n_) {}
     // g : 木の隣接リスト（両方向）、root : 根（省略で 0）

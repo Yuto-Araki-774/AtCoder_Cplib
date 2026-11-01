@@ -39,14 +39,25 @@ using namespace std;
 //      この Tree を継承している。使い方は全部同じ: X x(n); x.add_edge(a, b); x.build(root);
 //      lca・dist・path なども全部そのまま使える。使うときはこの Tree も一緒に貼る（Tree を先に）
 //   T : 辺の重みの型（既定 long long）
+//   【変数】（build の後に使える。adj は add_edge の後から）。例は根 0、辺 0-1, 0-2, 1-3 の木
+//   n              : 頂点数
+//   adj[v]         : v の隣の {頂点, 辺の重み} の一覧（両方向）                    例: adj[1] = {{0, 1}, {3, 1}}
+//   par[v]         : 親（根は −1）                                                  例: par[3] = 1, par[0] = −1
+//   dep[v]         : 根からの辺の本数                                               例: dep[3] = 2
+//   wdep[v]        : 根からの重みの和                                               （重みがすべて 1 なら dep と同じ）
+//   sz[v]          : v の部分木の頂点数（v 自身を含む）                             例: sz[1] = 2, sz[0] = 4
+//   children[v]    : 子の一覧                                                       例: children[0] = {1, 2}
+//   order          : 根から近い順（BFS 順）の頂点の並び。order[0] が根               例: {0, 1, 2, 3}
+//                    前から回すと「親が先」、後ろから回すと「子が先」（木 DP はこれ）
+//   up[k][v], LOG  : （内部用）v の 2^k 個上の祖先（根より上は根）。lca などで使う。LOG は k の個数
 template <class T = long long>
 struct Tree {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp
-    int n, LOG = 1;
-    vector<vector<pair<int, T>>> adj;
-    vector<int> par, dep, sz, order;
-    vector<T> wdep;
-    vector<vector<int>> children, up;  // up[k][v] = v の 2^k 個上
+    int n, LOG = 1;                     // n = 頂点数、LOG = up の段数（内部用）
+    vector<vector<pair<int, T>>> adj;   // adj[v] = v の隣の {頂点, 重み}
+    vector<int> par, dep, sz, order;    // 親（根は −1）、根からの辺の本数、部分木の頂点数、根から近い順の並び
+    vector<T> wdep;                     // 根からの重みの和
+    vector<vector<int>> children, up;   // 子の一覧、up[k][v] = v の 2^k 個上（内部用）
 
     // n_ : 頂点数
     Tree(int n_) : n(n_), adj(n_) {}

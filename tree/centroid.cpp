@@ -44,9 +44,9 @@ template <class T = long long>
 struct CentroidDecomposition : Tree<T> {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/centroid.cpp
     using B = Tree<T>;
-    int root = -1;
-    vector<int> cpar, level;
-    vector<vector<int>> cdist;
+    int root = -1;               // 重心木の根（木全体の重心）
+    vector<int> cpar, level;     // cpar[v] = 重心木での親（根は −1）、level[v] = 重心木での深さ（根が 0）
+    vector<vector<int>> cdist;   // cdist[v][k] = v から「重心木で深さ k の v の祖先」までの、元の木での辺の本数
     // n_ : 頂点数
     CentroidDecomposition(int n_) : B(n_) {}
     // g : 木の隣接リスト（両方向）。作ったらすぐ build する

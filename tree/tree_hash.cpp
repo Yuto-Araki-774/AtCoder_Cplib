@@ -31,7 +31,7 @@ struct TreeHash : Tree<T> {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_hash.cpp
     using B = Tree<T>;
     inline static map<vector<int>, int> table;  // ★ 子の番号の列（ソート済み）→ 番号。全部の TreeHash で共有
-    vector<long long> id;
+    vector<long long> id;  // id[v] = build(root) の根で見たときの、v の部分木の形の番号
     // n_ : 頂点数
     TreeHash(int n_) : B(n_) {}
     // g : 木の隣接リスト（両方向）
