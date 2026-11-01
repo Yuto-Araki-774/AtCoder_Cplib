@@ -19,7 +19,7 @@ AtCoder（ABC / ARC）で使うアルゴリズム・データ構造・典型テ�
 |---|---|---|
 | [basic/](#basic--探索数列) | 探索・数列: 二分探索、累積和、いもす法、座標圧縮、尺取り法、全探索、転倒数、スライド最小値 など | 12 |
 | [graph/](#graph--グラフ) | グラフ: BFS・DFS、ダイクストラ、最短路、トポロジカルソート、最小全域木、二部グラフ、SCC、橋・関節点、マッチング など | 22 |
-| [tree/](#tree--木) | 木: LCA・直径・重心、木 DP、全方位木 DP、オイラーツアー、HLD、重心分解、虚樹 など（全部 `Tree` と同じ使い方） | 10 |
+| [tree/](#tree--木) | 木: LCA・直径・重心、木 DP、全方位木 DP、オイラーツアー、HLD、重心分解、虚樹 など（全部 `Tree` と同じ使い方） | 11 |
 | [math/](#math--数学) | 数学: 累乗・拡張ユークリッド、行列累乗、二項係数、素数・素因数分解、メビウス変換、ガウスの消去法 など | 7 |
 | [string/](#string--文字列) | 文字列: ローリングハッシュ、KMP、回文（Manacher など）、括弧列、部分列、接尾辞配列、Trie、Aho-Corasick | 9 |
 | [dp/](#dp--dp) | DP: ナップサック、LCS、LIS、桁 DP、区間 DP、巡回セールスマン、期待値 DP、Alien DP など | 9 |
@@ -39,7 +39,7 @@ graph/   グラフ            graph_input, bfs, dfs, dijkstra, shortest_path, to
                            weighted_union_find, rollback_union_find, lowlink, scc_dag,
                            euler_path, persistent_union_find, chromatic_number, steiner_tree,
                            hungarian, general_matching, min_arborescence, dominator_tree
-tree/    木                tree（LCA・直径・木上のいもす法）, tree_dp, rerooting, euler_tour, hld,
+tree/    木                tree（LCA・直径・重心）, tree_imos, tree_dp, rerooting, euler_tour, hld,
                            centroid, tree_hash, auxiliary_tree, farthest, path_query
 dp/      DP                knapsack, lcs, lis, digit_dp, interval_dp, tsp, expected_value,
                            monotone_minima, alien_dp
@@ -189,7 +189,7 @@ T bin_search(T ok, T ng, F f) {
 | 本体A | `Imos<T>(n)` | `add(l, r, x)` で `[l, r)` に加算、`build()` で配列 |
 | 本体B | `Imos2D<T>(h, w)` | `add(r1, c1, r2, c2, x)` で矩形に加算、`build()` で 2 次元配列 |
 
-木の上のいもす法は `tree/tree.cpp` の `TreeImos`。座標が大きいときは `compress.cpp` と併用。
+木の上のいもす法は `tree/tree_imos.cpp` の `TreeImos`。座標が大きいときは `compress.cpp` と併用。
 
 ### [compress.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/basic/compress.cpp)
 | 区分 | メソッド | 何をするか |
@@ -504,15 +504,20 @@ h.lca(u, v); h.dist(u, v);  // Tree の関数はどれでも使える
 ### [tree.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp)
 | 区分 | 機能 | 何をするか |
 |---|---|---|
-| 本体 | `Tree<> t(n)`, `add_edge(a, b, w)` → `build(root)` | 木を作って根から前計算（`Tree<> t(g)` で隣接リストから辺をまとめて入れられる） |
+| 本体 | `Tree<> t(n)`, `add_edge(a, b, w)` → `build(root)` | 木を作って根から前計算。O(N)（`Tree<> t(g)` で隣接リストから辺をまとめて入れられる） |
 | 本体 | `par, dep, wdep, sz, height, children, order` | 親・深さ・重み付き深さ・部分木の頂点数・部分木の高さ（一番深い子孫までの辺の本数）・子・BFS 順 |
-| 本体 | `lca(a, b)`, `dist`, `wdist`, `kth_ancestor(v, k)` | 最小共通祖先、距離、k 個上の祖先 |
+| 本体 | `lca(a, b)`, `dist`, `wdist`, `kth_ancestor(v, k)` | 最小共通祖先、距離、k 個上の祖先。O(log N)。LCA の表（O(N log N)）は初めて呼んだときに作る |
 | 削除可 | `jump(a, b, k)`, `path(a, b)`, `is_on_path(a, b, c)` | パス上で k 歩進んだ頂点、パスの頂点列、c がパス上か |
 | 削除可 | `diameter()` | 直径の長さと端点間の頂点列（build 不要） |
 | 削除可 | `centroids()` | 木の重心（取り除くと残りがどれも N/2 以下になる頂点）。1 個か 2 個（build 不要） |
-| 削除可 | `TreeImos<U, T>(t)` | 木上のいもす法。`add_subtree(v, x)` 部分木加算、`add_path(u, v, x)` パス加算、`build()` |
 
 木 DP は `order` を逆順に回すと「子 → 親」の順になる（使用例あり）。
+
+### [tree_imos.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_imos.cpp) — 木の上のいもす法
+| 区分 | 機能 | 何をするか |
+|---|---|---|
+| 本体 | `TreeImos<U, T> im(t)` | t は build 済みの `Tree`。U は足す値の型、T は Tree の重みの型 |
+| 本体 | `add_subtree(v, x)`, `add_path(u, v, x)`, `build()` | 部分木に加算 O(1)、パスに加算 O(log N)、最後に各頂点の値 O(N) |
 
 ### [tree_dp.cpp](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_dp.cpp) — 木 DP のテンプレート
 | 区分 | 機能 | 何をするか |
@@ -1138,7 +1143,6 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 |---|---|---|
 | [`tree.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp) | [ABC014 D - 閉路](https://atcoder.jp/contests/abc014/tasks/abc014_4) | 答え = dist(a, b) + 1（LCA） |
 |  | [ABC361 E - Tree and Hamilton Path 2](https://atcoder.jp/contests/abc361/tasks/abc361_e) | 答え = 2 × (辺の重みの和) − 直径（diameter） |
-|  | [ABC138 D - Ki](https://atcoder.jp/contests/abc138/tasks/abc138_d) | 部分木に加算（TreeImos の add_subtree） |
 | [`rerooting.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/rerooting.cpp) | [ABC220 F - Distance Sums 2](https://atcoder.jp/contests/abc220/tasks/abc220_f) | 各頂点からの距離の和（使用例の「例2」そのもの） |
 |  | [ABC348 E - Minimize Sum of Distances](https://atcoder.jp/contests/abc348/tasks/abc348_e) | 例2 の頂点数を C_i の和に置き換える |
 | [`euler_tour.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/euler_tour.cpp) | [ABC202 E - Count Descendants](https://atcoder.jp/contests/abc202/tasks/abc202_e) | 深さごとに in[v] を並べ、[in[U], out[U]) に入る個数を二分探索 |
@@ -1152,6 +1156,7 @@ EDPC（Educational DP Contest）・AOJ（Aizu Online Judge）は ABC ではな�
 |  | [ABC359 G - Sum of Tree Distance](https://atcoder.jp/contests/abc359/tasks/abc359_g) | ラベルごとに compress し、虚樹の各辺について「辺の長さ × 片側の個数 × 反対側の個数」を足す |
 | [`farthest.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/farthest.cpp) | [ABC222 F - Expensive Expense](https://atcoder.jp/contests/abc222/tasks/abc222_f) | 各町 j に重み D_j の辺で葉 N + j を足した木で TreeFarthest。一番遠い端が i 自身の葉なら、もう一方の端までの距離を使う |
 | [`path_query.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/path_query.cpp) | [ABC235 E - MST + 1](https://atcoder.jp/contests/abc235/tasks/abc235_e) | 最小全域木を Tree にして、パス上の辺の重みの最大を TreePathQuery で。w がその最大より小さければ Yes（u == v なら No） |
+| [`tree_imos.cpp`](https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree_imos.cpp) | [ABC138 D - Ki](https://atcoder.jp/contests/abc138/tasks/abc138_d) | 部分木に加算（add_subtree）して、最後に build |
 
 ### dp/ — DP
 

@@ -1,6 +1,7 @@
 // =====================================================================
-// tree/tree.cpp  木の基本情報 + LCA（ダブリング）+ 木の直径
-//   親・深さ・部分木サイズ・BFS 順を前計算。LCA・距離・k 個上の祖先を O(log N)、直径、木上のいもす法
+// tree/tree.cpp  木の基本情報 + LCA（ダブリング）+ 木の直径・重心
+//   親・深さ・部分木サイズ・高さ・BFS 順を前計算（O(N)）。LCA・距離・k 個上の祖先を O(log N)、直径、重心
+//   LCA の表（ダブリング）は、lca などを初めて呼んだときに作る（使わなければ作らない）
 //   前提: 頂点 0..n-1 の連結な木
 // 依存: なし
 // ABC / ARC での使用例:
@@ -8,8 +9,6 @@
 //     → 答え = dist(a, b) + 1（LCA）
 //   ABC361 E - Tree and Hamilton Path 2  https://atcoder.jp/contests/abc361/tasks/abc361_e
 //     → 答え = 2 × (辺の重みの和) − 直径（diameter）
-//   ABC138 D - Ki  https://atcoder.jp/contests/abc138/tasks/abc138_d
-//     → 部分木に加算（TreeImos の add_subtree）
 // 貼る場所: コピー範囲を main 関数の外（using namespace std; の後、main より上）に貼る
 // =====================================================================
 #include <bits/stdc++.h>
@@ -26,8 +25,10 @@ using namespace std;
 //   Tree(n)              : 頂点 0..n−1 の木を作る準備（辺はまだない）
 //   Tree(g)              : 隣接リスト g（両方向）から辺をまとめて入れる（build は自分で呼ぶ）
 //   add_edge(a, b, w)    : 無向辺を足す（w 省略で 1）
-//   build(root)          : 根を決めて前計算する。O(N log N)。辺を全部足してから呼ぶ
+//   build(root)          : 根を決めて前計算する。O(N)。辺を全部足してから呼ぶ
 //   kth_ancestor(v, k)   : v の k 個上の祖先（なければ −1）。O(log N)
+//     ※ kth_ancestor・lca と、それを使う dist・wdist・jump・path・is_on_path は、初めて呼んだときに
+//        LCA の表を作る（O(N log N)、1 回だけ）。使わなければ作らないので、木 DP などでは余計な時間がかからない
 //   lca(a, b)            : 最小共通祖先。O(log N)
 //   dist(a, b)           : 辺の本数での距離、wdist(a, b) : 重みでの距離
 //   jump(a, b, k)        : a から b へ k 歩進んだ頂点（はみ出したら −1）
@@ -50,16 +51,18 @@ using namespace std;
 //   children[v]    : 子の一覧                                                       例: children[0] = {1, 2}
 //   order          : 根から近い順（BFS 順）の頂点の並び。order[0] が根               例: {0, 1, 2, 3}
 //                    前から回すと「親が先」、後ろから回すと「子が先」（木 DP はこれ）
-//   up[k][v], LOG  : （内部用）v の 2^k 個上の祖先（根より上は根）。lca などで使う。LOG は k の個数
+//   up[k][v], LOG  : （内部用）v の 2^k 個上の祖先（根より上は根）。lca などを初めて呼んだときに作る。LOG は k の個数
 template <class T = long long>
 struct Tree {
     // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp
-    int n, LOG = 1;                     // n = 頂点数、LOG = up の段数（内部用）
+    int n;                              // 頂点数
+    mutable int LOG = 0;                // up の段数（内部用。表を作るまでは 0）
     vector<vector<pair<int, T>>> adj;   // adj[v] = v の隣の {頂点, 重み}
     vector<int> par, dep, sz, order;    // 親（根は −1）、根からの辺の本数、部分木の頂点数、根から近い順の並び
     vector<int> height;                 // 部分木の高さ（v から一番深い子孫までの辺の本数）
     vector<T> wdep;                     // 根からの重みの和
-    vector<vector<int>> children, up;   // 子の一覧、up[k][v] = v の 2^k 個上（内部用）
+    vector<vector<int>> children;       // 子の一覧
+    mutable vector<vector<int>> up;     // up[k][v] = v の 2^k 個上（内部用。lca などを初めて呼んだときに作る）
 
     // n_ : 頂点数
     Tree(int n_) : n(n_), adj(n_) {}
@@ -88,6 +91,14 @@ struct Tree {
             sz[par[v]] += sz[v];
             height[par[v]] = max(height[par[v]], height[v] + 1);
         }
+        up.clear(), LOG = 0;  // LCA の表は使うときに作り直す
+    }
+
+    // prepare_lca() : LCA の表を作る（作ってあれば何もしない）。kth_ancestor・lca が自動で呼ぶので、普通は呼ばなくてよい
+    void prepare_lca() const {
+        // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp
+        if (!up.empty()) return;
+        LOG = 1;
         while ((1 << LOG) <= n) LOG++;
         up.assign(LOG, vector<int>(n));
         for (int v = 0; v < n; v++) up[0][v] = par[v] == -1 ? v : par[v];  // 根の親は根自身にしておく
@@ -98,12 +109,14 @@ struct Tree {
     // kth_ancestor(v, k) : v : 頂点、k : 何個上か（0 なら v 自身。深さを超えると −1）
     long long kth_ancestor(int v, int k) const {  // 存在しなければ -1
         if (k < 0 || k > dep[v]) return -1;
+        prepare_lca();
         for (int i = 0; i < LOG; i++)
             if (k >> i & 1) v = up[i][v];  // ★ k を 2 進数で分解して飛ぶ
         return v;
     }
     // lca(a, b) : a, b : 頂点（build 済みであること）
     long long lca(int a, int b) const {
+        prepare_lca();
         if (dep[a] < dep[b]) swap(a, b);
         a = kth_ancestor(a, dep[a] - dep[b]);  // ★ まず深さをそろえる
         if (a == b) return a;
@@ -183,51 +196,6 @@ struct Tree {
     // --- 削除可ここまで ---
 };
 
-// ---------- 削除可: 木上のいもす法（上の Tree が必要。build 済みであること） ----------
-// 頂点に値を足す操作をまとめて行い、最後に各頂点の値を一括で得る
-// U : 足す値の型
-// TreeImos<long long, long long> im(t);
-//   im.add_subtree(v, x)  v の部分木全体に x を足す      O(1)
-//   im.add_path(u, v, x)  u-v パス上の全頂点に x を足す   O(log N)（LCA を使う）
-//   im.build()            各頂点の最終的な値           O(N)
-// 例: 「パス u-v を通る回数」= 各パスに add_path(u, v, 1)
-// ◆ struct TreeImos : 木の上のいもす法（部分木やパスへの加算をまとめて行い、最後に各頂点の値を求める）
-//   TreeImos(t)          : t は build 済みの Tree（参照で持つので t を先に作って残しておく）
-//   add_subtree(v, x)    : v の部分木の全頂点に x を足す。O(1)
-//   add_path(u, v, x)    : u-v パス上の全頂点に x を足す。O(log N)
-//   build()              : 各頂点の値を返す。O(N)
-//   U : 足す値の型、T : Tree の重みの型
-template <class U, class T>
-struct TreeImos {
-    // Library: https://github.com/Yuto-Araki-774/AtCoder_Cplib/blob/main/tree/tree.cpp
-    const Tree<T>& t;
-    vector<U> ds, dp;  // ds: 部分木加算用、dp: パス加算用
-    // t_ : build 済みの Tree
-    TreeImos(const Tree<T>& t_) : t(t_), ds(t_.n, U(0)), dp(t_.n, U(0)) {}
-    // add_subtree(v, x) : v : 部分木の根、x : 足す値
-    void add_subtree(int v, U x) { ds[v] += x; }  // ★ 根の印だけ付けて、後で下に流す
-    // add_path(u, v, x) : u, v : パスの両端（u == v なら u だけ）、x : 足す値
-    void add_path(int u, int v, U x) {
-        int l = t.lca(u, v);
-        dp[u] += x, dp[v] += x;                // ★ 両端に +x
-        dp[l] -= x;                            // ★ LCA で 2 回分になるので 1 回引く
-        if (t.par[l] != -1) dp[t.par[l]] -= x;  // ★ LCA の親より上には流さない
-    }
-    // build() : 返り値 res[v] = 頂点 v に足された値の合計
-    vector<U> build() const {
-        auto s = ds, p = dp;
-        for (int v : t.order)
-            if (t.par[v] != -1) s[v] += s[t.par[v]];  // ★ 部分木加算: 根 → 葉 に累積
-        for (int i = t.n - 1; i > 0; i--) {
-            int v = t.order[i];
-            p[t.par[v]] += p[v];  // ★ パス加算: 葉 → 根 に累積
-        }
-        vector<U> res(t.n);
-        for (int v = 0; v < t.n; v++) res[v] = s[v] + p[v];
-        return res;
-    }
-};
-
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ ここまでコピー ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 // 他の木のファイルのテストは、ここより上を #include して使う（TREE_NO_MAIN を定義してから）
@@ -242,12 +210,17 @@ int main() {
     Tree<long long> t(6);
     t.add_edge(0, 1, 2), t.add_edge(0, 2, 3), t.add_edge(1, 3, 4), t.add_edge(1, 4, 1), t.add_edge(2, 5, 10);
     t.build(0);
+    assert(t.up.empty());  // build しただけでは LCA の表はまだない
     assert(t.lca(3, 4) == 1 && t.lca(3, 5) == 0 && t.dist(3, 5) == 4 && t.wdist(3, 5) == 19);
     assert(t.kth_ancestor(3, 2) == 0 && t.kth_ancestor(3, 3) == -1 && t.sz[1] == 3);
     assert(t.height[0] == 2 && t.height[1] == 1 && t.height[5] == 0 && t.height[2] == 1);
     assert(t.jump(3, 5, 3) == 2 && t.jump(3, 5, 5) == -1);
     assert((t.path(4, 5) == vector<long long>{4, 1, 0, 2, 5}) && t.is_on_path(4, 5, 0));
     assert(t.diameter().first == 19);
+    assert(!t.up.empty());
+    t.build(5);  // 根を変えて build し直すと表も作り直される
+    assert(t.up.empty() && t.lca(3, 4) == 1 && t.lca(0, 3) == 0 && t.lca(3, 2) == 2 && t.kth_ancestor(3, 4) == 5);
+    t.build(0);
     assert((t.centroids() == vector<long long>{0, 1}));  // 0 か 1 を取ると残りは 3 個以下
     {   // ランダムな木で、重心を「取り除いて最大の成分が N/2 以下」の愚直と比べる
         mt19937 rc(777);
@@ -293,12 +266,6 @@ int main() {
     }
     assert(sub[0] == 20);
 
-    // 木上のいもす: 部分木 1 に +1、パス 3-5 に +10、パス 4-4 に +100
-    TreeImos<long long, long long> im(t);
-    im.add_subtree(1, 1);
-    im.add_path(3, 5, 10);
-    im.add_path(4, 4, 100);
-    assert((im.build() == vector<long long>{10, 11, 10, 11, 101, 10}));
     // ランダムテスト: 親をたどる愚直な方法と、すべての機能を比較
     {
         mt19937 rr(119);
@@ -350,23 +317,6 @@ int main() {
                 }
             auto [len, dp] = tt.diameter();
             assert(len == dm && tt.wdist(dp.front(), dp.back()) == len);
-            TreeImos<long long, long long> im(tt);
-            vector<long long> ref(n, 0);
-            for (int k = 0; k < 10; k++) {
-                long long x = (long long)(rr() % 11) - 5;
-                if (rr() % 2) {
-                    int v = rr() % n;
-                    im.add_subtree(v, x);
-                    for (int u = 0; u < n; u++) if (is_desc(u, v)) ref[u] += x;
-                } else {
-                    int a = rr() % n, b = rr() % n, l = naive_lca(a, b);
-                    im.add_path(a, b, x);
-                    for (int y = a; y != l; y = P[y]) ref[y] += x;
-                    for (int y = b; y != l; y = P[y]) ref[y] += x;
-                    ref[l] += x;
-                }
-            }
-            assert(im.build() == ref);
         }
     }
     puts("OK");

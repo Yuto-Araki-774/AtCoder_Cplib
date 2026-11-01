@@ -52,6 +52,7 @@ struct TreePathQuery {
     TreePathQuery(const Tree<T>& t_, const vector<S>& a_) : t(t_), vertex(true), a(a_) { init(a_); }
     // （内部用）ダブリングの表を作る
     void init(const vector<S>& base) {
+        t.prepare_lca();  // Tree の LCA の表（up）を使うので、まだなら作る
         agg.assign(t.LOG, base);
         for (int k = 0; k + 1 < t.LOG; k++)
             for (int v = 0; v < t.n; v++) agg[k + 1][v] = op(agg[k][v], agg[k][t.up[k][v]]);  // ★ 2^k 上までと、その先の 2^k 上まで
